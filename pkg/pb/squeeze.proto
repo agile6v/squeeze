@@ -1,0 +1,199 @@
+// Copyright 2019 Squeeze Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/any.proto";
+
+service SqueezeService {
+    rpc ExecuteTask (ExecuteTaskRequest) returns (ExecuteTaskResponse) {}
+    rpc HeartBeat (stream HeartBeatRequest) returns (stream HeartBeatResponse) {}
+}
+
+message HeartBeatRequest {
+    message SlaveInfo {
+        uint32 grpcPort = 1;
+    }
+    message Task {
+        uint32 id = 1;
+        enum Status {
+            DONE = 0;
+            RUNNING = 1;
+        }
+        Status status = 2;
+    }
+    Task task = 1;
+    SlaveInfo info = 2;
+}
+
+message HeartBeatResponse {
+    repeated TaskRequest tasks = 1;
+}
+
+message TaskRequest {
+    uint32 concurrency = 1;
+    uint32 requests = 2;
+    uint32 rateLimit = 3;
+    oneof type {
+        HttpTask http = 4;
+        WebsocketTask websocket = 5;
+    }
+}
+
+message ExecuteTaskRequest {
+    enum Command {
+        START = 0;
+        STOP = 1;
+    }
+    Command cmd = 1;
+    Protocol protocol = 2;
+    string callback = 3;
+    uint32 duration = 4;
+    TaskRequest task = 8;
+}
+
+message ExecuteTaskResponse {
+    enum Status {
+        SUCC = 0;
+        FAIL = 1;
+    }
+    string addr = 1;
+    Status status = 2;
+    // When status is equal to FAIL, error will be set
+    string error = 3;
+    google.protobuf.Any any = 4;
+}
+
+enum Protocol {
+    UNKNOWN = 0;
+    HTTP = 1;
+    TCP = 2;
+    UDP = 3;
+    REDIS = 4;
+    MYSQL = 5;
+    MONGO = 6;
+    GRPC = 7;
+    THRIFT = 8;
+    WEBSOCKET = 9;
+}
+
+message WebsocketTask {
+    string scheme = 1;
+    string host = 2;
+    string path = 3;
+    uint32 timeout = 4;
+    string body = 5;
+}
+
+message HttpTask {
+    string url = 1;
+    string method = 2;
+    string body = 3;
+    uint32 timeout = 7;
+    bool http2 = 8;
+    bool disableRedirects = 9;
+    bool disableKeepalives = 10;
+    bool disableCompression = 11;
+    string proxyAddr = 12;
+    uint32 maxIdleConn = 13;
+    repeated string headers = 14;
+    string contentType = 15;
+}
+
+message WebsocketResult {
+    // The sum of all response sizes
+    int64 totalSize = 1;
+
+    // Requests per second
+    double rps = 2;
+
+    // Total time for running
+    double duration = 3;
+
+    double totalDuration = 9;
+
+    // Total number of requests
+    int64 requests = 4;
+
+    // Total number of requests
+    int64 totalRequests = 5;
+
+    // Total number of response
+    int64 totalResponses = 6;
+
+    // Average response size per request
+    int64 avgSize = 7;
+
+    map<string, uint32> errMap = 8;
+}
+
+message HTTPResult {
+    message LatencyDistribution {
+        uint32 percentage = 1;
+        double latency = 2;
+    }
+
+    message ElapsedInfo {
+        double max = 1;
+        double min = 2;
+        double avg = 3;
+    }
+
+    Protocol protocol = 1;
+
+    // Average response size per request
+    int64 avgSize = 2;
+
+    // The sum of all response sizes
+    int64 totalSize = 3;
+
+    // Total number of requests
+    int64 requests = 4;
+
+    // Requests per second
+    double rps = 5;
+
+    // Total time for running
+    double duration = 6;
+
+    double fastestReqTime = 7;
+
+    double slowestReqTime = 8;
+
+    double avgReqTime = 9;
+
+    map<uint32, uint32> statusCodes = 10;
+
+    repeated LatencyDistribution latencyDistribution = 11;
+
+    ElapsedInfo dns = 12;
+    ElapsedInfo delay = 13;
+    ElapsedInfo resp = 14;
+    ElapsedInfo conn = 15;
+    ElapsedInfo req = 16;
+
+    double connDuration = 17;
+    double dnsDuration = 18;
+    double reqDuration = 19;
+    double respDuration = 20;
+    double delayDuration = 21;
+
+    map<string, uint32> errMap = 22;
+
+    // Total number of requests
+    int64 totalRequests = 23;
+
+    double totalDuration = 24;
+}

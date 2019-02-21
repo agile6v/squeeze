@@ -22,10 +22,11 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"encoding/json"
 
 	"github.com/agile6v/squeeze/pkg/pb"
 	log "github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
+	//"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
@@ -139,7 +140,8 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		return nil, err
 	}
 
-	any, err := ptypes.MarshalAny(msg)
+	//any, err := ptypes.MarshalAny(msg)
+	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Errorf("could not marshal message : %v", err)
 		return nil, err
@@ -147,7 +149,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 
 	resp := &pb.ExecuteTaskResponse{
 		Status: pb.ExecuteTaskResponse_SUCC,
-		Any:    any,
+		Data: string(data),
 	}
 
 	return resp, nil

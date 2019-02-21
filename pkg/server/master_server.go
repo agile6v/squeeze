@@ -25,7 +25,7 @@ import (
 	log "github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	protobuf "github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+//	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
@@ -72,6 +72,11 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 	}(mergedResults)
 
 	if taskReq.Callback != "" {
+		err := m.dispatchTask(taskReq, conns, &wg)
+		if err != nil {
+			return nil, err
+		}
+
 		go func() {
 			wg.Wait()
 			close(m.results)
@@ -86,13 +91,8 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 				return
 			}
 
-			util.DoRequest("POST", taskReq.Callback, string(data))
+			util.DoRequest("POST", taskReq.Callback, string(data), 30)
 		}()
-
-		err := m.dispatchTask(taskReq, conns, &wg)
-		if err != nil {
-			return nil, err
-		}
 
 		return "success", nil
 	} else {
@@ -249,7 +249,7 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 // runCollector is used to collect results which all slaves generated.
 func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Protocol) {
 	builder := builder.NewBuilder(protocol)
-	results := make([]protobuf.Message, 0)
+	results := make([]string, 0)
 	squeezeResponse := &proto.SqueezeResponse{Result: nil}
 
 	for r := range m.results {
@@ -269,19 +269,21 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			continue
 		}
 
-		var dynamicAny ptypes.DynamicAny
-		if err := ptypes.UnmarshalAny(res.Any, &dynamicAny); err != nil {
+		//var dynamicAny ptypes.DynamicAny
+		//if err := ptypes.UnmarshalAny(res.Any, &dynamicAny); err != nil {
+		/*var any interface{}
+		err := json.Unmarshal([]byte(res.Data), &any)
+		if err != nil {
 			log.Errorf("Could not unmarshal result from any field: %s", err)
 			return
-		}
-
-		results = append(results, dynamicAny.Message)
+		}*/
+		results = append(results, res.Data)
 	}
 
 	if len(results) != 0 {
 		ret, err := builder.Merge(results)
 		if err != nil {
-			log.Error("failed to merge result, %s", err.Error())
+			log.Error("failed to merge result, ", err.Error())
 			return
 		}
 		squeezeResponse.Result = ret

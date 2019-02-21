@@ -27,7 +27,7 @@ var InfoCmd = &cobra.Command{
 	Short: "Show information about the squeeze cluster.",
 	Long:  `Show information about the squeeze cluster.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		resp, err := util.DoRequest("GET", config.ConfigArgs.HttpAddr+"/info", "")
+		resp, err := util.DoRequest("GET", config.ConfigArgs.HttpAddr+"/info", "", 5)
 		if err != nil {
 			return err
 		}

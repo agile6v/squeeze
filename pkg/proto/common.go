@@ -23,7 +23,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
+	//protobuf "github.com/golang/protobuf/proto"
 )
 
 type SqueezeStats struct {
@@ -45,11 +45,11 @@ type ProtoBuilder interface {
 	PreRequest(*pb.TaskRequest) interface{}
 	Request(context.Context, interface{}, *pb.TaskRequest) interface{}
 	PostRequest(interface{}) error
-	Done(time.Duration) (protobuf.Message, error)
+	Done(time.Duration) (interface{}, error)
 
 	// master side
 	Split(*pb.ExecuteTaskRequest, int) []*pb.ExecuteTaskRequest
-	Merge([]protobuf.Message) (interface{}, error)
+	Merge([]string) (interface{}, error)
 
 	// client side
 	CreateTask(*config.ProtoConfigArgs) (string, error)
@@ -73,7 +73,7 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs, pr
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
 	if err != nil {
 		return "", err
 	}

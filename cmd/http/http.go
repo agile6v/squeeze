@@ -60,8 +60,6 @@ var Command = &cobra.Command{
 			return err
 		}
 
-		log.Infof("%s", resp)
-
 		ret, err := builder.Render(resp)
 		if err != nil {
 			log.Errorf("failed to render response, %s", err)

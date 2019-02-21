@@ -17,16 +17,17 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"time"
+	"encoding/json"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
+//	protobuf "github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
-	"net/url"
-	"time"
 )
 
 const maxRes = 1000000
@@ -52,14 +53,14 @@ type wsResult struct {
 }
 
 type wsReport struct {
-	result *pb.WebsocketResult
+	result *websocketStats
 	lats   []float64 // time spent per request
 }
 
 func newWsReport(n int) *wsReport {
 	cap := util.Min(n, maxRes)
 	return &wsReport{
-		result: &pb.WebsocketResult{
+		result: &websocketStats{
 			ErrMap: make(map[string]uint32),
 		},
 		lats: make([]float64, 0, cap),
@@ -103,7 +104,7 @@ func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) 
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -197,7 +198,7 @@ func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, t
 		// asynchronous scenario in the future.
 		_, resp, err = conn.ReadMessage()
 		if err == nil {
-			log.Infof("read message %s from target.", string(resp))
+			log.V(3).Infof("read message %s from target.", string(resp))
 		}
 	}
 
@@ -236,7 +237,7 @@ func (builder *WebSocketBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
-func (builder *WebSocketBuilder) Done(total time.Duration) (protobuf.Message, error) {
+func (builder *WebSocketBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
 
@@ -258,14 +259,15 @@ func (builder *WebSocketBuilder) Done(total time.Duration) (protobuf.Message, er
 	return report.result, nil
 }
 
-func (builder *WebSocketBuilder) Merge(messages []protobuf.Message) (interface{}, error) {
+func (builder *WebSocketBuilder) Merge(messages []string) (interface{}, error) {
 	stats := &websocketStats{}
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r, ok := message.(*pb.WebsocketResult)
-		if !ok {
-			return nil, fmt.Errorf("cannot cast to http result: %#v", message)
+		r := &websocketStats{}
+		err := json.Unmarshal([]byte(message), r)
+		if err != nil {
+			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {

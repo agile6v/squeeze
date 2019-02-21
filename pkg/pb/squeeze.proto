@@ -74,6 +74,7 @@ message ExecuteTaskResponse {
     // When status is equal to FAIL, error will be set
     string error = 3;
     google.protobuf.Any any = 4;
+    string data = 5;
 }
 
 enum Protocol {
@@ -110,90 +111,4 @@ message HttpTask {
     uint32 maxIdleConn = 13;
     repeated string headers = 14;
     string contentType = 15;
-}
-
-message WebsocketResult {
-    // The sum of all response sizes
-    int64 totalSize = 1;
-
-    // Requests per second
-    double rps = 2;
-
-    // Total time for running
-    double duration = 3;
-
-    double totalDuration = 9;
-
-    // Total number of requests
-    int64 requests = 4;
-
-    // Total number of requests
-    int64 totalRequests = 5;
-
-    // Total number of response
-    int64 totalResponses = 6;
-
-    // Average response size per request
-    int64 avgSize = 7;
-
-    map<string, uint32> errMap = 8;
-}
-
-message HTTPResult {
-    message LatencyDistribution {
-        uint32 percentage = 1;
-        double latency = 2;
-    }
-
-    message ElapsedInfo {
-        double max = 1;
-        double min = 2;
-        double avg = 3;
-    }
-
-    Protocol protocol = 1;
-
-    // Average response size per request
-    int64 avgSize = 2;
-
-    // The sum of all response sizes
-    int64 totalSize = 3;
-
-    // Total number of requests
-    int64 requests = 4;
-
-    // Requests per second
-    double rps = 5;
-
-    // Total time for running
-    double duration = 6;
-
-    double fastestReqTime = 7;
-
-    double slowestReqTime = 8;
-
-    double avgReqTime = 9;
-
-    map<uint32, uint32> statusCodes = 10;
-
-    repeated LatencyDistribution latencyDistribution = 11;
-
-    ElapsedInfo dns = 12;
-    ElapsedInfo delay = 13;
-    ElapsedInfo resp = 14;
-    ElapsedInfo conn = 15;
-    ElapsedInfo req = 16;
-
-    double connDuration = 17;
-    double dnsDuration = 18;
-    double reqDuration = 19;
-    double respDuration = 20;
-    double delayDuration = 21;
-
-    map<string, uint32> errMap = 22;
-
-    // Total number of requests
-    int64 totalRequests = 23;
-
-    double totalDuration = 24;
 }

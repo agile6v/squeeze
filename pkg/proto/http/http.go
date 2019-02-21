@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"encoding/json"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -32,7 +33,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/version"
 	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
+//	protobuf "github.com/golang/protobuf/proto"
 	"golang.org/x/net/http2"
 )
 
@@ -72,7 +73,7 @@ type httpStats struct {
 	DelayDuration       float64      `json:"delayDuration,omitempty"`
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
-	LatencyDistribution []LatencyDistribution `json:latencyDistribution,omitempty`
+	LatencyDistribution []*LatencyDistribution `json:latencyDistribution,omitempty`
 }
 
 type httpResult struct {
@@ -89,7 +90,7 @@ type httpResult struct {
 }
 
 type httpReport struct {
-	result      *pb.HTTPResult
+	result      *httpStats
 	lats        []float64 // time spent per request
 	connLats    []float64
 	dnsLats     []float64
@@ -103,8 +104,7 @@ type httpReport struct {
 func newHttpReport(n int) *httpReport {
 	cap := util.Min(n, maxRes)
 	return &httpReport{
-		result: &pb.HTTPResult{
-			Protocol: pb.Protocol_HTTP,
+		result: &httpStats{
 			ErrMap:   make(map[string]uint32),
 		},
 		connLats:    make([]float64, 0, cap),
@@ -117,7 +117,7 @@ func newHttpReport(n int) *httpReport {
 	}
 }
 
-func latencies(report *httpReport) []*pb.HTTPResult_LatencyDistribution {
+func latencies(report *httpReport) []*LatencyDistribution {
 	pctls := []uint32{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
@@ -128,17 +128,17 @@ func latencies(report *httpReport) []*pb.HTTPResult_LatencyDistribution {
 			j++
 		}
 	}
-	res := make([]*pb.HTTPResult_LatencyDistribution, len(pctls))
+	res := make([]*LatencyDistribution, len(pctls))
 	for i := 0; i < len(pctls); i++ {
 		if data[i] > 0 {
-			res[i] = &pb.HTTPResult_LatencyDistribution{Percentage: pctls[i], Latency: data[i]}
+			res[i] = &LatencyDistribution{percentage: pctls[i], latency: data[i]}
 		}
 	}
 	return res
 }
 
-func newElapsedInfo(max, min float64) *pb.HTTPResult_ElapsedInfo {
-	return &pb.HTTPResult_ElapsedInfo{
+func newElapsedInfo(max, min float64) *ElapsedInfo {
+	return &ElapsedInfo{
 		Max: max,
 		Min: min,
 	}
@@ -186,7 +186,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -406,7 +406,7 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
-func (builder *HttpBuilder) Done(total time.Duration) (protobuf.Message, error) {
+func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
 
@@ -427,11 +427,22 @@ func (builder *HttpBuilder) Done(total time.Duration) (protobuf.Message, error) 
 	sort.Float64s(report.reqLats)
 	sort.Float64s(report.resLats)
 
-	report.result.Dns = newElapsedInfo(report.dnsLats[len(report.dnsLats)-1], report.dnsLats[0])
-	report.result.Delay = newElapsedInfo(report.delayLats[len(report.delayLats)-1], report.delayLats[0])
-	report.result.Resp = newElapsedInfo(report.resLats[len(report.resLats)-1], report.resLats[0])
-	report.result.Conn = newElapsedInfo(report.connLats[len(report.connLats)-1], report.connLats[0])
-	report.result.Req = newElapsedInfo(report.reqLats[len(report.reqLats)-1], report.reqLats[0])
+	report.result.Dns.Max = report.dnsLats[len(report.dnsLats)-1]
+	report.result.Dns.Min = report.dnsLats[0]
+	report.result.Delay.Max = report.delayLats[len(report.delayLats)-1]
+	report.result.Delay.Min = report.delayLats[0]
+	report.result.Resp.Max = report.resLats[len(report.resLats)-1]
+	report.result.Resp.Min = report.resLats[0]
+	report.result.Conn.Max = report.connLats[len(report.connLats)-1]
+	report.result.Conn.Min = report.connLats[0]
+	report.result.Req.Max = report.reqLats[len(report.reqLats)-1]
+	report.result.Req.Min = report.reqLats[0]
+
+	//report.result.Dns = ElapsedInfo{Max: report.dnsLats[len(report.dnsLats)-1], Min: report.dnsLats[0]}
+	//report.result.Delay = newElapsedInfo(report.delayLats[len(report.delayLats)-1], report.delayLats[0])
+	//report.result.Resp = newElapsedInfo(report.resLats[len(report.resLats)-1], report.resLats[0])
+	//report.result.Conn = newElapsedInfo(report.connLats[len(report.connLats)-1], report.connLats[0])
+	//report.result.Req = newElapsedInfo(report.reqLats[len(report.reqLats)-1], report.reqLats[0])
 
 	report.result.FastestReqTime = report.lats[0]
 	report.result.SlowestReqTime = report.lats[len(report.lats)-1]
@@ -440,15 +451,16 @@ func (builder *HttpBuilder) Done(total time.Duration) (protobuf.Message, error) 
 	return report.result, nil
 }
 
-func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, error) {
+func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 	stats := &httpStats{}
 	stats.StatusCodes = make(map[uint32]uint32, 100)
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r, ok := message.(*pb.HTTPResult)
-		if !ok {
-			return nil, fmt.Errorf("cannot cast to http result: %#v", message)
+		r := &httpStats{}
+		err := json.Unmarshal([]byte(message), r)
+		if err != nil {
+			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {
@@ -468,22 +480,20 @@ func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, err
 		stats.RespDuration += r.RespDuration
 		stats.DelayDuration += r.DelayDuration
 
-		if r.Req != nil {
-			stats.Req.Max = math.Max(stats.Req.Max, r.Req.Max)
-			stats.Req.Min = math.Min(stats.Req.Min, r.Req.Min)
+		stats.Req.Max = math.Max(stats.Req.Max, r.Req.Max)
+		stats.Req.Min = math.Min(stats.Req.Min, r.Req.Min)
 
-			stats.Conn.Max = math.Max(stats.Conn.Max, r.Conn.Max)
-			stats.Conn.Min = math.Min(stats.Conn.Min, r.Conn.Min)
+		stats.Conn.Max = math.Max(stats.Conn.Max, r.Conn.Max)
+		stats.Conn.Min = math.Min(stats.Conn.Min, r.Conn.Min)
 
-			stats.Delay.Max = math.Max(stats.Delay.Max, r.Delay.Max)
-			stats.Delay.Min = math.Min(stats.Delay.Min, r.Delay.Min)
+		stats.Delay.Max = math.Max(stats.Delay.Max, r.Delay.Max)
+		stats.Delay.Min = math.Min(stats.Delay.Min, r.Delay.Min)
 
-			stats.Resp.Max = math.Max(stats.Resp.Max, r.Resp.Max)
-			stats.Resp.Min = math.Min(stats.Resp.Min, r.Resp.Min)
+		stats.Resp.Max = math.Max(stats.Resp.Max, r.Resp.Max)
+		stats.Resp.Min = math.Min(stats.Resp.Min, r.Resp.Min)
 
-			stats.Dns.Max = math.Max(stats.Dns.Max, r.Dns.Max)
-			stats.Dns.Min = math.Min(stats.Dns.Min, r.Dns.Min)
-		}
+		stats.Dns.Max = math.Max(stats.Dns.Max, r.Dns.Max)
+		stats.Dns.Min = math.Min(stats.Dns.Min, r.Dns.Min)
 
 		for k, v := range r.StatusCodes {
 			if _, ok := stats.StatusCodes[k]; ok {

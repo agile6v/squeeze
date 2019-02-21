@@ -32,7 +32,7 @@ protoc:
 .PHONY: build
 build:
 	@echo "### Building binary"
-	$(GO_BIN) build -race -ldflags ${VERSION_FLAGS} -o $(BINARY)
+	$(GO_BIN) build -ldflags ${VERSION_FLAGS} -o $(BINARY)
 
 .PHONY: fmt
 fmt:

@@ -57,7 +57,7 @@ func parseInputWithRegexp(input, regx string) ([]string, error) {
 	return matches, nil
 }
 
-func DoRequest(method, host, body string) (string, error) {
+func DoRequest(method, host, body string, timeout time.Duration) (string, error) {
 	req, err := http.NewRequest(method, host, bytes.NewBuffer([]byte(body)))
 	if err != nil {
 		return "", err
@@ -69,7 +69,7 @@ func DoRequest(method, host, body string) (string, error) {
 
 	// Send request
 	client := http.Client{
-		Timeout: time.Duration(5 * time.Second),
+		Timeout: timeout,
 	}
 	resp, err := client.Do(req)
 	if err != nil {

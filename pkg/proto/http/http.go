@@ -15,26 +15,25 @@
 package http
 
 import (
-	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
-	"encoding/json"
-	"net/http"
-	"net/http/httptrace"
-	"net/url"
 	"sort"
 	"time"
+	"context"
+	"crypto/tls"
+	"net/url"
+	"io/ioutil"
+	"net/http"
+	"encoding/json"
+	"net/http/httptrace"
+	"golang.org/x/net/http2"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/version"
 	"github.com/golang/protobuf/jsonpb"
-//	protobuf "github.com/golang/protobuf/proto"
-	"golang.org/x/net/http2"
 )
 
 const maxRes = 1000000
@@ -52,12 +51,16 @@ type LatencyDistribution struct {
 
 type httpStats struct {
 	TotalRequests       int64       `json:"totalRequests,omitempty"`
+	// Total time for running
 	Duration            float64     `json:"duration,omitempty"`
 	FastestReqTime      float64     `json:"fastestReqTime,omitempty"`
 	SlowestReqTime      float64     `json:"slowestReqTime,omitempty"`
 	AvgReqTime          float64     `json:"avgReqTime,omitempty"`
+	// Average response size per request
 	AvgSize             int64       `json:"avgSize,omitempty"`
+	// The sum of all response sizes
 	TotalSize           int64       `json:"totalSize,omitempty"`
+	// Requests per second
 	Rps                 float64     `json:"rps,omitempty"`
 	Dns                 ElapsedInfo `json:"dns,omitempty"`
 	Delay               ElapsedInfo `json:"delay,omitempty"`
@@ -71,6 +74,7 @@ type httpStats struct {
 	ReqDuration         float64      `json:"reqDuration,omitempty"`
 	RespDuration        float64      `json:"respDuration,omitempty"`
 	DelayDuration       float64      `json:"delayDuration,omitempty"`
+	// Total number of requests
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
 	LatencyDistribution []*LatencyDistribution `json:latencyDistribution,omitempty`

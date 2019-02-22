@@ -15,8 +15,7 @@ syntax = "proto3";
 
 package pb;
 
-import "google/protobuf/any.proto";
-
+// SqueezeService definition, used to communication between master and slave
 service SqueezeService {
     rpc ExecuteTask (ExecuteTaskRequest) returns (ExecuteTaskResponse) {}
     rpc HeartBeat (stream HeartBeatRequest) returns (stream HeartBeatResponse) {}
@@ -73,8 +72,7 @@ message ExecuteTaskResponse {
     Status status = 2;
     // When status is equal to FAIL, error will be set
     string error = 3;
-    google.protobuf.Any any = 4;
-    string data = 5;
+    string data = 4;
 }
 
 enum Protocol {

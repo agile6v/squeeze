@@ -24,10 +24,9 @@ import (
 	"time"
 	"encoding/json"
 
+	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/pb"
 	log "github.com/golang/glog"
-	//"github.com/golang/protobuf/ptypes"
-	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 

@@ -15,19 +15,18 @@
 package websocket
 
 import (
-	"context"
 	"fmt"
-	"net/url"
 	"time"
+	"net/url"
+	"context"
 	"encoding/json"
+	"github.com/gorilla/websocket"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
-//	protobuf "github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
 )
 
 const maxRes = 1000000

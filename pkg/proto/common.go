@@ -23,7 +23,6 @@ import (
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/golang/protobuf/jsonpb"
-	//protobuf "github.com/golang/protobuf/proto"
 )
 
 type SqueezeStats struct {

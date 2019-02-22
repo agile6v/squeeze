@@ -25,7 +25,6 @@ import (
 	log "github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	protobuf "github.com/golang/protobuf/proto"
-//	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"

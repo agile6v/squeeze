@@ -30,12 +30,14 @@ var SrvArgs ServerArgs
 type NodeType int
 
 const (
-	//	Client represents the client mode
+	// Client represents the client mode
 	Client NodeType = iota
-	//	Slave represents the slave mode
+	// Slave represents the slave mode
 	Slave
-	//	Master represents the master mode
+	// Master represents the master mode
 	Master
+	// Web represents the web server mode (As the backend server of the UI)
+	Web
 )
 
 func (t NodeType) String() string {
@@ -46,6 +48,8 @@ func (t NodeType) String() string {
 		return "slave"
 	case Master:
 		return "master"
+	case Web:
+		return "web"
 	default:
 		return fmt.Sprintf("%d", t)
 	}
@@ -58,10 +62,10 @@ type AgentStatusResp struct {
 
 type ServerArgs struct {
 	HTTPAddr       string
-	GrpcAddr       string
+	GRPCAddr       string
 
-	MasterAddr     string
-	GrpcMasterAddr string
+	MasterAddr     string   // Master's HTTP Address
+	GrpcMasterAddr string   // Master's GRPC Address
 	ReportInterval time.Duration
 	ResultCapacity int
 }
@@ -82,19 +86,20 @@ type ServerBase struct {
 func NewServer(nodeType NodeType) Server {
 	if nodeType == Master {
 		return &MasterServer{}
-	} else {
+	} else if nodeType == Slave {
 		return &SlaveServer{}
+	} else {
+		return &WebServer{}
 	}
 }
 
 func (s *ServerBase) Initialize(args ServerArgs) error {
 	s.args = args
-	//s.Mode = nodeType
 	s.httpServer = &http.Server{
 		Addr: args.HTTPAddr,
 	}
 
-	_, port, err := util.GetHostPort(s.args.GrpcAddr)
+	_, port, err := util.GetHostPort(s.args.GRPCAddr)
 	if err != nil {
 		return err
 	}

@@ -37,6 +37,7 @@ func init() {
 	RootCmd.AddCommand(MasterCmd)
 	RootCmd.AddCommand(SlaveCmd)
 	RootCmd.AddCommand(ClientCmd)
+	RootCmd.AddCommand(WebCmd)
 	RootCmd.AddCommand(InfoCmd)
 	RootCmd.AddCommand(VersionCmd)
 }

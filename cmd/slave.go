@@ -43,7 +43,7 @@ var SlaveCmd = &cobra.Command{
 		// Start the server
 		err = srv.Start(stopChan)
 		if err != nil {
-			return fmt.Errorf("failed to start master server: %v", err)
+			return fmt.Errorf("failed to start slave server: %v", err)
 		}
 
 		util.WaitSignal(stopChan)
@@ -55,7 +55,7 @@ var SlaveCmd = &cobra.Command{
 func init() {
 	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9998",
 		"Squeeze service HTTP address")
-	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.GrpcAddr, "grpcAddr", ":9997",
+	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.GRPCAddr, "grpcAddr", ":9997",
 		"Squeeze service grpc address")
 	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.MasterAddr, "masterAddr", "",
 		"The address of the master server")

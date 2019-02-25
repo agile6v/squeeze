@@ -73,7 +73,6 @@ var Command = &cobra.Command{
 }
 
 func init() {
-	//  TODO: check the requests and concurrency is valid
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Requests, "requests", "n",
 		math.MaxInt32, "Number of requests to perform")
 	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.Method, "method", "m",

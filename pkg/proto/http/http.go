@@ -448,7 +448,6 @@ func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 	stats.StatusCodes = make(map[uint32]uint32, 100)
 	stats.ErrMap = make(map[string]uint32)
 
-
 	for _, message := range messages {
 		r := &httpStats{}
 		err := json.Unmarshal([]byte(message), r)
@@ -536,7 +535,7 @@ Summary:
   Size/request:	{{ .AvgSize }} bytes{{ end }}
 
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatNumber .Latency }} secs{{ end }}
+  {{ .Percentage }}% in {{ formatNumber .Latency }} secs{{ end }}
 
 Details (average, fastest, slowest):
   DNS+dialup:	{{ formatNumber .AvgReqTime }} secs, {{ formatNumber .FastestReqTime }} secs, {{ formatNumber .SlowestReqTime }} secs

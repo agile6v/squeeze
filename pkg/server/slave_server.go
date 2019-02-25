@@ -54,8 +54,8 @@ func (s *SlaveServer) Initialize(args ServerArgs) error {
 func (s *SlaveServer) Start(stopChan <-chan struct{}) error {
 	// grpc server
 	go func() {
-		log.Infof("grpc listening on %s", s.args.GrpcAddr)
-		listener, err := net.Listen("tcp", s.args.GrpcAddr)
+		log.Infof("grpc listening on %s", s.args.GRPCAddr)
+		listener, err := net.Listen("tcp", s.args.GRPCAddr)
 		if err != nil {
 			log.Fatalf("GRPC failed to listen: %v", err)
 		}

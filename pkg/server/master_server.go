@@ -267,14 +267,6 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			continue
 		}
 
-		//var dynamicAny ptypes.DynamicAny
-		//if err := ptypes.UnmarshalAny(res.Any, &dynamicAny); err != nil {
-		/*var any interface{}
-		err := json.Unmarshal([]byte(res.Data), &any)
-		if err != nil {
-			log.Errorf("Could not unmarshal result from any field: %s", err)
-			return
-		}*/
 		results = append(results, res.Data)
 	}
 
@@ -378,8 +370,8 @@ func (m *MasterServer) Start(stopChan <-chan struct{}) error {
 
 	// grpc server
 	go func() {
-		log.Infof("grpc listening on %s", m.args.GrpcAddr)
-		listener, err := net.Listen("tcp", m.args.GrpcAddr)
+		log.Infof("grpc listening on %s", m.args.GRPCAddr)
+		listener, err := net.Listen("tcp", m.args.GRPCAddr)
 		if err != nil {
 			log.Errorf("GRPC failed to listen: %v", err)
 			return

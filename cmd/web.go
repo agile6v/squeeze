@@ -16,45 +16,43 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/agile6v/squeeze/pkg/server"
+	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/util"
+	"github.com/agile6v/squeeze/pkg/server"
 	"github.com/spf13/cobra"
 )
 
-// MasterCmd represents the master command
-var MasterCmd = &cobra.Command{
-	Use:   "master",
-	Short: "Squeeze master node.",
-	Long:  `Master node is responsible for managing all slave nodes.`,
+// WebCmd represents the web command
+var WebCmd = &cobra.Command{
+	Use:   "web",
+	Short: "Backend server that supports the Squeeze UI.",
+	Long:  `Backend server that supports the Squeeze UI.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("run squeeze with master mode.")
+		fmt.Println("run squeeze with web mode.")
 
 		stopChan := make(chan struct{})
 
 		// Create the server
-		srv := server.NewServer(server.Master)
+		srv := server.NewServer(server.Web)
 
 		// Initialize the server
 		err := srv.Initialize(server.SrvArgs)
 		if err != nil {
-			return fmt.Errorf("failed to initialize master server: %v", err)
+			return fmt.Errorf("failed to initialize web server: %v", err)
 		}
 
 		// Start the server
 		err = srv.Start(stopChan)
 		if err != nil {
-			return fmt.Errorf("failed to start master server: %v", err)
+			return fmt.Errorf("failed to start web server: %v", err)
 		}
 
 		util.WaitSignal(stopChan)
-
 		return nil
 	},
 }
 
 func init() {
-	MasterCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9998",
-		"Squeeze service HTTP address")
-	MasterCmd.PersistentFlags().StringVar(&server.SrvArgs.GRPCAddr, "grpcAddr", ":9997",
-		"Squeeze service grpc address")
+	WebCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
+		"The address and port of the Squeeze master or slave.")
 }

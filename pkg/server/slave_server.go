@@ -17,7 +17,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"math"
 	"net"
 	"net/http"
 	"sync"
@@ -110,12 +109,12 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		Builder:   builder.NewBuilder(req.Protocol),
 		Requests:  int(req.Task.Requests),
 		Workers:   int(req.Task.Concurrency),
+		ResultCapacity: s.args.ResultCapacity,
 		RateLimit: float64(req.Task.RateLimit),
 	}
 
 	if req.Duration > 0 {
 		s.work.Ctx, s.work.Cancel = context.WithTimeout(ctx, time.Duration(req.Duration)*time.Second)
-		s.work.Requests = math.MaxInt32
 	} else {
 		s.work.Ctx, s.work.Cancel = context.WithCancel(ctx)
 	}

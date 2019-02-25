@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"net/http/httptrace"
 	"golang.org/x/net/http2"
+	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
@@ -35,8 +36,6 @@ import (
 	"github.com/agile6v/squeeze/pkg/version"
 	"github.com/golang/protobuf/jsonpb"
 )
-
-const maxRes = 1000000
 
 type ElapsedInfo struct {
 	Max float64     `json:"max,omitempty"`
@@ -106,7 +105,7 @@ type httpReport struct {
 }
 
 func newHttpReport(n int) *httpReport {
-	cap := util.Min(n, maxRes)
+	cap := n
 	return &httpReport{
 		result: &httpStats{
 			ErrMap:   make(map[string]uint32),
@@ -132,20 +131,15 @@ func latencies(report *httpReport) []*LatencyDistribution {
 			j++
 		}
 	}
+
 	res := make([]*LatencyDistribution, len(pctls))
 	for i := 0; i < len(pctls); i++ {
 		if data[i] > 0 {
 			res[i] = &LatencyDistribution{percentage: pctls[i], latency: data[i]}
 		}
 	}
+	log.Infof(">>>>> %v", res)
 	return res
-}
-
-func newElapsedInfo(max, min float64) *ElapsedInfo {
-	return &ElapsedInfo{
-		Max: max,
-		Min: min,
-	}
 }
 
 type HttpBuilder struct {
@@ -179,6 +173,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 					Headers:           ConfigArgs.HttpOpts.Headers,
 					ProxyAddr:         ConfigArgs.HttpOpts.ProxyAddr,
 					ContentType:       ConfigArgs.HttpOpts.ContentType,
+					MaxResults:        int32(ConfigArgs.HttpOpts.MaxResults),
 				},
 			},
 		},
@@ -237,8 +232,7 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
 	task := taskReq.GetHttp()
 
-	builder.report = newHttpReport(int(taskReq.Requests))
-
+	builder.report = newHttpReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
 	httpReq, err := http.NewRequest(task.Method, task.Url, nil)
 	if err != nil {
 		return err
@@ -309,8 +303,8 @@ func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) e
 	return nil
 }
 
-func (builder *HttpBuilder) PreRequest(taskReq *pb.TaskRequest) interface{} {
-	return nil
+func (builder *HttpBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
+	return nil, nil
 }
 
 func (builder *HttpBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
@@ -396,7 +390,7 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 			report.result.TotalSize += res.ContentLength
 		}
 
-		if len(report.resLats) < maxRes {
+		if len(report.resLats) < cap(report.resLats) {
 			report.lats = append(report.lats, res.Duration.Seconds())
 			report.connLats = append(report.connLats, res.ConnDuration.Seconds())
 			report.dnsLats = append(report.dnsLats, res.DnsDuration.Seconds())
@@ -441,12 +435,6 @@ func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	report.result.Conn.Min = report.connLats[0]
 	report.result.Req.Max = report.reqLats[len(report.reqLats)-1]
 	report.result.Req.Min = report.reqLats[0]
-
-	//report.result.Dns = ElapsedInfo{Max: report.dnsLats[len(report.dnsLats)-1], Min: report.dnsLats[0]}
-	//report.result.Delay = newElapsedInfo(report.delayLats[len(report.delayLats)-1], report.delayLats[0])
-	//report.result.Resp = newElapsedInfo(report.resLats[len(report.resLats)-1], report.resLats[0])
-	//report.result.Conn = newElapsedInfo(report.connLats[len(report.connLats)-1], report.connLats[0])
-	//report.result.Req = newElapsedInfo(report.reqLats[len(report.reqLats)-1], report.reqLats[0])
 
 	report.result.FastestReqTime = report.lats[0]
 	report.result.SlowestReqTime = report.lats[len(report.lats)-1]

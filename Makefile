@@ -19,7 +19,7 @@ GIT_TAG ?= $(shell git rev-parse --short HEAD)
 VERSION_FLAGS = "-X github.com/agile6v/squeeze/pkg/version.version=${VERSION} \
  		   -X github.com/agile6v/squeeze/pkg/version.gitRevision=$(GIT_TAG)"
 
-#export GO111MODULE=on
+export GO111MODULE=on
 
 .PHONY: all
 all: protoc build

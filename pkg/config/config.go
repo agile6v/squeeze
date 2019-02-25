@@ -37,6 +37,7 @@ type HttpOptions struct {
 	Body             string
 	ContentType      string
 	BodyFile         string
+	MaxResults       int
 	DisableKeepAlive bool
 }
 
@@ -50,4 +51,5 @@ type WsOptions struct {
 	Timeout     int
 	Duration    int
 	Body        string
+	MaxResults  int
 }

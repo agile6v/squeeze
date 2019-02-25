@@ -41,7 +41,7 @@ type ProtoBuilder interface {
 	// slave side
 	// These functions are executed in the following order
 	Init(context.Context, *pb.TaskRequest) error
-	PreRequest(*pb.TaskRequest) interface{}
+	PreRequest(*pb.TaskRequest) (interface{}, interface{})
 	Request(context.Context, interface{}, *pb.TaskRequest) interface{}
 	PostRequest(interface{}) error
 	Done(time.Duration) (interface{}, error)

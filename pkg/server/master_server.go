@@ -61,7 +61,6 @@ func (m *MasterServer) Initialize(args ServerArgs) error {
 
 func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveConn) (interface{}, error) {
 	count := len(conns)
-
 	var wg sync.WaitGroup
 	m.results = make(chan protobuf.Message, count)
 	mergedResults := make(chan interface{}, 1)

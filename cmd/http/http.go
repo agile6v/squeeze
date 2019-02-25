@@ -15,17 +15,18 @@
 package http
 
 import (
-	"errors"
+	"os"
 	"fmt"
+	"math"
+	"errors"
+	"net/url"
+	"os/signal"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto/http"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
-	"net/url"
-	"os"
-	"os/signal"
 )
 
 var Command = &cobra.Command{
@@ -74,7 +75,7 @@ var Command = &cobra.Command{
 func init() {
 	//  TODO: check the requests and concurrency is valid
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Requests, "requests", "n",
-		0, "Number of requests to perform")
+		math.MaxInt32, "Number of requests to perform")
 	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.Method, "method", "m",
 		"GET", "Method name")
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Concurrency, "concurrency", "c",
@@ -95,6 +96,8 @@ func init() {
 		"", "Request body string")
 	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.ContentType, "content-type", "T",
 		"text/plain", "Content-type header to use for POST/PUT data")
+	Command.PersistentFlags().IntVar(&config.ConfigArgs.HttpOpts.MaxResults, "maxResults", 1000000,
+		"The maximum number of response results that can be used")
 }
 
 func validate(args []string) error {

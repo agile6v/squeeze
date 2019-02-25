@@ -29,8 +29,6 @@ import (
 	log "github.com/golang/glog"
 )
 
-const maxRes = 1000000
-
 type websocketStats struct {
 	TotalSize       int64       `json:"totalSize,omitempty"`
 	Rps             float64     `json:"rps,omitempty"`
@@ -57,7 +55,7 @@ type wsReport struct {
 }
 
 func newWsReport(n int) *wsReport {
-	cap := util.Min(n, maxRes)
+	cap := n
 	return &wsReport{
 		result: &websocketStats{
 			ErrMap: make(map[string]uint32),
@@ -149,29 +147,12 @@ func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int
 }
 
 func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
-	task := taskReq.GetWebsocket()
-
-	builder.report = newWsReport(int(taskReq.Requests))
-
-	dialer := websocket.Dialer{
-		HandshakeTimeout: time.Duration(task.Timeout) * time.Second,
-	}
-
-	u := url.URL{Scheme: task.Scheme, Host: task.Host, Path: task.Path}
-	conn, _, err := dialer.Dial(u.String(), nil)
-	if err != nil {
-		return err
-	}
-
-	builder.Conn = conn
 	return nil
 }
 
-func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) interface{} {
+func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
 	task := taskReq.GetWebsocket()
-
-	builder.report = newWsReport(int(taskReq.Requests))
-
+	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
 	dialer := websocket.Dialer{
 		HandshakeTimeout: time.Duration(task.Timeout) * time.Second,
 	}
@@ -179,10 +160,10 @@ func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) interface{}
 	u := url.URL{Scheme: task.Scheme, Host: task.Host, Path: task.Path}
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
-		return err
+		return nil,  &wsResult{Err: err}
 	}
 
-	return conn
+	return conn, nil
 }
 
 func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
@@ -229,7 +210,7 @@ func (builder *WebSocketBuilder) PostRequest(result interface{}) error {
 			report.result.TotalSize += res.ContentLength
 		}
 
-		if len(report.lats) < maxRes {
+		if len(report.lats) < cap(report.lats) {
 			report.lats = append(report.lats, res.Duration.Seconds())
 		}
 	}
@@ -304,7 +285,6 @@ Summary:
   {{ if gt .TotalSize 0 }}
   Total data:	{{ .TotalSize }} bytes
   Size/request:	{{ .AvgSize }} bytes{{ end }}
-
 
 {{ if gt (len .ErrMap) 0 }}Error distribution:{{ range $err, $num := .ErrMap }}
   [{{ $num }}]	{{ $err }}{{ end }}{{ end }}

@@ -138,7 +138,6 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		return nil, err
 	}
 
-	//any, err := ptypes.MarshalAny(msg)
 	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Errorf("could not marshal message : %v", err)

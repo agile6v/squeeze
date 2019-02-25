@@ -28,7 +28,6 @@ import (
 	"encoding/json"
 	"net/http/httptrace"
 	"golang.org/x/net/http2"
-	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
@@ -44,8 +43,8 @@ type ElapsedInfo struct {
 }
 
 type LatencyDistribution struct {
-	percentage  uint32
-    latency     float64
+	Percentage  uint32
+    Latency     float64
 }
 
 type httpStats struct {
@@ -76,7 +75,9 @@ type httpStats struct {
 	// Total number of requests
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
-	LatencyDistribution []*LatencyDistribution `json:latencyDistribution,omitempty`
+	LatencyDistribution []LatencyDistribution `json:latencyDistribution,omitempty`
+	// time spent per request
+	Lats                []float64    `json:"latencies,omitempty"`
 }
 
 type httpResult struct {
@@ -94,7 +95,6 @@ type httpResult struct {
 
 type httpReport struct {
 	result      *httpStats
-	lats        []float64 // time spent per request
 	connLats    []float64
 	dnsLats     []float64
 	reqLats     []float64
@@ -109,36 +109,37 @@ func newHttpReport(n int) *httpReport {
 	return &httpReport{
 		result: &httpStats{
 			ErrMap:   make(map[string]uint32),
+			Lats:        make([]float64, 0, cap),
 		},
 		connLats:    make([]float64, 0, cap),
 		dnsLats:     make([]float64, 0, cap),
 		reqLats:     make([]float64, 0, cap),
 		resLats:     make([]float64, 0, cap),
 		delayLats:   make([]float64, 0, cap),
-		lats:        make([]float64, 0, cap),
 		statusCodes: make([]int, 0, cap),
 	}
 }
 
-func latencies(report *httpReport) []*LatencyDistribution {
+func latencies(stats *httpStats) []LatencyDistribution {
 	pctls := []uint32{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
-	for i := 0; i < len(report.lats) && j < len(pctls); i++ {
-		current := i * 100 / len(report.lats)
+	for i := 0; i < len(stats.Lats) && j < len(pctls); i++ {
+		current := i * 100 / len(stats.Lats)
 		if uint32(current) >= pctls[j] {
-			data[j] = report.lats[i]
+			data[j] = stats.Lats[i]
 			j++
 		}
 	}
 
-	res := make([]*LatencyDistribution, len(pctls))
+	res := make([]LatencyDistribution, len(pctls))
 	for i := 0; i < len(pctls); i++ {
 		if data[i] > 0 {
-			res[i] = &LatencyDistribution{percentage: pctls[i], latency: data[i]}
+			res[i].Percentage = pctls[i]
+			res[i].Latency = data[i]
 		}
 	}
-	log.Infof(">>>>> %v", res)
+
 	return res
 }
 
@@ -391,7 +392,7 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 		}
 
 		if len(report.resLats) < cap(report.resLats) {
-			report.lats = append(report.lats, res.Duration.Seconds())
+			report.result.Lats = append(report.result.Lats, res.Duration.Seconds())
 			report.connLats = append(report.connLats, res.ConnDuration.Seconds())
 			report.dnsLats = append(report.dnsLats, res.DnsDuration.Seconds())
 			report.reqLats = append(report.reqLats, res.ReqDuration.Seconds())
@@ -414,11 +415,11 @@ func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	}
 
 	report.result.StatusCodes = statusCodes
-	if len(report.lats) == 0 {
+	if len(report.result.Lats) == 0 {
 		return report.result, nil
 	}
 
-	sort.Float64s(report.lats)
+	sort.Float64s(report.result.Lats)
 	sort.Float64s(report.connLats)
 	sort.Float64s(report.dnsLats)
 	sort.Float64s(report.delayLats)
@@ -436,9 +437,8 @@ func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	report.result.Req.Max = report.reqLats[len(report.reqLats)-1]
 	report.result.Req.Min = report.reqLats[0]
 
-	report.result.FastestReqTime = report.lats[0]
-	report.result.SlowestReqTime = report.lats[len(report.lats)-1]
-	report.result.LatencyDistribution = latencies(builder.report)
+	report.result.FastestReqTime = report.result.Lats[0]
+	report.result.SlowestReqTime = report.result.Lats[len(report.result.Lats)-1]
 
 	return report.result, nil
 }
@@ -447,6 +447,7 @@ func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 	stats := &httpStats{}
 	stats.StatusCodes = make(map[uint32]uint32, 100)
 	stats.ErrMap = make(map[string]uint32)
+
 
 	for _, message := range messages {
 		r := &httpStats{}
@@ -502,9 +503,12 @@ func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 				stats.ErrMap[k] = v
 			}
 		}
+		stats.Lats = append(stats.Lats, r.Lats...)
 	}
 
 	if stats.Requests > 0 {
+		sort.Float64s(stats.Lats)
+		stats.LatencyDistribution = latencies(stats)
 		stats.AvgReqTime = stats.TotalDuration / float64(stats.Requests)
 		stats.AvgSize = stats.TotalSize / stats.Requests
 		stats.Req.Avg = stats.ReqDuration / float64(stats.Requests)

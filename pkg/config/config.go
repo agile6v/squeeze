@@ -17,11 +17,12 @@ package config
 var ConfigArgs ProtoConfigArgs
 
 type ProtoConfigArgs struct {
-	HttpAddr string         // Usually used to save the address of the master
-	Callback string         // If it is asynchronous mode, the response
-							// will be sent to the address specified by Callback.
-	HttpOpts HttpOptions    // Parameters of the HTTP protocol
-	WsOpts   WsOptions      // Parameters of the WEBSOCKET protocol
+	HttpAddr    string          // Usually used to save the address of the master
+	Callback    string          // If it is asynchronous mode, the response
+								// will be sent to the address specified by Callback
+	WebOpts     WebOptions      // Parameters of the web command
+	HttpOpts    HttpOptions     // Parameters of the HTTP protocol
+	WsOpts      WsOptions       // Parameters of the WEBSOCKET protocol
 }
 
 // HttpOptions contains http protocol runtime parameters
@@ -53,4 +54,11 @@ type WsOptions struct {
 	Duration    int
 	Body        string
 	MaxResults  int
+}
+
+// WebOptions contains options of the web command
+type WebOptions struct {
+	DSN     string
+	File    string
+	Type    string
 }

@@ -15,9 +15,11 @@
 package server
 
 import (
-	"net/http"
 	"sync"
+	"net/http"
+	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/pb"
+	"github.com/agile6v/squeeze/pkg/server/web/api"
 )
 
 type WebServer struct {
@@ -30,18 +32,29 @@ func (s *WebServer) Initialize(args ServerArgs) error {
 	s.ServerBase.Initialize(args)
 	s.Mode = Web
 
-	http.HandleFunc("/", s.handleInfo)
-	http.HandleFunc("/api/create", s.handleInfo)
-	http.HandleFunc("/api/delete", s.handleInfo)
-	http.HandleFunc("/api/search", s.handleInfo)
-	http.HandleFunc("/api/list", s.handleInfo)
-	http.HandleFunc("/api/start", s.handleInfo)
-	http.HandleFunc("/api/stop", s.handleInfo)
+	api := &api.AppAPI{}
+	api.Init()
 
 	return nil
 }
 
 func (s *WebServer) Start(stopChan <-chan struct{}) error {
+	// http server
+	go func() {
+		log.Infof("http listening on %s", s.httpServer.Addr)
+		err := s.httpServer.ListenAndServe()
+		if err != nil {
+			log.Errorf("Start http server error: %s", err.Error())
+		}
+	}()
+
+	go func() {
+		<-stopChan
+		err := s.httpServer.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 	return nil
 }
 

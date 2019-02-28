@@ -22,6 +22,7 @@ import (
 	"time"
 	"net/http"
 	"regexp"
+	"encoding/json"
 	"github.com/agile6v/squeeze/pkg/version"
 )
 
@@ -102,4 +103,21 @@ func CloneRequest(r *http.Request, body []byte) *http.Request {
 		r2.Body = ioutil.NopCloser(bytes.NewReader(body))
 	}
 	return r2
+}
+
+func ReadBody(r *http.Request, obj interface{}) error {
+	// Read body
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	// Unmarshal
+	err = json.Unmarshal(b, obj)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

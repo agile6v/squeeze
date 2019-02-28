@@ -17,11 +17,12 @@ package api
 import (
 	"net/http"
 	"github.com/agile6v/squeeze/pkg/util"
+	"github.com/agile6v/squeeze/pkg/server/web/controllers"
 )
 
-type AppAPI struct {
+type AppAPI struct {}
 
-}
+
 
 func (api *AppAPI) Init() {
 	http.HandleFunc("/", api.Index)
@@ -31,32 +32,51 @@ func (api *AppAPI) Init() {
 	http.HandleFunc("/api/list", api.list)
 	http.HandleFunc("/api/start", api.start)
 	http.HandleFunc("/api/stop", api.stop)
+	http.HandleFunc("/api/callback", api.callback)
 }
 
-func (api *AppAPI) Index(w http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) Index(w http.ResponseWriter, r *http.Request) {
 	util.RespondWithJSON(w, http.StatusOK, "")
 }
 
-func (api *AppAPI) create(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) create(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	task := &controllers.CreateTask{}
+	err := util.ReadBody(r, task)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = task.Handle()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	util.RespondWithError(w, http.StatusOK, "")
+}
+
+func (api *AppAPI) delete(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (api *AppAPI) delete(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) search(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (api *AppAPI) search(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) list(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (api *AppAPI) list(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) start(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (api *AppAPI) start(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) stop(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (api *AppAPI) stop(writer http.ResponseWriter, request *http.Request) {
+func (api *AppAPI) callback(w http.ResponseWriter, r *http.Request) {
 
 }

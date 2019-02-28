@@ -12,6 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package controllers
+
+import (
+    "strings"
+    "encoding/json"
+    "github.com/agile6v/squeeze/pkg/pb"
+    "github.com/agile6v/squeeze/pkg/proto/builder"
+    "github.com/agile6v/squeeze/pkg/config"
+)
+
+type CreateTask struct {
+    Protocol string
+    Data     json.RawMessage
+}
+
+func (createTask *CreateTask) Handle() error {
+    var err error
+
+    args := config.ProtoConfigArgs{}
+    args.Callback = ""
+    args.HttpAddr = ""
+
+    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
+    builder := builder.NewBuilder(protocol)
+
+    // Unmarshal
+    if protocol == pb.Protocol_HTTP {
+        err = json.Unmarshal(createTask.Data, &args.HttpOpts)
+    } else if protocol == pb.Protocol_WEBSOCKET {
+        err = json.Unmarshal(createTask.Data, &args.WsOpts)
+    } else {
+
+    }
+
+    if err != nil {
+        return err
+    }
+
+    _, err = builder.CreateTask(&args)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
+
+
 
 

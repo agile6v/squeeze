@@ -42,7 +42,11 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}, inden
 }
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	respondWithJSON(w, code, payload, false)
+	data := map[string]interface{} {
+		"error": "",
+		"data": payload,
+	}
+	respondWithJSON(w, code, data, false)
 }
 
 func RespondWithJSONIndent(w http.ResponseWriter, code int, payload interface{}) {
@@ -50,5 +54,9 @@ func RespondWithJSONIndent(w http.ResponseWriter, code int, payload interface{})
 }
 
 func RespondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message}, false)
+	data := map[string]interface{} {
+		"error": message,
+		"data": nil,
+	}
+	respondWithJSON(w, code, data, false)
 }

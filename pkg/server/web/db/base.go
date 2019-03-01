@@ -15,7 +15,6 @@
 package db
 
 import (
-    "errors"
     "github.com/jinzhu/gorm"
     log "github.com/golang/glog"
     "fmt"

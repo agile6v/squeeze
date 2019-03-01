@@ -15,17 +15,12 @@
 package server
 
 import (
-	"sync"
-	"net/http"
 	log "github.com/golang/glog"
-	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/server/web/api"
 )
 
 type WebServer struct {
 	ServerBase
-	lastTaskReq *pb.ExecuteTaskRequest
-	mutex       sync.RWMutex
 }
 
 func (s *WebServer) Initialize(args ServerArgs) error {
@@ -56,8 +51,4 @@ func (s *WebServer) Start(stopChan <-chan struct{}) error {
 		}
 	}()
 	return nil
-}
-
-func (m *WebServer) handleInfo(writer http.ResponseWriter, request *http.Request) {
-
 }

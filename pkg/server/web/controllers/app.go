@@ -15,11 +15,12 @@
 package controllers
 
 import (
-    "strings"
+    //"strings"
     "encoding/json"
-    "github.com/agile6v/squeeze/pkg/pb"
-    "github.com/agile6v/squeeze/pkg/proto/builder"
-    "github.com/agile6v/squeeze/pkg/config"
+    //"github.com/agile6v/squeeze/pkg/pb"
+    //"github.com/agile6v/squeeze/pkg/proto/builder"
+    //"github.com/agile6v/squeeze/pkg/config"
+    "github.com/agile6v/squeeze/pkg/server/web/dao"
 )
 
 type CreateTask struct {
@@ -27,14 +28,34 @@ type CreateTask struct {
     Data     json.RawMessage
 }
 
-func (createTask *CreateTask) Handle() error {
-    var err error
+func (c *CreateTask) Handle(data string) error {
+    err := dao.CreateTask(data)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+type GenericTask struct {
+    ID      int
+}
+
+func (task *GenericTask) Delete() error {
+    err := dao.DeleteTask(task.ID)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+func (task *GenericTask) Start() error {
+    /* var err error
 
     args := config.ProtoConfigArgs{}
     args.Callback = ""
     args.HttpAddr = ""
 
-    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
+    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(startTask.Protocol)])
     builder := builder.NewBuilder(protocol)
 
     // Unmarshal
@@ -53,13 +74,48 @@ func (createTask *CreateTask) Handle() error {
     _, err = builder.CreateTask(&args)
     if err != nil {
         return err
+    }*/
+    return nil
+}
+
+func (task *GenericTask) Stop() error {
+    /* var err error
+
+    args := config.ProtoConfigArgs{}
+    args.Callback = ""
+    args.HttpAddr = ""
+
+    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(startTask.Protocol)])
+    builder := builder.NewBuilder(protocol)
+
+    // Unmarshal
+    if protocol == pb.Protocol_HTTP {
+        err = json.Unmarshal(createTask.Data, &args.HttpOpts)
+    } else if protocol == pb.Protocol_WEBSOCKET {
+        err = json.Unmarshal(createTask.Data, &args.WsOpts)
+    } else {
+
     }
+
+    if err != nil {
+        return err
+    }
+
+    _, err = builder.CreateTask(&args)
+    if err != nil {
+        return err
+    }*/
+    return nil
+}
+
+func (task *GenericTask) Search() error {
 
     return nil
 }
 
-
-
+func ListTask() ([]dao.Task, error) {
+    return dao.ListTask()
+}
 
 
 

@@ -105,19 +105,19 @@ func CloneRequest(r *http.Request, body []byte) *http.Request {
 	return r2
 }
 
-func ReadBody(r *http.Request, obj interface{}) error {
+func ReadBody(r *http.Request, obj interface{}) (string, error) {
 	// Read body
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Unmarshal
 	err = json.Unmarshal(b, obj)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return string(b), nil
 }

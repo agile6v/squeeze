@@ -20,6 +20,8 @@ import (
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/server"
 	"github.com/spf13/cobra"
+	"github.com/agile6v/squeeze/pkg/server/web/db"
+	"github.com/agile6v/squeeze/pkg/server/web/dao"
 )
 
 // WebCmd represents the web command
@@ -44,6 +46,15 @@ var WebCmd = &cobra.Command{
 			return fmt.Errorf("failed to initialize web server: %v", err)
 		}
 
+		err = db.Init(config.ConfigArgs.WebOpts.Type,
+			config.ConfigArgs.WebOpts.DSN,
+			config.ConfigArgs.WebOpts.File)
+		if err != nil {
+			return fmt.Errorf("failed to init database: %v", err)
+		}
+
+		dao.Init()
+
 		// Start the server
 		err = srv.Start(stopChan)
 		if err != nil {
@@ -56,8 +67,10 @@ var WebCmd = &cobra.Command{
 }
 
 func init() {
-	WebCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", "http://127.0.0.1:9998",
-		"The address and port of the Squeeze master or slave.")
+	WebCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9995",
+		"The address and port of the web server.")
+	WebCmd.PersistentFlags().StringVar(&server.SrvArgs.MasterAddr, "masterAddr", "",
+		"The address of the master server")
 	WebCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.DSN, "dsn", "",
 		`Data Source Name. If you specify --type=mysql, need to set this option.
 Format: username:password@protocol(address)/dbname?param=value`)

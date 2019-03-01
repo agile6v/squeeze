@@ -22,8 +22,6 @@ import (
 
 type AppAPI struct {}
 
-
-
 func (api *AppAPI) Init() {
 	http.HandleFunc("/", api.Index)
 	http.HandleFunc("/api/create", api.create)
@@ -42,23 +40,37 @@ func (api *AppAPI) Index(w http.ResponseWriter, r *http.Request) {
 func (api *AppAPI) create(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	task := &controllers.CreateTask{}
-	err := util.ReadBody(r, task)
+	body, err := util.ReadBody(r, task)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	err = task.Handle()
+	err = task.Handle(body)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	util.RespondWithError(w, http.StatusOK, "")
+	util.RespondWithJSON(w, http.StatusOK, nil)
 }
 
 func (api *AppAPI) delete(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	task := &controllers.GenericTask{}
+	_, err := util.ReadBody(r, task)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	err = task.Delete()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, nil)
 }
 
 func (api *AppAPI) search(w http.ResponseWriter, r *http.Request) {
@@ -66,15 +78,49 @@ func (api *AppAPI) search(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *AppAPI) list(w http.ResponseWriter, r *http.Request) {
+	tasks, err := controllers.ListTask()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	util.RespondWithJSON(w, http.StatusOK, tasks)
 }
 
 func (api *AppAPI) start(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	task := &controllers.GenericTask{}
+	_, err := util.ReadBody(r, task)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	err = task.Start()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, nil)
 }
 
 func (api *AppAPI) stop(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	task := &controllers.GenericTask{}
+	_, err := util.ReadBody(r, task)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	err = task.Stop()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	util.RespondWithError(w, http.StatusOK, "")
 }
 
 func (api *AppAPI) callback(w http.ResponseWriter, r *http.Request) {

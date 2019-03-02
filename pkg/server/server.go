@@ -70,13 +70,17 @@ type ServerArgs struct {
 	ResultCapacity int
 }
 
+func NewServerArgs() *ServerArgs {
+	return &ServerArgs{}
+}
+
 type Server interface {
-	Initialize(args ServerArgs) error
+	Initialize(args *ServerArgs) error
 	Start(stopChan <-chan struct{}) error
 }
 
 type ServerBase struct {
-	args       ServerArgs
+	args       *ServerArgs
 	Mode       NodeType
 	httpServer *http.Server
 	grpcServer *grpc.Server
@@ -93,7 +97,7 @@ func NewServer(nodeType NodeType) Server {
 	}
 }
 
-func (s *ServerBase) Initialize(args ServerArgs) error {
+func (s *ServerBase) Initialize(args *ServerArgs) error {
 	s.args = args
 	s.httpServer = &http.Server{
 		Addr: args.HTTPAddr,

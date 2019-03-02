@@ -17,15 +17,11 @@ package controllers
 import (
     "strings"
     "encoding/json"
-    //"github.com/agile6v/squeeze/pkg/pb"
-    //"github.com/agile6v/squeeze/pkg/proto/builder"
-    //"github.com/agile6v/squeeze/pkg/config"
     log "github.com/golang/glog"
     "github.com/agile6v/squeeze/pkg/server/web/dao"
     "github.com/agile6v/squeeze/pkg/config"
     "github.com/agile6v/squeeze/pkg/pb"
     "github.com/agile6v/squeeze/pkg/proto/builder"
-    //"github.com/agile6v/squeeze/pkg/util"
 )
 
 type CreateTask struct {
@@ -52,7 +48,6 @@ func (task *GenericTask) Delete() error {
     }
     return nil
 }
-
 
 func (g *GenericTask) Start(masterAddr, webAddr string) error {
     task, err := dao.SearchTask(g.ID)
@@ -110,7 +105,7 @@ func (g *GenericTask) Stop(masterAddr string) error {
     args.HttpAddr = masterAddr
 
     protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
-    //builder := builder.NewBuilder(protocol)
+    builder := builder.NewBuilder(protocol)
 
     if protocol == pb.Protocol_HTTP {
         err = json.Unmarshal(createTask.Data, &args.HttpOpts)
@@ -124,17 +119,16 @@ func (g *GenericTask) Stop(masterAddr string) error {
         return err
     }
 
-    /*resp, err := builder.(&args)
+    resp, err := builder.CancelTask(&args)
     if err != nil {
         return err
     }
 
-    log.Infof("stop task returns %s", resp)*/
+    log.Infof("stop task returns %s", resp)
     return nil
 }
 
 func (task *GenericTask) Search() error {
-
     return nil
 }
 

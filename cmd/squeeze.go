@@ -34,10 +34,10 @@ func init() {
 	// For https://github.com/kubernetes/kubernetes/issues/17162#issuecomment-225596212
 	flag.CommandLine.Parse([]string{})
 
-	RootCmd.AddCommand(MasterCmd)
-	RootCmd.AddCommand(SlaveCmd)
-	RootCmd.AddCommand(ClientCmd)
-	RootCmd.AddCommand(WebCmd)
-	RootCmd.AddCommand(InfoCmd)
+	RootCmd.AddCommand(MasterCmd())
+	RootCmd.AddCommand(SlaveCmd())
+	RootCmd.AddCommand(ClientCmd())
+	RootCmd.AddCommand(WebCmd())
+	RootCmd.AddCommand(InfoCmd())
 	RootCmd.AddCommand(VersionCmd)
 }

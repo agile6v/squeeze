@@ -43,7 +43,7 @@ type MasterServer struct {
 	results chan protobuf.Message
 }
 
-func (m *MasterServer) Initialize(args ServerArgs) error {
+func (m *MasterServer) Initialize(args *ServerArgs) error {
 	m.ServerBase.Initialize(args)
 	m.Mode = Master
 
@@ -89,7 +89,12 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 				return
 			}
 
-			util.DoRequest("POST", taskReq.Callback, string(data), 30)
+			resp, err := util.DoRequest("POST", taskReq.Callback, string(data), 30)
+			if err != nil {
+				log.Errorf("Failed to send results to callback address: %s, %s", err.Error(), resp)
+				return
+			}
+			log.Infof("Send results to callback address successfully: %s", resp)
 		}()
 
 		return "success", nil

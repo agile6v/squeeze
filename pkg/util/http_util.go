@@ -67,10 +67,10 @@ func DoRequest(method, host, body string, timeout time.Duration) (string, error)
 	header := make(http.Header)
 	header.Set("User-Agent", version.GetVersion())
 	req.Header = header
-
+	
 	// Send request
 	client := http.Client{
-		Timeout: timeout,
+		Timeout: time.Duration(timeout * time.Second),
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -113,10 +113,12 @@ func ReadBody(r *http.Request, obj interface{}) (string, error) {
 		return "", err
 	}
 
-	// Unmarshal
-	err = json.Unmarshal(b, obj)
-	if err != nil {
-		return "", err
+	if obj != nil {
+		// Unmarshal
+		err = json.Unmarshal(b, obj)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return string(b), nil

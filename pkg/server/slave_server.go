@@ -36,7 +36,7 @@ type SlaveServer struct {
 	mutex       sync.RWMutex
 }
 
-func (s *SlaveServer) Initialize(args ServerArgs) error {
+func (s *SlaveServer) Initialize(args *ServerArgs) error {
 	s.ServerBase.Initialize(args)
 	s.Mode = Slave
 

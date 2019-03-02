@@ -23,9 +23,9 @@ import (
 	"os/signal"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto/websocket"
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
+	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
 var Command = &cobra.Command{
@@ -37,14 +37,14 @@ var Command = &cobra.Command{
 		return validate(args)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		builder := websocket.NewBuilder()
+		builder := builder.NewBuilder(pb.Protocol_WEBSOCKET)
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 		go func() {
 			<-c
 			fmt.Printf("\nCanceling...\n")
-			_, err := builder.CancelTask(&config.ConfigArgs, pb.Protocol_WEBSOCKET)
+			_, err := builder.CancelTask(&config.ConfigArgs)
 			if err != nil {
 				log.Errorf("failed to cancel task %s", err)
 			}

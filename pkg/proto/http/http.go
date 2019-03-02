@@ -30,7 +30,6 @@ import (
 	"golang.org/x/net/http2"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/version"
 	"github.com/golang/protobuf/jsonpb"
@@ -47,7 +46,7 @@ type LatencyDistribution struct {
     Latency     float64
 }
 
-type httpStats struct {
+type HttpStats struct {
 	TotalRequests       int64       `json:"totalRequests,omitempty"`
 	// Total time for running
 	Duration            float64     `json:"duration,omitempty"`
@@ -94,7 +93,7 @@ type httpResult struct {
 }
 
 type httpReport struct {
-	result      *httpStats
+	result      *HttpStats
 	connLats    []float64
 	dnsLats     []float64
 	reqLats     []float64
@@ -107,7 +106,7 @@ type httpReport struct {
 func newHttpReport(n int) *httpReport {
 	cap := n
 	return &httpReport{
-		result: &httpStats{
+		result: &HttpStats{
 			ErrMap:   make(map[string]uint32),
 			Lats:        make([]float64, 0, cap),
 		},
@@ -120,7 +119,7 @@ func newHttpReport(n int) *httpReport {
 	}
 }
 
-func latencies(stats *httpStats) []LatencyDistribution {
+func latencies(stats *HttpStats) []LatencyDistribution {
 	pctls := []uint32{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
@@ -144,17 +143,20 @@ func latencies(stats *httpStats) []LatencyDistribution {
 }
 
 type HttpBuilder struct {
-	*proto.ProtoBuilderBase
 	report     *httpReport
 	HttpReq    *http.Request
 	HttpClient *http.Client
 }
 
 func NewBuilder() *HttpBuilder {
-	return &HttpBuilder{&proto.ProtoBuilderBase{Template: &resultTemplate, Stats: &httpStats{}}, nil, nil, nil}
+	return &HttpBuilder{}
 }
 
 func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+	if ConfigArgs.HttpOpts.Duration > 0 {
+		ConfigArgs.HttpOpts.Requests = math.MaxInt32
+	}
+
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
@@ -444,12 +446,12 @@ func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 }
 
 func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
-	stats := &httpStats{}
+	stats := &HttpStats{}
 	stats.StatusCodes = make(map[uint32]uint32, 100)
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r := &httpStats{}
+		r := &HttpStats{}
 		err := json.Unmarshal([]byte(message), r)
 		if err != nil {
 			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
@@ -516,13 +518,14 @@ func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 		stats.Resp.Avg = stats.RespDuration / float64(stats.Requests)
 		stats.Delay.Avg = stats.DelayDuration / float64(stats.Requests)
 		stats.Rps = float64(stats.TotalRequests) / stats.Duration
+		stats.Lats = nil
 	}
 
 	return stats, nil
 }
 
 var (
-	resultTemplate = `
+	ResultTmpl = `
 Summary:
   Requests:	{{ formatNumberInt64 .TotalRequests }}
   Total:	{{ formatNumber .Duration }} secs

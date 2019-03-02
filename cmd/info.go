@@ -21,23 +21,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// InfoCmd represents the info command
-var InfoCmd = &cobra.Command{
-	Use:   "info",
-	Short: "Show information about the squeeze cluster.",
-	Long:  `Show information about the squeeze cluster.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		resp, err := util.DoRequest("GET", config.ConfigArgs.HttpAddr+"/info", "", 5)
-		if err != nil {
-			return err
-		}
+func InfoCmd() *cobra.Command {
+	// infoCmd represents the info command
+	infoCmd := &cobra.Command{
+		Use:   "info",
+		Short: "Show information about the squeeze cluster.",
+		Long:  `Show information about the squeeze cluster.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			resp, err := util.DoRequest("GET", config.ConfigArgs.HttpAddr+"/info", "", 5)
+			if err != nil {
+				return err
+			}
 
-		fmt.Printf("Info: %s\n", resp)
-		return nil
-	},
-}
+			fmt.Printf("Info: %s\n", resp)
+			return nil
+		},
+	}
 
-func init() {
-	InfoCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
+	infoCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
 		"The address and port of the Squeeze master or slave.")
+	return infoCmd
 }
+
+

@@ -24,12 +24,11 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
 )
 
-type websocketStats struct {
+type WebsocketStats struct {
 	TotalSize       int64       `json:"totalSize,omitempty"`
 	Rps             float64     `json:"rps,omitempty"`
 	Duration        float64     `json:"duration,omitempty"`
@@ -50,14 +49,14 @@ type wsResult struct {
 }
 
 type wsReport struct {
-	result *websocketStats
+	result *WebsocketStats
 	lats   []float64 // time spent per request
 }
 
 func newWsReport(n int) *wsReport {
 	cap := n
 	return &wsReport{
-		result: &websocketStats{
+		result: &WebsocketStats{
 			ErrMap: make(map[string]uint32),
 		},
 		lats: make([]float64, 0, cap),
@@ -65,13 +64,12 @@ func newWsReport(n int) *wsReport {
 }
 
 type WebSocketBuilder struct {
-	*proto.ProtoBuilderBase
 	Conn   *websocket.Conn
 	report *wsReport
 }
 
 func NewBuilder() *WebSocketBuilder {
-	return &WebSocketBuilder{&proto.ProtoBuilderBase{Template: &resultTemplate, Stats: &websocketStats{}}, nil, nil}
+	return &WebSocketBuilder{}
 }
 
 func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
@@ -240,14 +238,14 @@ func (builder *WebSocketBuilder) Done(total time.Duration) (interface{}, error) 
 }
 
 func (builder *WebSocketBuilder) Merge(messages []string) (interface{}, error) {
-	stats := &websocketStats{}
+	stats := &WebsocketStats{}
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r := &websocketStats{}
+		r := &WebsocketStats{}
 		err := json.Unmarshal([]byte(message), r)
 		if err != nil {
-			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
+			return nil, fmt.Errorf("cannot cast to WebsocketStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {
@@ -277,7 +275,7 @@ func (builder *WebSocketBuilder) Merge(messages []string) (interface{}, error) {
 }
 
 var (
-	resultTemplate = `
+	ResultTmpl = `
 Summary:
   Requests:	{{ formatNumberInt64 .TotalRequests }}
   Total:	{{ formatNumber .Duration }} secs

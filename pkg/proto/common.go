@@ -34,7 +34,7 @@ type SqueezeStats struct {
 
 type SqueezeResponse struct {
 	AgentStats []SqueezeStats `json:"agent_stats"`
-	Result     interface{}  `json:"result"`
+	Result     interface{}    `json:"result"`
 }
 
 type ProtoBuilder interface {
@@ -55,14 +55,14 @@ type ProtoBuilder interface {
 }
 
 type ProtoBuilderBase struct {
+	ProtoBuilder
 	Template *string
 	Stats    interface{}
 }
 
-func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs, protocol pb.Protocol) (string, error) {
+func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_STOP,
-		Protocol: protocol,
 		Callback: ConfigArgs.Callback,
 	}
 

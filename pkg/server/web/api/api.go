@@ -16,6 +16,7 @@ package api
 
 import (
 	"net/http"
+	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/server/web/controllers"
 )
@@ -129,4 +130,12 @@ func (api *AppAPI) stop(w http.ResponseWriter, r *http.Request) {
 
 func (api *AppAPI) callback(w http.ResponseWriter, r *http.Request) {
 
+	body, err := util.ReadBody(r, nil)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Infof("Recv results: %s", body)
+	util.RespondWithJSON(w, http.StatusOK, nil)
 }

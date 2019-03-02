@@ -24,61 +24,66 @@ import (
 	"github.com/agile6v/squeeze/pkg/server/web/dao"
 )
 
-// WebCmd represents the web command
-var WebCmd = &cobra.Command{
-	Use:   "web",
-	Short: "Backend server that supports the Squeeze UI.",
-	Long:  `Backend server that supports the Squeeze UI.`,
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return validate(args)
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("run squeeze with web mode.")
+func WebCmd() *cobra.Command {
+	serverArgs := server.NewServerArgs()
 
-		stopChan := make(chan struct{})
+	// webCmd represents the web command
+	webCmd := &cobra.Command{
+		Use:   "web",
+		Short: "Backend server that supports the Squeeze UI.",
+		Long:  `Backend server that supports the Squeeze UI.`,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return validate(args)
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("run squeeze with web mode.")
 
-		// Create the server
-		srv := server.NewServer(server.Web)
+			stopChan := make(chan struct{})
 
-		// Initialize the server
-		err := srv.Initialize(server.SrvArgs)
-		if err != nil {
-			return fmt.Errorf("failed to initialize web server: %v", err)
-		}
+			// Create the server
+			srv := server.NewServer(server.Web)
 
-		err = db.Init(config.ConfigArgs.WebOpts.Type,
-			config.ConfigArgs.WebOpts.DSN,
-			config.ConfigArgs.WebOpts.File)
-		if err != nil {
-			return fmt.Errorf("failed to init database: %v", err)
-		}
+			// Initialize the server
+			err := srv.Initialize(serverArgs)
+			if err != nil {
+				return fmt.Errorf("failed to initialize web server: %v", err)
+			}
 
-		dao.Init()
+			err = db.Init(config.ConfigArgs.WebOpts.Type,
+				config.ConfigArgs.WebOpts.DSN,
+				config.ConfigArgs.WebOpts.File)
+			if err != nil {
+				return fmt.Errorf("failed to init database: %v", err)
+			}
 
-		// Start the server
-		err = srv.Start(stopChan)
-		if err != nil {
-			return fmt.Errorf("failed to start web server: %v", err)
-		}
+			dao.Init()
 
-		util.WaitSignal(stopChan)
-		return nil
-	},
-}
+			// Start the server
+			err = srv.Start(stopChan)
+			if err != nil {
+				return fmt.Errorf("failed to start web server: %v", err)
+			}
 
-func init() {
-	WebCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9995",
+			util.WaitSignal(stopChan)
+			return nil
+		},
+	}
+
+	webCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9991",
 		"The address and port of the web server.")
-	WebCmd.PersistentFlags().StringVar(&server.SrvArgs.MasterAddr, "masterAddr", "",
+	webCmd.PersistentFlags().StringVar(&serverArgs.MasterAddr, "masterAddr", "",
 		"The address of the master server")
-	WebCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.DSN, "dsn", "",
+	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.DSN, "dsn", "",
 		`Data Source Name. If you specify --type=mysql, need to set this option.
 Format: username:password@protocol(address)/dbname?param=value`)
-	WebCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.File, "file", "/tmp/sqlite.db",
+	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.File, "file", "/tmp/sqlite.db",
 		"SQLite database files. If you specify --type=sqlite, need to set this option.")
-	WebCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.Type, "type", "sqlite",
+	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.Type, "type", "sqlite",
 		"The type of the database, one of the mysql and sqlite.")
-	WebCmd.MarkPersistentFlagRequired("type")
+	webCmd.MarkPersistentFlagRequired("type")
+	webCmd.MarkPersistentFlagRequired("masterAddr")
+
+	return webCmd
 }
 
 func validate(args []string) error {

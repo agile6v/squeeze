@@ -83,7 +83,10 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			// and then read the merged results.
 			response := <-mergedResults
 
-			data, err := json.Marshal(response)
+			data, err := json.Marshal(map[string]interface{} {
+				"error": "",
+				"data": response,
+			})
 			if err != nil {
 				log.Errorf("unable to marshal data : %v", err)
 				return
@@ -253,7 +256,7 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Protocol) {
 	builder := builder.NewBuilder(protocol)
 	results := make([]string, 0)
-	squeezeResponse := &proto.SqueezeResponse{Result: nil}
+	SqueezeResult := &proto.SqueezeResult{Result: nil}
 
 	for r := range m.results {
 		res, ok := r.(*pb.ExecuteTaskResponse)
@@ -262,7 +265,7 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			continue
 		}
 
-		squeezeResponse.AgentStats = append(squeezeResponse.AgentStats, proto.SqueezeStats{
+		SqueezeResult.AgentStats = append(SqueezeResult.AgentStats, proto.SqueezeStats{
 			Addr: res.Addr,
 			Status: int32(res.Status),
 			Error: res.Error},
@@ -281,10 +284,10 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			log.Error("failed to merge result, ", err.Error())
 			return
 		}
-		squeezeResponse.Result = ret
+		SqueezeResult.Result = ret
 	}
 
-	aggregation <- squeezeResponse
+	aggregation <- SqueezeResult
 }
 
 func (m *MasterServer) handleInfo(writer http.ResponseWriter, request *http.Request) {

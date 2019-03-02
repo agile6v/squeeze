@@ -29,10 +29,14 @@ type SqueezeStats struct {
 	Addr    string  `json:"addr"`
 	Status  int32   `json:"status"`
 	Error   string  `json:"error"`
-	//Stats   interface{}``
 }
 
 type SqueezeResponse struct {
+	Data   *SqueezeResult `json:"data"`
+	Error   string        `json:"error"`
+}
+
+type SqueezeResult struct {
 	AgentStats []SqueezeStats `json:"agent_stats"`
 	Result     interface{}    `json:"result"`
 }
@@ -81,15 +85,19 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (s
 
 func (proto *ProtoBuilderBase) Render(data string) (string, error) {
 	response := &SqueezeResponse{
-		Result: proto.Stats,
+		Data: &SqueezeResult{
+			Result: proto.Stats,
+		},
+		Error: "",
 	}
+
 	err := json.Unmarshal([]byte(data), response)
 	if err != nil {
 		return "", err
 	}
 
 	buf := &bytes.Buffer{}
-	if response.Result == nil {
+	if response.Data.Result == nil {
 		if err := util.NewTemplate(errorTemplate).Execute(buf, response); err != nil {
 			return "", err
 		}

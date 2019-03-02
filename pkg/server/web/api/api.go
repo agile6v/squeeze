@@ -20,7 +20,11 @@ import (
 	"github.com/agile6v/squeeze/pkg/server/web/controllers"
 )
 
-type AppAPI struct {}
+type AppAPI struct {
+	MasterAddr string
+	HTTPAddr   string
+	LocalAddr  string
+}
 
 func (api *AppAPI) Init() {
 	http.HandleFunc("/", api.Index)
@@ -96,7 +100,7 @@ func (api *AppAPI) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = task.Start()
+	err = task.Start(api.MasterAddr, api.LocalAddr)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -114,7 +118,7 @@ func (api *AppAPI) stop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = task.Stop()
+	err = task.Stop(api.MasterAddr)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return

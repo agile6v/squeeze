@@ -15,12 +15,17 @@
 package controllers
 
 import (
-    //"strings"
+    "strings"
     "encoding/json"
     //"github.com/agile6v/squeeze/pkg/pb"
     //"github.com/agile6v/squeeze/pkg/proto/builder"
     //"github.com/agile6v/squeeze/pkg/config"
+    log "github.com/golang/glog"
     "github.com/agile6v/squeeze/pkg/server/web/dao"
+    "github.com/agile6v/squeeze/pkg/config"
+    "github.com/agile6v/squeeze/pkg/pb"
+    "github.com/agile6v/squeeze/pkg/proto/builder"
+    //"github.com/agile6v/squeeze/pkg/util"
 )
 
 type CreateTask struct {
@@ -48,63 +53,83 @@ func (task *GenericTask) Delete() error {
     return nil
 }
 
-func (task *GenericTask) Start() error {
-    /* var err error
+
+func (g *GenericTask) Start(masterAddr, webAddr string) error {
+    task, err := dao.SearchTask(g.ID)
+    if err != nil {
+        return err
+    }
+
+    createTask := &CreateTask{}
+    err = json.Unmarshal([]byte(task.Request), createTask)
+    if err != nil {
+        return err
+    }
 
     args := config.ProtoConfigArgs{}
-    args.Callback = ""
-    args.HttpAddr = ""
+    args.Callback = "http://" + webAddr + "/api/callback"
+    args.HttpAddr = masterAddr
 
-    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(startTask.Protocol)])
+    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
     builder := builder.NewBuilder(protocol)
 
-    // Unmarshal
     if protocol == pb.Protocol_HTTP {
         err = json.Unmarshal(createTask.Data, &args.HttpOpts)
     } else if protocol == pb.Protocol_WEBSOCKET {
         err = json.Unmarshal(createTask.Data, &args.WsOpts)
     } else {
-
+        // TODO: error
     }
 
     if err != nil {
         return err
     }
 
-    _, err = builder.CreateTask(&args)
+    resp, err := builder.CreateTask(&args)
     if err != nil {
         return err
-    }*/
+    }
+
+    log.Infof("start task returns %s", resp)
     return nil
 }
 
-func (task *GenericTask) Stop() error {
-    /* var err error
+func (g *GenericTask) Stop(masterAddr string) error {
+    task, err := dao.SearchTask(g.ID)
+    if err != nil {
+        return err
+    }
+
+    createTask := &CreateTask{}
+    err = json.Unmarshal([]byte(task.Request), createTask)
+    if err != nil {
+        return err
+    }
 
     args := config.ProtoConfigArgs{}
-    args.Callback = ""
-    args.HttpAddr = ""
+    args.HttpAddr = masterAddr
 
-    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(startTask.Protocol)])
-    builder := builder.NewBuilder(protocol)
+    protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
+    //builder := builder.NewBuilder(protocol)
 
-    // Unmarshal
     if protocol == pb.Protocol_HTTP {
         err = json.Unmarshal(createTask.Data, &args.HttpOpts)
     } else if protocol == pb.Protocol_WEBSOCKET {
         err = json.Unmarshal(createTask.Data, &args.WsOpts)
     } else {
-
+        // TODO: error
     }
 
     if err != nil {
         return err
     }
 
-    _, err = builder.CreateTask(&args)
+    /*resp, err := builder.(&args)
     if err != nil {
         return err
-    }*/
+    }
+
+    log.Infof("stop task returns %s", resp)*/
     return nil
 }
 

@@ -15,8 +15,10 @@
 package server
 
 import (
+	"net/url"
 	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/server/web/api"
+	"github.com/agile6v/squeeze/pkg/util"
 )
 
 type WebServer struct {
@@ -27,7 +29,22 @@ func (s *WebServer) Initialize(args ServerArgs) error {
 	s.ServerBase.Initialize(args)
 	s.Mode = Web
 
-	api := &api.AppAPI{}
+	ip, err := util.ExternalIP()
+	if err != nil {
+		return err
+	}
+
+	u, err := url.Parse(args.HTTPAddr)
+	if err != nil {
+		return err
+	}
+
+	api := &api.AppAPI{
+		MasterAddr: s.args.MasterAddr,
+		HTTPAddr: s.args.HTTPAddr,
+		LocalAddr: ip + ":" + u.Port(),
+	}
+
 	api.Init()
 
 	return nil

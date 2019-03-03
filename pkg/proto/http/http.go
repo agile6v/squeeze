@@ -158,6 +158,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 	}
 
 	req := &pb.ExecuteTaskRequest{
+		Id:       uint32(ConfigArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
 		Callback: ConfigArgs.Callback,

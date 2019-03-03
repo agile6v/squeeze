@@ -74,6 +74,7 @@ func NewBuilder() *WebSocketBuilder {
 
 func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
+		Id:       uint32(ConfigArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_WEBSOCKET,
 		Callback: ConfigArgs.Callback,

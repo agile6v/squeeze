@@ -45,6 +45,16 @@ func CreateTask(reqData string) error {
     return nil
 }
 
+func UpdateTaskResponse(id int, data string) error {
+    orm := db.GetOrm()
+    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Response: data}).Error
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 func DeleteTask(id int) error {
     orm := db.GetOrm()
     err := orm.Delete(&Task{Id: id}).Error

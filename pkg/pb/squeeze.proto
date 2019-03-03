@@ -68,7 +68,8 @@ message ExecuteTaskRequest {
     Protocol protocol = 2;
     string callback = 3;
     uint32 duration = 4;
-    TaskRequest task = 8;
+    uint32 id = 5;
+    TaskRequest task = 6;
 }
 
 // ExecuteTaskResponse for ExecuteTaskRequest, is used to report the results of this execution task.

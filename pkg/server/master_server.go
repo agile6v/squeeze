@@ -66,7 +66,7 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 	mergedResults := make(chan interface{}, 1)
 
 	go func(mergedResults chan interface{}) {
-		m.runCollector(mergedResults, taskReq.Protocol)
+		m.runCollector(mergedResults, taskReq)
 	}(mergedResults)
 
 	if taskReq.Callback != "" {
@@ -253,10 +253,13 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // runCollector is used to collect results which all slaves generated.
-func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Protocol) {
-	builder := builder.NewBuilder(protocol)
+func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.ExecuteTaskRequest) {
+	builder := builder.NewBuilder(taskReq.Protocol)
 	results := make([]string, 0)
-	SqueezeResult := &proto.SqueezeResult{Result: nil}
+	SqueezeResult := &proto.SqueezeResult{
+		ID: taskReq.Id,
+		Result: nil,
+	}
 
 	for r := range m.results {
 		res, ok := r.(*pb.ExecuteTaskResponse)

@@ -17,6 +17,7 @@ package config
 var ConfigArgs ProtoConfigArgs
 
 type ProtoConfigArgs struct {
+	ID          int             // The ID of the task
 	HttpAddr    string          // Usually used to save the address of the master
 	Callback    string          // If it is asynchronous mode, the response
 								// will be sent to the address specified by Callback

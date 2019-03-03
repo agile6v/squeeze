@@ -21,6 +21,7 @@ import (
     "github.com/agile6v/squeeze/pkg/server/web/dao"
     "github.com/agile6v/squeeze/pkg/config"
     "github.com/agile6v/squeeze/pkg/pb"
+    "github.com/agile6v/squeeze/pkg/proto"
     "github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
@@ -64,6 +65,7 @@ func (g *GenericTask) Start(masterAddr, webAddr string) error {
     args := config.ProtoConfigArgs{}
     args.Callback = "http://" + webAddr + "/api/callback"
     args.HttpAddr = masterAddr
+    args.ID = task.Id
 
     protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
     builder := builder.NewBuilder(protocol)
@@ -134,6 +136,23 @@ func (task *GenericTask) Search() error {
 
 func ListTask() ([]dao.Task, error) {
     return dao.ListTask()
+}
+
+func HandleCallback(data string) error {
+    response := &proto.SqueezeResponse{}
+    err := json.Unmarshal([]byte(data), response)
+    if err != nil {
+        return err
+    }
+
+    id := response.Data.ID
+
+    err = dao.UpdateTaskResponse(int(id), data)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 

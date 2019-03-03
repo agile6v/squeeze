@@ -37,6 +37,7 @@ type SqueezeResponse struct {
 }
 
 type SqueezeResult struct {
+	ID         uint32         `json:"id"`
 	AgentStats []SqueezeStats `json:"agent_stats"`
 	Result     interface{}    `json:"result"`
 }

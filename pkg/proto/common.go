@@ -99,7 +99,7 @@ func (proto *ProtoBuilderBase) Render(data string) (string, error) {
 
 	buf := &bytes.Buffer{}
 	if response.Data.Result == nil {
-		if err := util.NewTemplate(errorTemplate).Execute(buf, response); err != nil {
+		if err := util.NewTemplate(ErrorTemplate).Execute(buf, response); err != nil {
 			return "", err
 		}
 	} else {
@@ -112,7 +112,7 @@ func (proto *ProtoBuilderBase) Render(data string) (string, error) {
 }
 
 var (
-	errorTemplate = `
+	ErrorTemplate = `
 Summary:
 {{ range .AgentStats }}
   Agent: {{ .Addr }}, {{ if eq .Status 0 }}SUCCESS{{ else }}FAILED{{ end }}, {{ .Error }}

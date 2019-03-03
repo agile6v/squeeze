@@ -201,7 +201,7 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 
 	if count > int(request.Task.Concurrency) {
 		count = int(request.Task.Concurrency)
-	} else if (count > int(request.Task.Requests)) {
+	} else if count > int(request.Task.Requests) {
 		count = int(request.Task.Requests)
 	}
 

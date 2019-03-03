@@ -16,9 +16,13 @@ package cmd
 
 import (
 	"fmt"
+	"bytes"
+	"encoding/json"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/spf13/cobra"
+	log "github.com/golang/glog"
+	"github.com/agile6v/squeeze/pkg/server"
 )
 
 func InfoCmd() *cobra.Command {
@@ -33,7 +37,15 @@ func InfoCmd() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Info: %s\n", resp)
+			status := &ClusterInfo{}
+			ret, err := render(resp, &InfoTemplate, status)
+			if err != nil {
+				log.Errorf("failed to render response, %s", err)
+				return err
+			}
+
+			fmt.Printf("%s", ret)
+
 			return nil
 		},
 	}
@@ -42,5 +54,33 @@ func InfoCmd() *cobra.Command {
 		"The address and port of the Squeeze master or slave.")
 	return infoCmd
 }
+
+type ClusterInfo struct {
+	Data   []server.AgentStatusResp `json:"data"`
+	Error  string                   `json:"error"`
+}
+
+func render(data string, tmpl *string, stats *ClusterInfo) (string, error) {
+	err := json.Unmarshal([]byte(data), stats)
+	if err != nil {
+		return "", err
+	}
+
+	buf := &bytes.Buffer{}
+	if err := util.NewTemplate(*tmpl).Execute(buf, stats.Data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+var (
+	InfoTemplate = `
+Cluster Information:
+{{ range . }}
+  Agent: {{ .Addr }}, {{ .Status }}
+{{ end }}
+`
+)
 
 

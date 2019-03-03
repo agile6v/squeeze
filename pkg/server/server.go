@@ -58,6 +58,7 @@ func (t NodeType) String() string {
 type AgentStatusResp struct {
 	ConnID string `json:"id"`
 	Addr   string `json:"addr"`
+	Status string `json:"status"`
 }
 
 type ServerArgs struct {
@@ -66,7 +67,7 @@ type ServerArgs struct {
 
 	MasterAddr     string   // Master's HTTP Address
 	GrpcMasterAddr string   // Master's GRPC Address
-	ReportInterval time.Duration
+	ReportInterval time.Duration // Heartbeat reporting interval
 	ResultCapacity int
 }
 
@@ -121,6 +122,13 @@ func (s *ServerBase) addConn(connID string, conn *SlaveConn) {
 	defer slaveConnsMutex.Unlock()
 
 	slaveConns[connID] = conn
+}
+
+func (s *ServerBase) updateConn(connID string, status string) {
+	slaveConnsMutex.Lock()
+	defer slaveConnsMutex.Unlock()
+
+	slaveConns[connID].Status = status
 }
 
 func (s *ServerBase) removeConn(connID string, conn *SlaveConn) {

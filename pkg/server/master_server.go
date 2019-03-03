@@ -293,15 +293,15 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.Ex
 	aggregation <- SqueezeResult
 }
 
-func (m *MasterServer) handleInfo(writer http.ResponseWriter, request *http.Request) {
+func (m *MasterServer) handleInfo(w http.ResponseWriter, r *http.Request) {
 	resp := []AgentStatusResp{}
 	slaveConnsMutex.Lock()
 	for connID, c := range slaveConns {
-		resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr})
+		resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr, Status: c.Status})
 	}
 	slaveConnsMutex.Unlock()
 
-	json.NewEncoder(writer).Encode(resp)
+	util.RespondWithJSON(w, http.StatusOK, resp)
 }
 
 func (m *MasterServer) ExecuteTask(ctx context.Context, in *pb.ExecuteTaskRequest) (*pb.ExecuteTaskResponse, error) {
@@ -342,6 +342,8 @@ func (m *MasterServer) HeartBeat(stream pb.SqueezeService_HeartBeatServer) error
 				m.addConn(conn.ConnID, conn)
 				defer m.removeConn(conn.ConnID, conn)
 			}
+
+			m.updateConn(conn.ConnID, pb.HeartBeatRequest_Task_Status_name[int32(req.Task.Status)])
 
 			if err := stream.Send(&pb.HeartBeatResponse{}); err != nil {
 				log.Error("send failed.")

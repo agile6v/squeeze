@@ -41,6 +41,7 @@ type SlaveConn struct {
 	added    bool
 	ConnID   string
 	GrpcPort int
+	Status   string
 }
 
 func newSlaveConn(addr string, stream SlaveStream) *SlaveConn {

@@ -170,6 +170,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 			Type: &pb.TaskRequest_Http{
 				Http: &pb.HttpTask{
 					Url:               ConfigArgs.HttpOpts.URL,
+					Http2:             ConfigArgs.HttpOpts.HTTP2,
 					Method:            ConfigArgs.HttpOpts.Method,
 					Body:              ConfigArgs.HttpOpts.Body,
 					Timeout:           uint32(ConfigArgs.HttpOpts.Timeout),

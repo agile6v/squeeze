@@ -29,6 +29,7 @@ type ProtoConfigArgs struct {
 // HttpOptions contains http protocol runtime parameters
 type HttpOptions struct {
 	URL              string
+	HTTP2            bool
 	Requests         int
 	Method           string
 	ProxyAddr        string

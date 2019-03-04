@@ -97,6 +97,8 @@ func init() {
 		"text/plain", "Content-type header to use for POST/PUT data")
 	Command.PersistentFlags().IntVar(&config.ConfigArgs.HttpOpts.MaxResults, "maxResults", 1000000,
 		"The maximum number of response results that can be used")
+	Command.PersistentFlags().BoolVar(&config.ConfigArgs.HttpOpts.HTTP2, "http2",
+		false, "Enable http2")
 }
 
 func validate(args []string) error {

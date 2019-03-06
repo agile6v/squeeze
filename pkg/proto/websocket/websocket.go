@@ -15,23 +15,20 @@
 package websocket
 
 import (
-	"context"
 	"fmt"
+	"time"
+	"net/url"
+	"context"
+	"encoding/json"
+	"github.com/gorilla/websocket"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
-	"net/url"
-	"time"
 )
 
-const maxRes = 1000000
-
-type websocketStats struct {
+type WebsocketStats struct {
 	TotalSize       int64       `json:"totalSize,omitempty"`
 	Rps             float64     `json:"rps,omitempty"`
 	Duration        float64     `json:"duration,omitempty"`
@@ -52,14 +49,14 @@ type wsResult struct {
 }
 
 type wsReport struct {
-	result *pb.WebsocketResult
+	result *WebsocketStats
 	lats   []float64 // time spent per request
 }
 
 func newWsReport(n int) *wsReport {
-	cap := util.Min(n, maxRes)
+	cap := n
 	return &wsReport{
-		result: &pb.WebsocketResult{
+		result: &WebsocketStats{
 			ErrMap: make(map[string]uint32),
 		},
 		lats: make([]float64, 0, cap),
@@ -67,17 +64,17 @@ func newWsReport(n int) *wsReport {
 }
 
 type WebSocketBuilder struct {
-	*proto.ProtoBuilderBase
 	Conn   *websocket.Conn
 	report *wsReport
 }
 
 func NewBuilder() *WebSocketBuilder {
-	return &WebSocketBuilder{&proto.ProtoBuilderBase{Template: &resultTemplate, Stats: &websocketStats{}}, nil, nil}
+	return &WebSocketBuilder{}
 }
 
 func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
+		Id:       uint32(ConfigArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_WEBSOCKET,
 		Callback: ConfigArgs.Callback,
@@ -103,7 +100,7 @@ func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) 
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -149,29 +146,12 @@ func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int
 }
 
 func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
-	task := taskReq.GetWebsocket()
-
-	builder.report = newWsReport(int(taskReq.Requests))
-
-	dialer := websocket.Dialer{
-		HandshakeTimeout: time.Duration(task.Timeout) * time.Second,
-	}
-
-	u := url.URL{Scheme: task.Scheme, Host: task.Host, Path: task.Path}
-	conn, _, err := dialer.Dial(u.String(), nil)
-	if err != nil {
-		return err
-	}
-
-	builder.Conn = conn
 	return nil
 }
 
-func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) interface{} {
+func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
 	task := taskReq.GetWebsocket()
-
-	builder.report = newWsReport(int(taskReq.Requests))
-
+	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
 	dialer := websocket.Dialer{
 		HandshakeTimeout: time.Duration(task.Timeout) * time.Second,
 	}
@@ -179,10 +159,10 @@ func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) interface{}
 	u := url.URL{Scheme: task.Scheme, Host: task.Host, Path: task.Path}
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
-		return err
+		return nil,  &wsResult{Err: err}
 	}
 
-	return conn
+	return conn, nil
 }
 
 func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
@@ -197,7 +177,7 @@ func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, t
 		// asynchronous scenario in the future.
 		_, resp, err = conn.ReadMessage()
 		if err == nil {
-			log.Infof("read message %s from target.", string(resp))
+			log.V(3).Infof("read message %s from target.", string(resp))
 		}
 	}
 
@@ -229,14 +209,14 @@ func (builder *WebSocketBuilder) PostRequest(result interface{}) error {
 			report.result.TotalSize += res.ContentLength
 		}
 
-		if len(report.lats) < maxRes {
+		if len(report.lats) < cap(report.lats) {
 			report.lats = append(report.lats, res.Duration.Seconds())
 		}
 	}
 	return nil
 }
 
-func (builder *WebSocketBuilder) Done(total time.Duration) (protobuf.Message, error) {
+func (builder *WebSocketBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
 
@@ -258,14 +238,15 @@ func (builder *WebSocketBuilder) Done(total time.Duration) (protobuf.Message, er
 	return report.result, nil
 }
 
-func (builder *WebSocketBuilder) Merge(messages []protobuf.Message) (interface{}, error) {
-	stats := &websocketStats{}
+func (builder *WebSocketBuilder) Merge(messages []string) (interface{}, error) {
+	stats := &WebsocketStats{}
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r, ok := message.(*pb.WebsocketResult)
-		if !ok {
-			return nil, fmt.Errorf("cannot cast to http result: %#v", message)
+		r := &WebsocketStats{}
+		err := json.Unmarshal([]byte(message), r)
+		if err != nil {
+			return nil, fmt.Errorf("cannot cast to WebsocketStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {
@@ -295,7 +276,7 @@ func (builder *WebSocketBuilder) Merge(messages []protobuf.Message) (interface{}
 }
 
 var (
-	resultTemplate = `
+	ResultTmpl = `
 Summary:
   Requests:	{{ formatNumberInt64 .TotalRequests }}
   Total:	{{ formatNumber .Duration }} secs
@@ -303,7 +284,6 @@ Summary:
   {{ if gt .TotalSize 0 }}
   Total data:	{{ .TotalSize }} bytes
   Size/request:	{{ .AvgSize }} bytes{{ end }}
-
 
 {{ if gt (len .ErrMap) 0 }}Error distribution:{{ range $err, $num := .ErrMap }}
   [{{ $num }}]	{{ $err }}{{ end }}{{ end }}

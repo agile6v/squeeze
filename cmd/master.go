@@ -21,40 +21,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// MasterCmd represents the master command
-var MasterCmd = &cobra.Command{
-	Use:   "master",
-	Short: "Squeeze master node.",
-	Long:  `Master node is responsible for managing all slave nodes.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("run squeeze with master mode.")
+func MasterCmd() *cobra.Command {
+	serverArgs := server.NewServerArgs()
 
-		stopChan := make(chan struct{})
+	// masterCmd represents the master command
+	masterCmd := &cobra.Command{
+		Use:   "master",
+		Short: "Squeeze master node.",
+		Long:  `Master node is responsible for managing all slave nodes.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("run squeeze with master mode.")
 
-		// Create the server
-		srv := server.NewServer(server.Master)
+			stopChan := make(chan struct{})
 
-		// Initialize the server
-		err := srv.Initialize(server.SrvArgs)
-		if err != nil {
-			return fmt.Errorf("failed to initialize master server: %v", err)
-		}
+			// Create the server
+			srv := server.NewServer(server.Master)
 
-		// Start the server
-		err = srv.Start(stopChan)
-		if err != nil {
-			return fmt.Errorf("failed to start master server: %v", err)
-		}
+			// Initialize the server
+			err := srv.Initialize(serverArgs)
+			if err != nil {
+				return fmt.Errorf("failed to initialize master server: %v", err)
+			}
 
-		util.WaitSignal(stopChan)
+			// Start the server
+			err = srv.Start(stopChan)
+			if err != nil {
+				return fmt.Errorf("failed to start master server: %v", err)
+			}
 
-		return nil
-	},
-}
+			util.WaitSignal(stopChan)
 
-func init() {
-	MasterCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9998",
+			return nil
+		},
+	}
+
+	masterCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9998",
 		"Squeeze service HTTP address")
-	MasterCmd.PersistentFlags().StringVar(&server.SrvArgs.GrpcAddr, "grpcAddr", ":9997",
+	masterCmd.PersistentFlags().StringVar(&serverArgs.GRPCAddr, "grpcAddr", ":9997",
 		"Squeeze service grpc address")
+	return masterCmd
 }

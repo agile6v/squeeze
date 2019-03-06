@@ -21,13 +21,12 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/websocket"
 )
 
-func NewBuilder(protocol pb.Protocol) proto.ProtoBuilder {
+func NewBuilder(protocol pb.Protocol) *proto.ProtoBuilderBase {
 	switch protocol {
 	case pb.Protocol_HTTP:
-		return http.NewBuilder()
+		return &proto.ProtoBuilderBase{http.NewBuilder(), &http.ResultTmpl, &http.HttpStats{}}
 	case pb.Protocol_WEBSOCKET:
-		return websocket.NewBuilder()
-	case pb.Protocol_REDIS:
+		return &proto.ProtoBuilderBase{websocket.NewBuilder(), &websocket.ResultTmpl, &websocket.WebsocketStats{}}
 	}
 	return nil
 }

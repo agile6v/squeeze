@@ -30,12 +30,14 @@ var SrvArgs ServerArgs
 type NodeType int
 
 const (
-	//	Client represents the client mode
+	// Client represents the client mode
 	Client NodeType = iota
-	//	Slave represents the slave mode
+	// Slave represents the slave mode
 	Slave
-	//	Master represents the master mode
+	// Master represents the master mode
 	Master
+	// Web represents the web server mode (As the backend server of the UI)
+	Web
 )
 
 func (t NodeType) String() string {
@@ -46,6 +48,8 @@ func (t NodeType) String() string {
 		return "slave"
 	case Master:
 		return "master"
+	case Web:
+		return "web"
 	default:
 		return fmt.Sprintf("%d", t)
 	}
@@ -54,25 +58,30 @@ func (t NodeType) String() string {
 type AgentStatusResp struct {
 	ConnID string `json:"id"`
 	Addr   string `json:"addr"`
+	Status string `json:"status"`
 }
 
 type ServerArgs struct {
-	HTTPAddr       string
-	GrpcAddr       string
+	HTTPAddr       string   // The listening address for http
+	GRPCAddr       string   // The listening address for grpc
 
-	MasterAddr     string
-	GrpcMasterAddr string
-	ReportInterval time.Duration
+	MasterAddr     string   // Master's HTTP Address
+	GrpcMasterAddr string   // Master's GRPC Address
+	ReportInterval time.Duration // Heartbeat reporting interval
 	ResultCapacity int
 }
 
+func NewServerArgs() *ServerArgs {
+	return &ServerArgs{}
+}
+
 type Server interface {
-	Initialize(args ServerArgs) error
+	Initialize(args *ServerArgs) error
 	Start(stopChan <-chan struct{}) error
 }
 
 type ServerBase struct {
-	args       ServerArgs
+	args       *ServerArgs
 	Mode       NodeType
 	httpServer *http.Server
 	grpcServer *grpc.Server
@@ -82,19 +91,20 @@ type ServerBase struct {
 func NewServer(nodeType NodeType) Server {
 	if nodeType == Master {
 		return &MasterServer{}
-	} else {
+	} else if nodeType == Slave {
 		return &SlaveServer{}
+	} else {
+		return &WebServer{}
 	}
 }
 
-func (s *ServerBase) Initialize(args ServerArgs) error {
+func (s *ServerBase) Initialize(args *ServerArgs) error {
 	s.args = args
-	//s.Mode = nodeType
 	s.httpServer = &http.Server{
 		Addr: args.HTTPAddr,
 	}
 
-	_, port, err := util.GetHostPort(s.args.GrpcAddr)
+	_, port, err := util.GetHostPort(s.args.GRPCAddr)
 	if err != nil {
 		return err
 	}
@@ -112,6 +122,13 @@ func (s *ServerBase) addConn(connID string, conn *SlaveConn) {
 	defer slaveConnsMutex.Unlock()
 
 	slaveConns[connID] = conn
+}
+
+func (s *ServerBase) updateConn(connID string, status string) {
+	slaveConnsMutex.Lock()
+	defer slaveConnsMutex.Unlock()
+
+	slaveConns[connID].Status = status
 }
 
 func (s *ServerBase) removeConn(connID string, conn *SlaveConn) {

@@ -21,50 +21,54 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// SlaveCmd represents the slave command
-var SlaveCmd = &cobra.Command{
-	Use:   "slave",
-	Short: "Squeeze slave node.",
-	Long:  `Slave initiates stress testing to the target.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("run squeeze with slave mode.")
+func SlaveCmd() *cobra.Command {
+	serverArgs := server.NewServerArgs()
 
-		stopChan := make(chan struct{})
+	// slaveCmd represents the slave command
+	slaveCmd := &cobra.Command{
+		Use:   "slave",
+		Short: "Squeeze slave node.",
+		Long:  `Slave initiates stress testing to the target.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("run squeeze with slave mode.")
 
-		// Create the server
-		srv := server.NewServer(server.Slave)
+			stopChan := make(chan struct{})
 
-		// Initialize the server
-		err := srv.Initialize(server.SrvArgs)
-		if err != nil {
-			return fmt.Errorf("failed to initialize slave server: %v", err)
-		}
+			// Create the server
+			srv := server.NewServer(server.Slave)
 
-		// Start the server
-		err = srv.Start(stopChan)
-		if err != nil {
-			return fmt.Errorf("failed to start master server: %v", err)
-		}
+			// Initialize the server
+			err := srv.Initialize(serverArgs)
+			if err != nil {
+				return fmt.Errorf("failed to initialize slave server: %v", err)
+			}
 
-		util.WaitSignal(stopChan)
+			// Start the server
+			err = srv.Start(stopChan)
+			if err != nil {
+				return fmt.Errorf("failed to start slave server: %v", err)
+			}
 
-		return nil
-	},
-}
+			util.WaitSignal(stopChan)
 
-func init() {
-	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.HTTPAddr, "httpAddr", ":9998",
+			return nil
+		},
+	}
+
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9998",
 		"Squeeze service HTTP address")
-	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.GrpcAddr, "grpcAddr", ":9997",
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.GRPCAddr, "grpcAddr", ":9997",
 		"Squeeze service grpc address")
-	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.MasterAddr, "masterAddr", "",
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.MasterAddr, "masterAddr", "",
 		"The address of the master server")
-	SlaveCmd.PersistentFlags().StringVar(&server.SrvArgs.GrpcMasterAddr, "grpcMasterAddr", "",
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.GrpcMasterAddr, "grpcMasterAddr", "",
 		"The address of the grpc master server")
-	SlaveCmd.PersistentFlags().DurationVar(&server.SrvArgs.ReportInterval, "reportInterval", 5,
+	slaveCmd.PersistentFlags().DurationVar(&serverArgs.ReportInterval, "reportInterval", 5,
 		"Task reporting interval to the master")
-	SlaveCmd.PersistentFlags().IntVar(&server.SrvArgs.ResultCapacity, "resultCapacity", 2000,
+	slaveCmd.PersistentFlags().IntVar(&serverArgs.ResultCapacity, "resultCapacity", 2000,
 		"The capacity of the results channel for aggregating.")
-	SlaveCmd.MarkPersistentFlagRequired("masterAddr")
-	SlaveCmd.MarkPersistentFlagRequired("grpcMasterAddr")
+	slaveCmd.MarkPersistentFlagRequired("masterAddr")
+	slaveCmd.MarkPersistentFlagRequired("grpcMasterAddr")
+
+	return slaveCmd
 }

@@ -23,47 +23,51 @@ import (
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
 )
 
 type SqueezeStats struct {
 	Addr    string  `json:"addr"`
 	Status  int32   `json:"status"`
 	Error   string  `json:"error"`
-	//Stats   interface{}``
 }
 
 type SqueezeResponse struct {
+	Data   *SqueezeResult `json:"data"`
+	Error   string        `json:"error"`
+}
+
+type SqueezeResult struct {
+	ID         uint32         `json:"id"`
 	AgentStats []SqueezeStats `json:"agent_stats"`
-	Result     interface{}  `json:"result"`
+	Result     interface{}    `json:"result"`
 }
 
 type ProtoBuilder interface {
 	// slave side
 	// These functions are executed in the following order
 	Init(context.Context, *pb.TaskRequest) error
-	PreRequest(*pb.TaskRequest) interface{}
+	PreRequest(*pb.TaskRequest) (interface{}, interface{})
 	Request(context.Context, interface{}, *pb.TaskRequest) interface{}
 	PostRequest(interface{}) error
-	Done(time.Duration) (protobuf.Message, error)
+	Done(time.Duration) (interface{}, error)
 
 	// master side
 	Split(*pb.ExecuteTaskRequest, int) []*pb.ExecuteTaskRequest
-	Merge([]protobuf.Message) (interface{}, error)
+	Merge([]string) (interface{}, error)
 
 	// client side
 	CreateTask(*config.ProtoConfigArgs) (string, error)
 }
 
 type ProtoBuilderBase struct {
+	ProtoBuilder
 	Template *string
 	Stats    interface{}
 }
 
-func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs, protocol pb.Protocol) (string, error) {
+func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_STOP,
-		Protocol: protocol,
 		Callback: ConfigArgs.Callback,
 	}
 
@@ -73,7 +77,7 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs, pr
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
 	if err != nil {
 		return "", err
 	}
@@ -82,16 +86,20 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs, pr
 
 func (proto *ProtoBuilderBase) Render(data string) (string, error) {
 	response := &SqueezeResponse{
-		Result: proto.Stats,
+		Data: &SqueezeResult{
+			Result: proto.Stats,
+		},
+		Error: "",
 	}
+
 	err := json.Unmarshal([]byte(data), response)
 	if err != nil {
 		return "", err
 	}
 
 	buf := &bytes.Buffer{}
-	if response.Result == nil {
-		if err := util.NewTemplate(errorTemplate).Execute(buf, response); err != nil {
+	if response.Data.Result == nil {
+		if err := util.NewTemplate(ErrorTemplate).Execute(buf, response); err != nil {
 			return "", err
 		}
 	} else {
@@ -104,7 +112,7 @@ func (proto *ProtoBuilderBase) Render(data string) (string, error) {
 }
 
 var (
-	errorTemplate = `
+	ErrorTemplate = `
 Summary:
 {{ range .AgentStats }}
   Agent: {{ .Addr }}, {{ if eq .Status 0 }}SUCCESS{{ else }}FAILED{{ end }}, {{ .Error }}

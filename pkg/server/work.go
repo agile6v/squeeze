@@ -25,9 +25,6 @@ import (
 	log "github.com/golang/glog"
 )
 
-// Max size of the buffer of Result channel.
-const maxResult = 1000000
-
 type Work struct {
 	// Protocol constructor
 	Builder build.ProtoBuilder
@@ -47,6 +44,9 @@ type Work struct {
 	// RateLimit is the rate limit in queries per second.
 	RateLimit float64
 
+	// The capacity of the result of the collector channel
+	ResultCapacity int
+
 	// Used to aggregate the result of each request
 	results chan interface{}
 
@@ -57,14 +57,14 @@ type Work struct {
 // Run starts collecotr & worker goroutine. It blocks until
 // all work is done or receive cancel signal.
 func (w *Work) Run(ctx context.Context) (time.Duration, error) {
-	// Initialization before calling the request
+	// Initialization before calling the request handler
 	err := w.Builder.Init(ctx, w.Req.Task)
 	if err != nil {
 		log.Infof("failed to execute Init: %s", err.Error())
 		return 0, err
 	}
 
-	w.results = make(chan interface{}, util.Min(w.Workers*2000, maxResult))
+	w.results = make(chan interface{}, w.Workers * w.ResultCapacity)
 	w.done = make(chan bool, 1)
 	start := util.Now()
 
@@ -103,7 +103,11 @@ func (w *Work) runWorker(ctx context.Context, n int) {
 		throttle = time.Tick(time.Duration(1e6/(w.RateLimit)) * time.Microsecond)
 	}
 
-	obj := w.Builder.PreRequest(w.Req.Task)
+	obj, result := w.Builder.PreRequest(w.Req.Task)
+	if result != nil {
+		w.results <- result
+		return
+	}
 	for i := 0; i < n; i++ {
 		select {
 		case <-ctx.Done():
@@ -154,7 +158,7 @@ func (w *Work) runCollector() {
 	for result := range w.results {
 		err := w.Builder.PostRequest(result)
 		if err != nil {
-			// TODO:
+			log.Error("PostRequest got error : ", err)
 		}
 	}
 

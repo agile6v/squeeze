@@ -17,15 +17,19 @@ package config
 var ConfigArgs ProtoConfigArgs
 
 type ProtoConfigArgs struct {
-	HttpAddr string
-	Callback string
-	HttpOpts HttpOptions
-	WsOpts   WsOptions
+	ID          int             // The ID of the task
+	HttpAddr    string          // Usually used to save the address of the master
+	Callback    string          // If it is asynchronous mode, the response
+								// will be sent to the address specified by Callback
+	WebOpts     WebOptions      // Parameters of the web command
+	HttpOpts    HttpOptions     // Parameters of the HTTP protocol
+	WsOpts      WsOptions       // Parameters of the WEBSOCKET protocol
 }
 
 // HttpOptions contains http protocol runtime parameters
 type HttpOptions struct {
 	URL              string
+	HTTP2            bool
 	Requests         int
 	Method           string
 	ProxyAddr        string
@@ -37,6 +41,7 @@ type HttpOptions struct {
 	Body             string
 	ContentType      string
 	BodyFile         string
+	MaxResults       int
 	DisableKeepAlive bool
 }
 
@@ -50,4 +55,12 @@ type WsOptions struct {
 	Timeout     int
 	Duration    int
 	Body        string
+	MaxResults  int
+}
+
+// WebOptions contains options of the web command
+type WebOptions struct {
+	DSN     string
+	File    string
+	Type    string
 }

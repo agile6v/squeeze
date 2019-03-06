@@ -15,28 +15,25 @@
 package http
 
 import (
-	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
-	"net/http"
-	"net/http/httptrace"
-	"net/url"
 	"sort"
 	"time"
+	"context"
+	"crypto/tls"
+	"net/url"
+	"io/ioutil"
+	"net/http"
+	"encoding/json"
+	"net/http/httptrace"
+	"golang.org/x/net/http2"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/version"
 	"github.com/golang/protobuf/jsonpb"
-	protobuf "github.com/golang/protobuf/proto"
-	"golang.org/x/net/http2"
 )
-
-const maxRes = 1000000
 
 type ElapsedInfo struct {
 	Max float64     `json:"max,omitempty"`
@@ -45,18 +42,22 @@ type ElapsedInfo struct {
 }
 
 type LatencyDistribution struct {
-	percentage  uint32
-    latency     float64
+	Percentage  uint32
+    Latency     float64
 }
 
-type httpStats struct {
+type HttpStats struct {
 	TotalRequests       int64       `json:"totalRequests,omitempty"`
+	// Total time for running
 	Duration            float64     `json:"duration,omitempty"`
 	FastestReqTime      float64     `json:"fastestReqTime,omitempty"`
 	SlowestReqTime      float64     `json:"slowestReqTime,omitempty"`
 	AvgReqTime          float64     `json:"avgReqTime,omitempty"`
+	// Average response size per request
 	AvgSize             int64       `json:"avgSize,omitempty"`
+	// The sum of all response sizes
 	TotalSize           int64       `json:"totalSize,omitempty"`
+	// Requests per second
 	Rps                 float64     `json:"rps,omitempty"`
 	Dns                 ElapsedInfo `json:"dns,omitempty"`
 	Delay               ElapsedInfo `json:"delay,omitempty"`
@@ -70,9 +71,12 @@ type httpStats struct {
 	ReqDuration         float64      `json:"reqDuration,omitempty"`
 	RespDuration        float64      `json:"respDuration,omitempty"`
 	DelayDuration       float64      `json:"delayDuration,omitempty"`
+	// Total number of requests
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
 	LatencyDistribution []LatencyDistribution `json:latencyDistribution,omitempty`
+	// time spent per request
+	Lats                []float64    `json:"latencies,omitempty"`
 }
 
 type httpResult struct {
@@ -89,8 +93,7 @@ type httpResult struct {
 }
 
 type httpReport struct {
-	result      *pb.HTTPResult
-	lats        []float64 // time spent per request
+	result      *HttpStats
 	connLats    []float64
 	dnsLats     []float64
 	reqLats     []float64
@@ -101,62 +104,61 @@ type httpReport struct {
 }
 
 func newHttpReport(n int) *httpReport {
-	cap := util.Min(n, maxRes)
+	cap := n
 	return &httpReport{
-		result: &pb.HTTPResult{
-			Protocol: pb.Protocol_HTTP,
+		result: &HttpStats{
 			ErrMap:   make(map[string]uint32),
+			Lats:        make([]float64, 0, cap),
 		},
 		connLats:    make([]float64, 0, cap),
 		dnsLats:     make([]float64, 0, cap),
 		reqLats:     make([]float64, 0, cap),
 		resLats:     make([]float64, 0, cap),
 		delayLats:   make([]float64, 0, cap),
-		lats:        make([]float64, 0, cap),
 		statusCodes: make([]int, 0, cap),
 	}
 }
 
-func latencies(report *httpReport) []*pb.HTTPResult_LatencyDistribution {
+func latencies(stats *HttpStats) []LatencyDistribution {
 	pctls := []uint32{10, 25, 50, 75, 90, 95, 99}
 	data := make([]float64, len(pctls))
 	j := 0
-	for i := 0; i < len(report.lats) && j < len(pctls); i++ {
-		current := i * 100 / len(report.lats)
+	for i := 0; i < len(stats.Lats) && j < len(pctls); i++ {
+		current := i * 100 / len(stats.Lats)
 		if uint32(current) >= pctls[j] {
-			data[j] = report.lats[i]
+			data[j] = stats.Lats[i]
 			j++
 		}
 	}
-	res := make([]*pb.HTTPResult_LatencyDistribution, len(pctls))
+
+	res := make([]LatencyDistribution, len(pctls))
 	for i := 0; i < len(pctls); i++ {
 		if data[i] > 0 {
-			res[i] = &pb.HTTPResult_LatencyDistribution{Percentage: pctls[i], Latency: data[i]}
+			res[i].Percentage = pctls[i]
+			res[i].Latency = data[i]
 		}
 	}
+
 	return res
 }
 
-func newElapsedInfo(max, min float64) *pb.HTTPResult_ElapsedInfo {
-	return &pb.HTTPResult_ElapsedInfo{
-		Max: max,
-		Min: min,
-	}
-}
-
 type HttpBuilder struct {
-	*proto.ProtoBuilderBase
 	report     *httpReport
 	HttpReq    *http.Request
 	HttpClient *http.Client
 }
 
 func NewBuilder() *HttpBuilder {
-	return &HttpBuilder{&proto.ProtoBuilderBase{Template: &resultTemplate, Stats: &httpStats{}}, nil, nil, nil}
+	return &HttpBuilder{}
 }
 
 func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+	if ConfigArgs.HttpOpts.Duration > 0 {
+		ConfigArgs.HttpOpts.Requests = math.MaxInt32
+	}
+
 	req := &pb.ExecuteTaskRequest{
+		Id:       uint32(ConfigArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
 		Callback: ConfigArgs.Callback,
@@ -168,6 +170,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 			Type: &pb.TaskRequest_Http{
 				Http: &pb.HttpTask{
 					Url:               ConfigArgs.HttpOpts.URL,
+					Http2:             ConfigArgs.HttpOpts.HTTP2,
 					Method:            ConfigArgs.HttpOpts.Method,
 					Body:              ConfigArgs.HttpOpts.Body,
 					Timeout:           uint32(ConfigArgs.HttpOpts.Timeout),
@@ -175,6 +178,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 					Headers:           ConfigArgs.HttpOpts.Headers,
 					ProxyAddr:         ConfigArgs.HttpOpts.ProxyAddr,
 					ContentType:       ConfigArgs.HttpOpts.ContentType,
+					MaxResults:        int32(ConfigArgs.HttpOpts.MaxResults),
 				},
 			},
 		},
@@ -186,7 +190,7 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr))
+	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -198,7 +202,7 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 
 	if count > int(request.Task.Concurrency) {
 		count = int(request.Task.Concurrency)
-	} else if (count > int(request.Task.Requests)) {
+	} else if count > int(request.Task.Requests) {
 		count = int(request.Task.Requests)
 	}
 
@@ -233,8 +237,7 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
 	task := taskReq.GetHttp()
 
-	builder.report = newHttpReport(int(taskReq.Requests))
-
+	builder.report = newHttpReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
 	httpReq, err := http.NewRequest(task.Method, task.Url, nil)
 	if err != nil {
 		return err
@@ -305,8 +308,8 @@ func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) e
 	return nil
 }
 
-func (builder *HttpBuilder) PreRequest(taskReq *pb.TaskRequest) interface{} {
-	return nil
+func (builder *HttpBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
+	return nil, nil
 }
 
 func (builder *HttpBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
@@ -392,8 +395,8 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 			report.result.TotalSize += res.ContentLength
 		}
 
-		if len(report.resLats) < maxRes {
-			report.lats = append(report.lats, res.Duration.Seconds())
+		if len(report.resLats) < cap(report.resLats) {
+			report.result.Lats = append(report.result.Lats, res.Duration.Seconds())
 			report.connLats = append(report.connLats, res.ConnDuration.Seconds())
 			report.dnsLats = append(report.dnsLats, res.DnsDuration.Seconds())
 			report.reqLats = append(report.reqLats, res.ReqDuration.Seconds())
@@ -406,7 +409,7 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
-func (builder *HttpBuilder) Done(total time.Duration) (protobuf.Message, error) {
+func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
 
@@ -416,39 +419,44 @@ func (builder *HttpBuilder) Done(total time.Duration) (protobuf.Message, error) 
 	}
 
 	report.result.StatusCodes = statusCodes
-	if len(report.lats) == 0 {
+	if len(report.result.Lats) == 0 {
 		return report.result, nil
 	}
 
-	sort.Float64s(report.lats)
+	sort.Float64s(report.result.Lats)
 	sort.Float64s(report.connLats)
 	sort.Float64s(report.dnsLats)
 	sort.Float64s(report.delayLats)
 	sort.Float64s(report.reqLats)
 	sort.Float64s(report.resLats)
 
-	report.result.Dns = newElapsedInfo(report.dnsLats[len(report.dnsLats)-1], report.dnsLats[0])
-	report.result.Delay = newElapsedInfo(report.delayLats[len(report.delayLats)-1], report.delayLats[0])
-	report.result.Resp = newElapsedInfo(report.resLats[len(report.resLats)-1], report.resLats[0])
-	report.result.Conn = newElapsedInfo(report.connLats[len(report.connLats)-1], report.connLats[0])
-	report.result.Req = newElapsedInfo(report.reqLats[len(report.reqLats)-1], report.reqLats[0])
+	report.result.Dns.Max = report.dnsLats[len(report.dnsLats)-1]
+	report.result.Dns.Min = report.dnsLats[0]
+	report.result.Delay.Max = report.delayLats[len(report.delayLats)-1]
+	report.result.Delay.Min = report.delayLats[0]
+	report.result.Resp.Max = report.resLats[len(report.resLats)-1]
+	report.result.Resp.Min = report.resLats[0]
+	report.result.Conn.Max = report.connLats[len(report.connLats)-1]
+	report.result.Conn.Min = report.connLats[0]
+	report.result.Req.Max = report.reqLats[len(report.reqLats)-1]
+	report.result.Req.Min = report.reqLats[0]
 
-	report.result.FastestReqTime = report.lats[0]
-	report.result.SlowestReqTime = report.lats[len(report.lats)-1]
-	report.result.LatencyDistribution = latencies(builder.report)
+	report.result.FastestReqTime = report.result.Lats[0]
+	report.result.SlowestReqTime = report.result.Lats[len(report.result.Lats)-1]
 
 	return report.result, nil
 }
 
-func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, error) {
-	stats := &httpStats{}
+func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
+	stats := &HttpStats{}
 	stats.StatusCodes = make(map[uint32]uint32, 100)
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r, ok := message.(*pb.HTTPResult)
-		if !ok {
-			return nil, fmt.Errorf("cannot cast to http result: %#v", message)
+		r := &HttpStats{}
+		err := json.Unmarshal([]byte(message), r)
+		if err != nil {
+			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {
@@ -468,22 +476,20 @@ func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, err
 		stats.RespDuration += r.RespDuration
 		stats.DelayDuration += r.DelayDuration
 
-		if r.Req != nil {
-			stats.Req.Max = math.Max(stats.Req.Max, r.Req.Max)
-			stats.Req.Min = math.Min(stats.Req.Min, r.Req.Min)
+		stats.Req.Max = math.Max(stats.Req.Max, r.Req.Max)
+		stats.Req.Min = math.Min(stats.Req.Min, r.Req.Min)
 
-			stats.Conn.Max = math.Max(stats.Conn.Max, r.Conn.Max)
-			stats.Conn.Min = math.Min(stats.Conn.Min, r.Conn.Min)
+		stats.Conn.Max = math.Max(stats.Conn.Max, r.Conn.Max)
+		stats.Conn.Min = math.Min(stats.Conn.Min, r.Conn.Min)
 
-			stats.Delay.Max = math.Max(stats.Delay.Max, r.Delay.Max)
-			stats.Delay.Min = math.Min(stats.Delay.Min, r.Delay.Min)
+		stats.Delay.Max = math.Max(stats.Delay.Max, r.Delay.Max)
+		stats.Delay.Min = math.Min(stats.Delay.Min, r.Delay.Min)
 
-			stats.Resp.Max = math.Max(stats.Resp.Max, r.Resp.Max)
-			stats.Resp.Min = math.Min(stats.Resp.Min, r.Resp.Min)
+		stats.Resp.Max = math.Max(stats.Resp.Max, r.Resp.Max)
+		stats.Resp.Min = math.Min(stats.Resp.Min, r.Resp.Min)
 
-			stats.Dns.Max = math.Max(stats.Dns.Max, r.Dns.Max)
-			stats.Dns.Min = math.Min(stats.Dns.Min, r.Dns.Min)
-		}
+		stats.Dns.Max = math.Max(stats.Dns.Max, r.Dns.Max)
+		stats.Dns.Min = math.Min(stats.Dns.Min, r.Dns.Min)
 
 		for k, v := range r.StatusCodes {
 			if _, ok := stats.StatusCodes[k]; ok {
@@ -500,9 +506,12 @@ func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, err
 				stats.ErrMap[k] = v
 			}
 		}
+		stats.Lats = append(stats.Lats, r.Lats...)
 	}
 
 	if stats.Requests > 0 {
+		sort.Float64s(stats.Lats)
+		stats.LatencyDistribution = latencies(stats)
 		stats.AvgReqTime = stats.TotalDuration / float64(stats.Requests)
 		stats.AvgSize = stats.TotalSize / stats.Requests
 		stats.Req.Avg = stats.ReqDuration / float64(stats.Requests)
@@ -511,13 +520,14 @@ func (builder *HttpBuilder) Merge(messages []protobuf.Message) (interface{}, err
 		stats.Resp.Avg = stats.RespDuration / float64(stats.Requests)
 		stats.Delay.Avg = stats.DelayDuration / float64(stats.Requests)
 		stats.Rps = float64(stats.TotalRequests) / stats.Duration
+		stats.Lats = nil
 	}
 
 	return stats, nil
 }
 
 var (
-	resultTemplate = `
+	ResultTmpl = `
 Summary:
   Requests:	{{ formatNumberInt64 .TotalRequests }}
   Total:	{{ formatNumber .Duration }} secs
@@ -530,7 +540,7 @@ Summary:
   Size/request:	{{ .AvgSize }} bytes{{ end }}
 
 Latency distribution:{{ range .LatencyDistribution }}
-  {{ .Percentage }}%% in {{ formatNumber .Latency }} secs{{ end }}
+  {{ .Percentage }}% in {{ formatNumber .Latency }} secs{{ end }}
 
 Details (average, fastest, slowest):
   DNS+dialup:	{{ formatNumber .AvgReqTime }} secs, {{ formatNumber .FastestReqTime }} secs, {{ formatNumber .SlowestReqTime }} secs

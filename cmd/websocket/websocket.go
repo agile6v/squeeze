@@ -15,16 +15,17 @@
 package websocket
 
 import (
-	"errors"
+	"os"
 	"fmt"
+	"math"
+	"errors"
+	"net/url"
+	"os/signal"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/proto/websocket"
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
-	"net/url"
-	"os"
-	"os/signal"
+	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
 var Command = &cobra.Command{
@@ -36,14 +37,14 @@ var Command = &cobra.Command{
 		return validate(args)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		builder := websocket.NewBuilder()
+		builder := builder.NewBuilder(pb.Protocol_WEBSOCKET)
 
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 		go func() {
 			<-c
 			fmt.Printf("\nCanceling...\n")
-			_, err := builder.CancelTask(&config.ConfigArgs, pb.Protocol_WEBSOCKET)
+			_, err := builder.CancelTask(&config.ConfigArgs)
 			if err != nil {
 				log.Errorf("failed to cancel task %s", err)
 			}
@@ -76,7 +77,7 @@ var Command = &cobra.Command{
 
 func init() {
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.WsOpts.Requests, "requests", "n",
-		0, "Number of requests to perform")
+		math.MaxInt32, "Number of requests to perform")
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.WsOpts.Concurrency, "concurrency", "c",
 		1, "Number of multiple requests to make at a time")
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.WsOpts.Timeout, "timeout", "s",
@@ -85,6 +86,8 @@ func init() {
 		"", "Request body string")
 	Command.PersistentFlags().IntVarP(&config.ConfigArgs.WsOpts.Duration, "duration", "z",
 		0, "Duration of application to send requests. if duration is specified, n is ignored.")
+	Command.PersistentFlags().IntVar(&config.ConfigArgs.WsOpts.MaxResults, "maxResults", 1000000,
+		"The maximum number of response results that can be used")
 }
 
 func validate(args []string) error {
@@ -99,7 +102,7 @@ func validate(args []string) error {
 	}
 
 	if u.Scheme == "" || u.Path == "" {
-		return errors.New("xxxxxxx")
+		return errors.New("URL Scheme or Path cannot be empty.")
 	}
 
 	config.ConfigArgs.WsOpts.Scheme = u.Scheme

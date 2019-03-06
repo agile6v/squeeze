@@ -21,30 +21,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ClientCmd represents the client command
-var ClientCmd = &cobra.Command{
-	Use:   "client",
-	Short: "A handy tool that can call the Squeeze's API.",
-	Long: `This command allows you to interact with Squeeze and stress targets with multiple protocols.
+func ClientCmd() *cobra.Command {
+	// clientCmd represents the client command
+	clientCmd := &cobra.Command{
+		Use:   "client",
+		Short: "A handy tool that can call the Squeeze's API.",
+		Long: `This command allows you to interact with Squeeze and stress targets with multiple protocols.
 Currently supported protocol is only http, other protocols are under development. Look forward
 to your contribution.
 	`,
+	}
+
+	clientCmd.PersistentFlags().StringVar(&config.ConfigArgs.Callback, "callback", "",
+		"If this call is asynchronous then stress result will be sent to the address.")
+	clientCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
+		"The address and port of the Squeeze master or slave.")
+
+	clientCmd.AddCommand(http.Command)
+	clientCmd.AddCommand(websocket.Command)
+	clientCmd.AddCommand(stopCmd)
+
+	return clientCmd
 }
 
-// StopCmd represents the stop command
-var StopCmd = &cobra.Command{
+// stopCmd represents the stop command
+var stopCmd = &cobra.Command{
 	Use:   "stop",
 	Short: "",
 	Long:  ``,
-}
-
-func init() {
-	ClientCmd.PersistentFlags().StringVar(&config.ConfigArgs.Callback, "callback", "",
-		"If this call is asynchronous then stress result will be sent to the address.")
-	ClientCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
-		"The address and port of the Squeeze master or slave.")
-
-	ClientCmd.AddCommand(http.Command)
-	ClientCmd.AddCommand(websocket.Command)
-	ClientCmd.AddCommand(StopCmd)
 }

@@ -17,16 +17,15 @@ package server
 import (
 	"context"
 	"fmt"
-	"math"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+	"encoding/json"
 
+	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/pb"
 	log "github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
@@ -37,7 +36,7 @@ type SlaveServer struct {
 	mutex       sync.RWMutex
 }
 
-func (s *SlaveServer) Initialize(args ServerArgs) error {
+func (s *SlaveServer) Initialize(args *ServerArgs) error {
 	s.ServerBase.Initialize(args)
 	s.Mode = Slave
 
@@ -55,8 +54,8 @@ func (s *SlaveServer) Initialize(args ServerArgs) error {
 func (s *SlaveServer) Start(stopChan <-chan struct{}) error {
 	// grpc server
 	go func() {
-		log.Infof("grpc listening on %s", s.args.GrpcAddr)
-		listener, err := net.Listen("tcp", s.args.GrpcAddr)
+		log.Infof("grpc listening on %s", s.args.GRPCAddr)
+		listener, err := net.Listen("tcp", s.args.GRPCAddr)
 		if err != nil {
 			log.Fatalf("GRPC failed to listen: %v", err)
 		}
@@ -110,12 +109,12 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		Builder:   builder.NewBuilder(req.Protocol),
 		Requests:  int(req.Task.Requests),
 		Workers:   int(req.Task.Concurrency),
+		ResultCapacity: s.args.ResultCapacity,
 		RateLimit: float64(req.Task.RateLimit),
 	}
 
 	if req.Duration > 0 {
 		s.work.Ctx, s.work.Cancel = context.WithTimeout(ctx, time.Duration(req.Duration)*time.Second)
-		s.work.Requests = math.MaxInt32
 	} else {
 		s.work.Ctx, s.work.Cancel = context.WithCancel(ctx)
 	}
@@ -139,7 +138,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		return nil, err
 	}
 
-	any, err := ptypes.MarshalAny(msg)
+	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Errorf("could not marshal message : %v", err)
 		return nil, err
@@ -147,7 +146,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 
 	resp := &pb.ExecuteTaskResponse{
 		Status: pb.ExecuteTaskResponse_SUCC,
-		Any:    any,
+		Data: string(data),
 	}
 
 	return resp, nil

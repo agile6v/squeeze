@@ -22,6 +22,7 @@ import (
 	"time"
 	"net/http"
 	"regexp"
+	"encoding/json"
 	"github.com/agile6v/squeeze/pkg/version"
 )
 
@@ -57,7 +58,7 @@ func parseInputWithRegexp(input, regx string) ([]string, error) {
 	return matches, nil
 }
 
-func DoRequest(method, host, body string) (string, error) {
+func DoRequest(method, host, body string, timeout time.Duration) (string, error) {
 	req, err := http.NewRequest(method, host, bytes.NewBuffer([]byte(body)))
 	if err != nil {
 		return "", err
@@ -66,10 +67,10 @@ func DoRequest(method, host, body string) (string, error) {
 	header := make(http.Header)
 	header.Set("User-Agent", version.GetVersion())
 	req.Header = header
-
+	
 	// Send request
 	client := http.Client{
-		Timeout: time.Duration(5 * time.Second),
+		Timeout: time.Duration(timeout * time.Second),
 	}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -102,4 +103,23 @@ func CloneRequest(r *http.Request, body []byte) *http.Request {
 		r2.Body = ioutil.NopCloser(bytes.NewReader(body))
 	}
 	return r2
+}
+
+func ReadBody(r *http.Request, obj interface{}) (string, error) {
+	// Read body
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return "", err
+	}
+
+	if obj != nil {
+		// Unmarshal
+		err = json.Unmarshal(b, obj)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return string(b), nil
 }

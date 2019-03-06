@@ -15,13 +15,17 @@ syntax = "proto3";
 
 package pb;
 
-import "google/protobuf/any.proto";
-
+// SqueezeService definition, used to communication between master and slave
 service SqueezeService {
+    // ExecuteTask is used to perform tasks on the slave node
     rpc ExecuteTask (ExecuteTaskRequest) returns (ExecuteTaskResponse) {}
+
+    // HeartBeat is used to report task status to master node
     rpc HeartBeat (stream HeartBeatRequest) returns (stream HeartBeatResponse) {}
 }
 
+// HeartBeatRequest describes the tasks status on the slave
+// and the information about the slave & host.
 message HeartBeatRequest {
     message SlaveInfo {
         uint32 grpcPort = 1;
@@ -38,6 +42,8 @@ message HeartBeatRequest {
     SlaveInfo info = 2;
 }
 
+// HeartBeatResponse for HeartBeatRequest, is used to send tasks from master to slave.
+// !!!Send task is not yet supported!!!
 message HeartBeatResponse {
     repeated TaskRequest tasks = 1;
 }
@@ -52,6 +58,7 @@ message TaskRequest {
     }
 }
 
+// ExecuteTaskRequest describes the task information to be executed.
 message ExecuteTaskRequest {
     enum Command {
         START = 0;
@@ -61,21 +68,27 @@ message ExecuteTaskRequest {
     Protocol protocol = 2;
     string callback = 3;
     uint32 duration = 4;
-    TaskRequest task = 8;
+    uint32 id = 5;
+    TaskRequest task = 6;
 }
 
+// ExecuteTaskResponse for ExecuteTaskRequest, is used to report the results of this execution task.
 message ExecuteTaskResponse {
     enum Status {
         SUCC = 0;
         FAIL = 1;
     }
+    // Slave address
     string addr = 1;
+    // Task status
     Status status = 2;
     // When status is equal to FAIL, error will be set
     string error = 3;
-    google.protobuf.Any any = 4;
+    // Task results in json format
+    string data = 4;
 }
 
+// All supported protocols
 enum Protocol {
     UNKNOWN = 0;
     HTTP = 1;
@@ -95,6 +108,7 @@ message WebsocketTask {
     string path = 3;
     uint32 timeout = 4;
     string body = 5;
+    int32 maxResults = 6;
 }
 
 message HttpTask {
@@ -110,90 +124,5 @@ message HttpTask {
     uint32 maxIdleConn = 13;
     repeated string headers = 14;
     string contentType = 15;
-}
-
-message WebsocketResult {
-    // The sum of all response sizes
-    int64 totalSize = 1;
-
-    // Requests per second
-    double rps = 2;
-
-    // Total time for running
-    double duration = 3;
-
-    double totalDuration = 9;
-
-    // Total number of requests
-    int64 requests = 4;
-
-    // Total number of requests
-    int64 totalRequests = 5;
-
-    // Total number of response
-    int64 totalResponses = 6;
-
-    // Average response size per request
-    int64 avgSize = 7;
-
-    map<string, uint32> errMap = 8;
-}
-
-message HTTPResult {
-    message LatencyDistribution {
-        uint32 percentage = 1;
-        double latency = 2;
-    }
-
-    message ElapsedInfo {
-        double max = 1;
-        double min = 2;
-        double avg = 3;
-    }
-
-    Protocol protocol = 1;
-
-    // Average response size per request
-    int64 avgSize = 2;
-
-    // The sum of all response sizes
-    int64 totalSize = 3;
-
-    // Total number of requests
-    int64 requests = 4;
-
-    // Requests per second
-    double rps = 5;
-
-    // Total time for running
-    double duration = 6;
-
-    double fastestReqTime = 7;
-
-    double slowestReqTime = 8;
-
-    double avgReqTime = 9;
-
-    map<uint32, uint32> statusCodes = 10;
-
-    repeated LatencyDistribution latencyDistribution = 11;
-
-    ElapsedInfo dns = 12;
-    ElapsedInfo delay = 13;
-    ElapsedInfo resp = 14;
-    ElapsedInfo conn = 15;
-    ElapsedInfo req = 16;
-
-    double connDuration = 17;
-    double dnsDuration = 18;
-    double reqDuration = 19;
-    double respDuration = 20;
-    double delayDuration = 21;
-
-    map<string, uint32> errMap = 22;
-
-    // Total number of requests
-    int64 totalRequests = 23;
-
-    double totalDuration = 24;
+    int32 maxResults = 16;
 }

@@ -3,13 +3,13 @@
 
 package pb
 
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+
 import (
-	context "context"
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	any "github.com/golang/protobuf/ptypes/any"
+	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
-	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -21,8 +21,9 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// All supported protocols
 type Protocol int32
 
 const (
@@ -50,7 +51,6 @@ var Protocol_name = map[int32]string{
 	8: "THRIFT",
 	9: "WEBSOCKET",
 }
-
 var Protocol_value = map[string]int32{
 	"UNKNOWN":   0,
 	"HTTP":      1,
@@ -67,9 +67,8 @@ var Protocol_value = map[string]int32{
 func (x Protocol) String() string {
 	return proto.EnumName(Protocol_name, int32(x))
 }
-
 func (Protocol) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{0}
 }
 
 type HeartBeatRequest_Task_Status int32
@@ -83,7 +82,6 @@ var HeartBeatRequest_Task_Status_name = map[int32]string{
 	0: "DONE",
 	1: "RUNNING",
 }
-
 var HeartBeatRequest_Task_Status_value = map[string]int32{
 	"DONE":    0,
 	"RUNNING": 1,
@@ -92,9 +90,8 @@ var HeartBeatRequest_Task_Status_value = map[string]int32{
 func (x HeartBeatRequest_Task_Status) String() string {
 	return proto.EnumName(HeartBeatRequest_Task_Status_name, int32(x))
 }
-
 func (HeartBeatRequest_Task_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{0, 1, 0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{0, 1, 0}
 }
 
 type ExecuteTaskRequest_Command int32
@@ -108,7 +105,6 @@ var ExecuteTaskRequest_Command_name = map[int32]string{
 	0: "START",
 	1: "STOP",
 }
-
 var ExecuteTaskRequest_Command_value = map[string]int32{
 	"START": 0,
 	"STOP":  1,
@@ -117,9 +113,8 @@ var ExecuteTaskRequest_Command_value = map[string]int32{
 func (x ExecuteTaskRequest_Command) String() string {
 	return proto.EnumName(ExecuteTaskRequest_Command_name, int32(x))
 }
-
 func (ExecuteTaskRequest_Command) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{3, 0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{3, 0}
 }
 
 type ExecuteTaskResponse_Status int32
@@ -133,7 +128,6 @@ var ExecuteTaskResponse_Status_name = map[int32]string{
 	0: "SUCC",
 	1: "FAIL",
 }
-
 var ExecuteTaskResponse_Status_value = map[string]int32{
 	"SUCC": 0,
 	"FAIL": 1,
@@ -142,11 +136,12 @@ var ExecuteTaskResponse_Status_value = map[string]int32{
 func (x ExecuteTaskResponse_Status) String() string {
 	return proto.EnumName(ExecuteTaskResponse_Status_name, int32(x))
 }
-
 func (ExecuteTaskResponse_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{4, 0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{4, 0}
 }
 
+// HeartBeatRequest describes the tasks status on the slave
+// and the information about the slave & host.
 type HeartBeatRequest struct {
 	Task                 *HeartBeatRequest_Task      `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	Info                 *HeartBeatRequest_SlaveInfo `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
@@ -159,17 +154,16 @@ func (m *HeartBeatRequest) Reset()         { *m = HeartBeatRequest{} }
 func (m *HeartBeatRequest) String() string { return proto.CompactTextString(m) }
 func (*HeartBeatRequest) ProtoMessage()    {}
 func (*HeartBeatRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{0}
 }
-
 func (m *HeartBeatRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HeartBeatRequest.Unmarshal(m, b)
 }
 func (m *HeartBeatRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HeartBeatRequest.Marshal(b, m, deterministic)
 }
-func (m *HeartBeatRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartBeatRequest.Merge(m, src)
+func (dst *HeartBeatRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartBeatRequest.Merge(dst, src)
 }
 func (m *HeartBeatRequest) XXX_Size() int {
 	return xxx_messageInfo_HeartBeatRequest.Size(m)
@@ -205,17 +199,16 @@ func (m *HeartBeatRequest_SlaveInfo) Reset()         { *m = HeartBeatRequest_Sla
 func (m *HeartBeatRequest_SlaveInfo) String() string { return proto.CompactTextString(m) }
 func (*HeartBeatRequest_SlaveInfo) ProtoMessage()    {}
 func (*HeartBeatRequest_SlaveInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{0, 0}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{0, 0}
 }
-
 func (m *HeartBeatRequest_SlaveInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HeartBeatRequest_SlaveInfo.Unmarshal(m, b)
 }
 func (m *HeartBeatRequest_SlaveInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HeartBeatRequest_SlaveInfo.Marshal(b, m, deterministic)
 }
-func (m *HeartBeatRequest_SlaveInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartBeatRequest_SlaveInfo.Merge(m, src)
+func (dst *HeartBeatRequest_SlaveInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartBeatRequest_SlaveInfo.Merge(dst, src)
 }
 func (m *HeartBeatRequest_SlaveInfo) XXX_Size() int {
 	return xxx_messageInfo_HeartBeatRequest_SlaveInfo.Size(m)
@@ -245,17 +238,16 @@ func (m *HeartBeatRequest_Task) Reset()         { *m = HeartBeatRequest_Task{} }
 func (m *HeartBeatRequest_Task) String() string { return proto.CompactTextString(m) }
 func (*HeartBeatRequest_Task) ProtoMessage()    {}
 func (*HeartBeatRequest_Task) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{0, 1}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{0, 1}
 }
-
 func (m *HeartBeatRequest_Task) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HeartBeatRequest_Task.Unmarshal(m, b)
 }
 func (m *HeartBeatRequest_Task) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HeartBeatRequest_Task.Marshal(b, m, deterministic)
 }
-func (m *HeartBeatRequest_Task) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartBeatRequest_Task.Merge(m, src)
+func (dst *HeartBeatRequest_Task) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartBeatRequest_Task.Merge(dst, src)
 }
 func (m *HeartBeatRequest_Task) XXX_Size() int {
 	return xxx_messageInfo_HeartBeatRequest_Task.Size(m)
@@ -280,6 +272,8 @@ func (m *HeartBeatRequest_Task) GetStatus() HeartBeatRequest_Task_Status {
 	return HeartBeatRequest_Task_DONE
 }
 
+// HeartBeatResponse for HeartBeatRequest, is used to send tasks from master to slave.
+// !!!Send task is not yet supported!!!
 type HeartBeatResponse struct {
 	Tasks                []*TaskRequest `protobuf:"bytes,1,rep,name=tasks,proto3" json:"tasks,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
@@ -291,17 +285,16 @@ func (m *HeartBeatResponse) Reset()         { *m = HeartBeatResponse{} }
 func (m *HeartBeatResponse) String() string { return proto.CompactTextString(m) }
 func (*HeartBeatResponse) ProtoMessage()    {}
 func (*HeartBeatResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{1}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{1}
 }
-
 func (m *HeartBeatResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HeartBeatResponse.Unmarshal(m, b)
 }
 func (m *HeartBeatResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HeartBeatResponse.Marshal(b, m, deterministic)
 }
-func (m *HeartBeatResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HeartBeatResponse.Merge(m, src)
+func (dst *HeartBeatResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HeartBeatResponse.Merge(dst, src)
 }
 func (m *HeartBeatResponse) XXX_Size() int {
 	return xxx_messageInfo_HeartBeatResponse.Size(m)
@@ -336,17 +329,16 @@ func (m *TaskRequest) Reset()         { *m = TaskRequest{} }
 func (m *TaskRequest) String() string { return proto.CompactTextString(m) }
 func (*TaskRequest) ProtoMessage()    {}
 func (*TaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{2}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{2}
 }
-
 func (m *TaskRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TaskRequest.Unmarshal(m, b)
 }
 func (m *TaskRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_TaskRequest.Marshal(b, m, deterministic)
 }
-func (m *TaskRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TaskRequest.Merge(m, src)
+func (dst *TaskRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TaskRequest.Merge(dst, src)
 }
 func (m *TaskRequest) XXX_Size() int {
 	return xxx_messageInfo_TaskRequest.Size(m)
@@ -415,20 +407,88 @@ func (m *TaskRequest) GetWebsocket() *WebsocketTask {
 	return nil
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*TaskRequest) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*TaskRequest) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _TaskRequest_OneofMarshaler, _TaskRequest_OneofUnmarshaler, _TaskRequest_OneofSizer, []interface{}{
 		(*TaskRequest_Http)(nil),
 		(*TaskRequest_Websocket)(nil),
 	}
 }
 
+func _TaskRequest_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*TaskRequest)
+	// type
+	switch x := m.Type.(type) {
+	case *TaskRequest_Http:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Http); err != nil {
+			return err
+		}
+	case *TaskRequest_Websocket:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Websocket); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("TaskRequest.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _TaskRequest_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*TaskRequest)
+	switch tag {
+	case 4: // type.http
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(HttpTask)
+		err := b.DecodeMessage(msg)
+		m.Type = &TaskRequest_Http{msg}
+		return true, err
+	case 5: // type.websocket
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(WebsocketTask)
+		err := b.DecodeMessage(msg)
+		m.Type = &TaskRequest_Websocket{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _TaskRequest_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*TaskRequest)
+	// type
+	switch x := m.Type.(type) {
+	case *TaskRequest_Http:
+		s := proto.Size(x.Http)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *TaskRequest_Websocket:
+		s := proto.Size(x.Websocket)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// ExecuteTaskRequest describes the task information to be executed.
 type ExecuteTaskRequest struct {
 	Cmd                  ExecuteTaskRequest_Command `protobuf:"varint,1,opt,name=cmd,proto3,enum=pb.ExecuteTaskRequest_Command" json:"cmd,omitempty"`
 	Protocol             Protocol                   `protobuf:"varint,2,opt,name=protocol,proto3,enum=pb.Protocol" json:"protocol,omitempty"`
 	Callback             string                     `protobuf:"bytes,3,opt,name=callback,proto3" json:"callback,omitempty"`
 	Duration             uint32                     `protobuf:"varint,4,opt,name=duration,proto3" json:"duration,omitempty"`
-	Task                 *TaskRequest               `protobuf:"bytes,8,opt,name=task,proto3" json:"task,omitempty"`
+	Id                   uint32                     `protobuf:"varint,5,opt,name=id,proto3" json:"id,omitempty"`
+	Task                 *TaskRequest               `protobuf:"bytes,6,opt,name=task,proto3" json:"task,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
 	XXX_unrecognized     []byte                     `json:"-"`
 	XXX_sizecache        int32                      `json:"-"`
@@ -438,17 +498,16 @@ func (m *ExecuteTaskRequest) Reset()         { *m = ExecuteTaskRequest{} }
 func (m *ExecuteTaskRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecuteTaskRequest) ProtoMessage()    {}
 func (*ExecuteTaskRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{3}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{3}
 }
-
 func (m *ExecuteTaskRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExecuteTaskRequest.Unmarshal(m, b)
 }
 func (m *ExecuteTaskRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExecuteTaskRequest.Marshal(b, m, deterministic)
 }
-func (m *ExecuteTaskRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExecuteTaskRequest.Merge(m, src)
+func (dst *ExecuteTaskRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExecuteTaskRequest.Merge(dst, src)
 }
 func (m *ExecuteTaskRequest) XXX_Size() int {
 	return xxx_messageInfo_ExecuteTaskRequest.Size(m)
@@ -487,6 +546,13 @@ func (m *ExecuteTaskRequest) GetDuration() uint32 {
 	return 0
 }
 
+func (m *ExecuteTaskRequest) GetId() uint32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
 func (m *ExecuteTaskRequest) GetTask() *TaskRequest {
 	if m != nil {
 		return m.Task
@@ -494,12 +560,16 @@ func (m *ExecuteTaskRequest) GetTask() *TaskRequest {
 	return nil
 }
 
+// ExecuteTaskResponse for ExecuteTaskRequest, is used to report the results of this execution task.
 type ExecuteTaskResponse struct {
-	Addr   string                     `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
+	// Slave address
+	Addr string `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
+	// Task status
 	Status ExecuteTaskResponse_Status `protobuf:"varint,2,opt,name=status,proto3,enum=pb.ExecuteTaskResponse_Status" json:"status,omitempty"`
 	// When status is equal to FAIL, error will be set
-	Error                string   `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
-	Any                  *any.Any `protobuf:"bytes,4,opt,name=any,proto3" json:"any,omitempty"`
+	Error string `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	// Task results in json format
+	Data                 string   `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -509,17 +579,16 @@ func (m *ExecuteTaskResponse) Reset()         { *m = ExecuteTaskResponse{} }
 func (m *ExecuteTaskResponse) String() string { return proto.CompactTextString(m) }
 func (*ExecuteTaskResponse) ProtoMessage()    {}
 func (*ExecuteTaskResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{4}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{4}
 }
-
 func (m *ExecuteTaskResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExecuteTaskResponse.Unmarshal(m, b)
 }
 func (m *ExecuteTaskResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExecuteTaskResponse.Marshal(b, m, deterministic)
 }
-func (m *ExecuteTaskResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExecuteTaskResponse.Merge(m, src)
+func (dst *ExecuteTaskResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExecuteTaskResponse.Merge(dst, src)
 }
 func (m *ExecuteTaskResponse) XXX_Size() int {
 	return xxx_messageInfo_ExecuteTaskResponse.Size(m)
@@ -551,11 +620,11 @@ func (m *ExecuteTaskResponse) GetError() string {
 	return ""
 }
 
-func (m *ExecuteTaskResponse) GetAny() *any.Any {
+func (m *ExecuteTaskResponse) GetData() string {
 	if m != nil {
-		return m.Any
+		return m.Data
 	}
-	return nil
+	return ""
 }
 
 type WebsocketTask struct {
@@ -564,6 +633,7 @@ type WebsocketTask struct {
 	Path                 string   `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
 	Timeout              uint32   `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	Body                 string   `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
+	MaxResults           int32    `protobuf:"varint,6,opt,name=maxResults,proto3" json:"maxResults,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -573,17 +643,16 @@ func (m *WebsocketTask) Reset()         { *m = WebsocketTask{} }
 func (m *WebsocketTask) String() string { return proto.CompactTextString(m) }
 func (*WebsocketTask) ProtoMessage()    {}
 func (*WebsocketTask) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{5}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{5}
 }
-
 func (m *WebsocketTask) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_WebsocketTask.Unmarshal(m, b)
 }
 func (m *WebsocketTask) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_WebsocketTask.Marshal(b, m, deterministic)
 }
-func (m *WebsocketTask) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_WebsocketTask.Merge(m, src)
+func (dst *WebsocketTask) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WebsocketTask.Merge(dst, src)
 }
 func (m *WebsocketTask) XXX_Size() int {
 	return xxx_messageInfo_WebsocketTask.Size(m)
@@ -629,6 +698,13 @@ func (m *WebsocketTask) GetBody() string {
 	return ""
 }
 
+func (m *WebsocketTask) GetMaxResults() int32 {
+	if m != nil {
+		return m.MaxResults
+	}
+	return 0
+}
+
 type HttpTask struct {
 	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 	Method               string   `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`
@@ -642,6 +718,7 @@ type HttpTask struct {
 	MaxIdleConn          uint32   `protobuf:"varint,13,opt,name=maxIdleConn,proto3" json:"maxIdleConn,omitempty"`
 	Headers              []string `protobuf:"bytes,14,rep,name=headers,proto3" json:"headers,omitempty"`
 	ContentType          string   `protobuf:"bytes,15,opt,name=contentType,proto3" json:"contentType,omitempty"`
+	MaxResults           int32    `protobuf:"varint,16,opt,name=maxResults,proto3" json:"maxResults,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -651,17 +728,16 @@ func (m *HttpTask) Reset()         { *m = HttpTask{} }
 func (m *HttpTask) String() string { return proto.CompactTextString(m) }
 func (*HttpTask) ProtoMessage()    {}
 func (*HttpTask) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{6}
+	return fileDescriptor_squeeze_762fd7722b0faf7c, []int{6}
 }
-
 func (m *HttpTask) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HttpTask.Unmarshal(m, b)
 }
 func (m *HttpTask) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HttpTask.Marshal(b, m, deterministic)
 }
-func (m *HttpTask) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HttpTask.Merge(m, src)
+func (dst *HttpTask) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HttpTask.Merge(dst, src)
 }
 func (m *HttpTask) XXX_Size() int {
 	return xxx_messageInfo_HttpTask.Size(m)
@@ -756,452 +832,14 @@ func (m *HttpTask) GetContentType() string {
 	return ""
 }
 
-type WebsocketResult struct {
-	// The sum of all response sizes
-	TotalSize int64 `protobuf:"varint,1,opt,name=totalSize,proto3" json:"totalSize,omitempty"`
-	// Requests per second
-	Rps float64 `protobuf:"fixed64,2,opt,name=rps,proto3" json:"rps,omitempty"`
-	// Total time for running
-	Duration      float64 `protobuf:"fixed64,3,opt,name=duration,proto3" json:"duration,omitempty"`
-	TotalDuration float64 `protobuf:"fixed64,9,opt,name=totalDuration,proto3" json:"totalDuration,omitempty"`
-	// Total number of requests
-	Requests int64 `protobuf:"varint,4,opt,name=requests,proto3" json:"requests,omitempty"`
-	// Total number of requests
-	TotalRequests int64 `protobuf:"varint,5,opt,name=totalRequests,proto3" json:"totalRequests,omitempty"`
-	// Total number of response
-	TotalResponses int64 `protobuf:"varint,6,opt,name=totalResponses,proto3" json:"totalResponses,omitempty"`
-	// Average response size per request
-	AvgSize              int64             `protobuf:"varint,7,opt,name=avgSize,proto3" json:"avgSize,omitempty"`
-	ErrMap               map[string]uint32 `protobuf:"bytes,8,rep,name=errMap,proto3" json:"errMap,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
-}
-
-func (m *WebsocketResult) Reset()         { *m = WebsocketResult{} }
-func (m *WebsocketResult) String() string { return proto.CompactTextString(m) }
-func (*WebsocketResult) ProtoMessage()    {}
-func (*WebsocketResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{7}
-}
-
-func (m *WebsocketResult) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_WebsocketResult.Unmarshal(m, b)
-}
-func (m *WebsocketResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_WebsocketResult.Marshal(b, m, deterministic)
-}
-func (m *WebsocketResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_WebsocketResult.Merge(m, src)
-}
-func (m *WebsocketResult) XXX_Size() int {
-	return xxx_messageInfo_WebsocketResult.Size(m)
-}
-func (m *WebsocketResult) XXX_DiscardUnknown() {
-	xxx_messageInfo_WebsocketResult.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_WebsocketResult proto.InternalMessageInfo
-
-func (m *WebsocketResult) GetTotalSize() int64 {
+func (m *HttpTask) GetMaxResults() int32 {
 	if m != nil {
-		return m.TotalSize
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetRps() float64 {
-	if m != nil {
-		return m.Rps
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetDuration() float64 {
-	if m != nil {
-		return m.Duration
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetTotalDuration() float64 {
-	if m != nil {
-		return m.TotalDuration
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetRequests() int64 {
-	if m != nil {
-		return m.Requests
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetTotalRequests() int64 {
-	if m != nil {
-		return m.TotalRequests
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetTotalResponses() int64 {
-	if m != nil {
-		return m.TotalResponses
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetAvgSize() int64 {
-	if m != nil {
-		return m.AvgSize
-	}
-	return 0
-}
-
-func (m *WebsocketResult) GetErrMap() map[string]uint32 {
-	if m != nil {
-		return m.ErrMap
-	}
-	return nil
-}
-
-type HTTPResult struct {
-	Protocol Protocol `protobuf:"varint,1,opt,name=protocol,proto3,enum=pb.Protocol" json:"protocol,omitempty"`
-	// Average response size per request
-	AvgSize int64 `protobuf:"varint,2,opt,name=avgSize,proto3" json:"avgSize,omitempty"`
-	// The sum of all response sizes
-	TotalSize int64 `protobuf:"varint,3,opt,name=totalSize,proto3" json:"totalSize,omitempty"`
-	// Total number of requests
-	Requests int64 `protobuf:"varint,4,opt,name=requests,proto3" json:"requests,omitempty"`
-	// Requests per second
-	Rps float64 `protobuf:"fixed64,5,opt,name=rps,proto3" json:"rps,omitempty"`
-	// Total time for running
-	Duration            float64                           `protobuf:"fixed64,6,opt,name=duration,proto3" json:"duration,omitempty"`
-	FastestReqTime      float64                           `protobuf:"fixed64,7,opt,name=fastestReqTime,proto3" json:"fastestReqTime,omitempty"`
-	SlowestReqTime      float64                           `protobuf:"fixed64,8,opt,name=slowestReqTime,proto3" json:"slowestReqTime,omitempty"`
-	AvgReqTime          float64                           `protobuf:"fixed64,9,opt,name=avgReqTime,proto3" json:"avgReqTime,omitempty"`
-	StatusCodes         map[uint32]uint32                 `protobuf:"bytes,10,rep,name=statusCodes,proto3" json:"statusCodes,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	LatencyDistribution []*HTTPResult_LatencyDistribution `protobuf:"bytes,11,rep,name=latencyDistribution,proto3" json:"latencyDistribution,omitempty"`
-	Dns                 *HTTPResult_ElapsedInfo           `protobuf:"bytes,12,opt,name=dns,proto3" json:"dns,omitempty"`
-	Delay               *HTTPResult_ElapsedInfo           `protobuf:"bytes,13,opt,name=delay,proto3" json:"delay,omitempty"`
-	Resp                *HTTPResult_ElapsedInfo           `protobuf:"bytes,14,opt,name=resp,proto3" json:"resp,omitempty"`
-	Conn                *HTTPResult_ElapsedInfo           `protobuf:"bytes,15,opt,name=conn,proto3" json:"conn,omitempty"`
-	Req                 *HTTPResult_ElapsedInfo           `protobuf:"bytes,16,opt,name=req,proto3" json:"req,omitempty"`
-	ConnDuration        float64                           `protobuf:"fixed64,17,opt,name=connDuration,proto3" json:"connDuration,omitempty"`
-	DnsDuration         float64                           `protobuf:"fixed64,18,opt,name=dnsDuration,proto3" json:"dnsDuration,omitempty"`
-	ReqDuration         float64                           `protobuf:"fixed64,19,opt,name=reqDuration,proto3" json:"reqDuration,omitempty"`
-	RespDuration        float64                           `protobuf:"fixed64,20,opt,name=respDuration,proto3" json:"respDuration,omitempty"`
-	DelayDuration       float64                           `protobuf:"fixed64,21,opt,name=delayDuration,proto3" json:"delayDuration,omitempty"`
-	ErrMap              map[string]uint32                 `protobuf:"bytes,22,rep,name=errMap,proto3" json:"errMap,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	// Total number of requests
-	TotalRequests        int64    `protobuf:"varint,23,opt,name=totalRequests,proto3" json:"totalRequests,omitempty"`
-	TotalDuration        float64  `protobuf:"fixed64,24,opt,name=totalDuration,proto3" json:"totalDuration,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *HTTPResult) Reset()         { *m = HTTPResult{} }
-func (m *HTTPResult) String() string { return proto.CompactTextString(m) }
-func (*HTTPResult) ProtoMessage()    {}
-func (*HTTPResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{8}
-}
-
-func (m *HTTPResult) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_HTTPResult.Unmarshal(m, b)
-}
-func (m *HTTPResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_HTTPResult.Marshal(b, m, deterministic)
-}
-func (m *HTTPResult) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HTTPResult.Merge(m, src)
-}
-func (m *HTTPResult) XXX_Size() int {
-	return xxx_messageInfo_HTTPResult.Size(m)
-}
-func (m *HTTPResult) XXX_DiscardUnknown() {
-	xxx_messageInfo_HTTPResult.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_HTTPResult proto.InternalMessageInfo
-
-func (m *HTTPResult) GetProtocol() Protocol {
-	if m != nil {
-		return m.Protocol
-	}
-	return Protocol_UNKNOWN
-}
-
-func (m *HTTPResult) GetAvgSize() int64 {
-	if m != nil {
-		return m.AvgSize
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetTotalSize() int64 {
-	if m != nil {
-		return m.TotalSize
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetRequests() int64 {
-	if m != nil {
-		return m.Requests
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetRps() float64 {
-	if m != nil {
-		return m.Rps
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetDuration() float64 {
-	if m != nil {
-		return m.Duration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetFastestReqTime() float64 {
-	if m != nil {
-		return m.FastestReqTime
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetSlowestReqTime() float64 {
-	if m != nil {
-		return m.SlowestReqTime
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetAvgReqTime() float64 {
-	if m != nil {
-		return m.AvgReqTime
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetStatusCodes() map[uint32]uint32 {
-	if m != nil {
-		return m.StatusCodes
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetLatencyDistribution() []*HTTPResult_LatencyDistribution {
-	if m != nil {
-		return m.LatencyDistribution
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetDns() *HTTPResult_ElapsedInfo {
-	if m != nil {
-		return m.Dns
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetDelay() *HTTPResult_ElapsedInfo {
-	if m != nil {
-		return m.Delay
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetResp() *HTTPResult_ElapsedInfo {
-	if m != nil {
-		return m.Resp
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetConn() *HTTPResult_ElapsedInfo {
-	if m != nil {
-		return m.Conn
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetReq() *HTTPResult_ElapsedInfo {
-	if m != nil {
-		return m.Req
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetConnDuration() float64 {
-	if m != nil {
-		return m.ConnDuration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetDnsDuration() float64 {
-	if m != nil {
-		return m.DnsDuration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetReqDuration() float64 {
-	if m != nil {
-		return m.ReqDuration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetRespDuration() float64 {
-	if m != nil {
-		return m.RespDuration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetDelayDuration() float64 {
-	if m != nil {
-		return m.DelayDuration
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetErrMap() map[string]uint32 {
-	if m != nil {
-		return m.ErrMap
-	}
-	return nil
-}
-
-func (m *HTTPResult) GetTotalRequests() int64 {
-	if m != nil {
-		return m.TotalRequests
-	}
-	return 0
-}
-
-func (m *HTTPResult) GetTotalDuration() float64 {
-	if m != nil {
-		return m.TotalDuration
-	}
-	return 0
-}
-
-type HTTPResult_LatencyDistribution struct {
-	Percentage           uint32   `protobuf:"varint,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
-	Latency              float64  `protobuf:"fixed64,2,opt,name=latency,proto3" json:"latency,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *HTTPResult_LatencyDistribution) Reset()         { *m = HTTPResult_LatencyDistribution{} }
-func (m *HTTPResult_LatencyDistribution) String() string { return proto.CompactTextString(m) }
-func (*HTTPResult_LatencyDistribution) ProtoMessage()    {}
-func (*HTTPResult_LatencyDistribution) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{8, 0}
-}
-
-func (m *HTTPResult_LatencyDistribution) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_HTTPResult_LatencyDistribution.Unmarshal(m, b)
-}
-func (m *HTTPResult_LatencyDistribution) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_HTTPResult_LatencyDistribution.Marshal(b, m, deterministic)
-}
-func (m *HTTPResult_LatencyDistribution) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HTTPResult_LatencyDistribution.Merge(m, src)
-}
-func (m *HTTPResult_LatencyDistribution) XXX_Size() int {
-	return xxx_messageInfo_HTTPResult_LatencyDistribution.Size(m)
-}
-func (m *HTTPResult_LatencyDistribution) XXX_DiscardUnknown() {
-	xxx_messageInfo_HTTPResult_LatencyDistribution.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_HTTPResult_LatencyDistribution proto.InternalMessageInfo
-
-func (m *HTTPResult_LatencyDistribution) GetPercentage() uint32 {
-	if m != nil {
-		return m.Percentage
-	}
-	return 0
-}
-
-func (m *HTTPResult_LatencyDistribution) GetLatency() float64 {
-	if m != nil {
-		return m.Latency
-	}
-	return 0
-}
-
-type HTTPResult_ElapsedInfo struct {
-	Max                  float64  `protobuf:"fixed64,1,opt,name=max,proto3" json:"max,omitempty"`
-	Min                  float64  `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
-	Avg                  float64  `protobuf:"fixed64,3,opt,name=avg,proto3" json:"avg,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *HTTPResult_ElapsedInfo) Reset()         { *m = HTTPResult_ElapsedInfo{} }
-func (m *HTTPResult_ElapsedInfo) String() string { return proto.CompactTextString(m) }
-func (*HTTPResult_ElapsedInfo) ProtoMessage()    {}
-func (*HTTPResult_ElapsedInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_c08d88d47f9b9bc1, []int{8, 1}
-}
-
-func (m *HTTPResult_ElapsedInfo) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_HTTPResult_ElapsedInfo.Unmarshal(m, b)
-}
-func (m *HTTPResult_ElapsedInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_HTTPResult_ElapsedInfo.Marshal(b, m, deterministic)
-}
-func (m *HTTPResult_ElapsedInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HTTPResult_ElapsedInfo.Merge(m, src)
-}
-func (m *HTTPResult_ElapsedInfo) XXX_Size() int {
-	return xxx_messageInfo_HTTPResult_ElapsedInfo.Size(m)
-}
-func (m *HTTPResult_ElapsedInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_HTTPResult_ElapsedInfo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_HTTPResult_ElapsedInfo proto.InternalMessageInfo
-
-func (m *HTTPResult_ElapsedInfo) GetMax() float64 {
-	if m != nil {
-		return m.Max
-	}
-	return 0
-}
-
-func (m *HTTPResult_ElapsedInfo) GetMin() float64 {
-	if m != nil {
-		return m.Min
-	}
-	return 0
-}
-
-func (m *HTTPResult_ElapsedInfo) GetAvg() float64 {
-	if m != nil {
-		return m.Avg
+		return m.MaxResults
 	}
 	return 0
 }
 
 func init() {
-	proto.RegisterEnum("pb.Protocol", Protocol_name, Protocol_value)
-	proto.RegisterEnum("pb.HeartBeatRequest_Task_Status", HeartBeatRequest_Task_Status_name, HeartBeatRequest_Task_Status_value)
-	proto.RegisterEnum("pb.ExecuteTaskRequest_Command", ExecuteTaskRequest_Command_name, ExecuteTaskRequest_Command_value)
-	proto.RegisterEnum("pb.ExecuteTaskResponse_Status", ExecuteTaskResponse_Status_name, ExecuteTaskResponse_Status_value)
 	proto.RegisterType((*HeartBeatRequest)(nil), "pb.HeartBeatRequest")
 	proto.RegisterType((*HeartBeatRequest_SlaveInfo)(nil), "pb.HeartBeatRequest.SlaveInfo")
 	proto.RegisterType((*HeartBeatRequest_Task)(nil), "pb.HeartBeatRequest.Task")
@@ -1211,108 +849,10 @@ func init() {
 	proto.RegisterType((*ExecuteTaskResponse)(nil), "pb.ExecuteTaskResponse")
 	proto.RegisterType((*WebsocketTask)(nil), "pb.WebsocketTask")
 	proto.RegisterType((*HttpTask)(nil), "pb.HttpTask")
-	proto.RegisterType((*WebsocketResult)(nil), "pb.WebsocketResult")
-	proto.RegisterMapType((map[string]uint32)(nil), "pb.WebsocketResult.ErrMapEntry")
-	proto.RegisterType((*HTTPResult)(nil), "pb.HTTPResult")
-	proto.RegisterMapType((map[string]uint32)(nil), "pb.HTTPResult.ErrMapEntry")
-	proto.RegisterMapType((map[uint32]uint32)(nil), "pb.HTTPResult.StatusCodesEntry")
-	proto.RegisterType((*HTTPResult_LatencyDistribution)(nil), "pb.HTTPResult.LatencyDistribution")
-	proto.RegisterType((*HTTPResult_ElapsedInfo)(nil), "pb.HTTPResult.ElapsedInfo")
-}
-
-func init() { proto.RegisterFile("squeeze.proto", fileDescriptor_c08d88d47f9b9bc1) }
-
-var fileDescriptor_c08d88d47f9b9bc1 = []byte{
-	// 1410 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0xcb, 0x6e, 0xdb, 0x46,
-	0x14, 0x35, 0xf5, 0xb2, 0x78, 0x15, 0xc9, 0xf4, 0xd8, 0x49, 0x18, 0x21, 0x48, 0x0c, 0xb6, 0x4d,
-	0x8d, 0x20, 0x55, 0x52, 0x15, 0x68, 0xd3, 0x2c, 0x82, 0x3a, 0xb2, 0x12, 0x1b, 0x71, 0x64, 0x77,
-	0x24, 0x23, 0xe8, 0x72, 0x44, 0x8e, 0x6d, 0xc2, 0x14, 0x49, 0x0f, 0x47, 0x8a, 0x15, 0xa0, 0x1f,
-	0xd1, 0xfe, 0x4f, 0xf7, 0xfd, 0x99, 0x6e, 0xba, 0x2d, 0x50, 0x14, 0xf3, 0x20, 0x45, 0x3d, 0x12,
-	0x2f, 0xba, 0x9b, 0x7b, 0xe6, 0x70, 0xee, 0xdc, 0xd7, 0xd1, 0x08, 0xea, 0xc9, 0xd5, 0x98, 0xd2,
-	0x8f, 0xb4, 0x15, 0xb3, 0x88, 0x47, 0xa8, 0x10, 0x0f, 0x9b, 0xf7, 0xce, 0xa3, 0xe8, 0x3c, 0xa0,
-	0x4f, 0x25, 0x32, 0x1c, 0x9f, 0x3d, 0x25, 0xe1, 0x54, 0x6d, 0x3b, 0xbf, 0x15, 0xc0, 0x3a, 0xa0,
-	0x84, 0xf1, 0x57, 0x94, 0x70, 0x4c, 0xaf, 0xc6, 0x34, 0xe1, 0xe8, 0x1b, 0x28, 0x71, 0x92, 0x5c,
-	0xda, 0xc6, 0x8e, 0xb1, 0x5b, 0x6b, 0xdf, 0x6b, 0xc5, 0xc3, 0xd6, 0x22, 0xa7, 0x35, 0x20, 0xc9,
-	0x25, 0x96, 0x34, 0xd4, 0x86, 0x92, 0x1f, 0x9e, 0x45, 0x76, 0x41, 0xd2, 0x1f, 0xac, 0xa4, 0xf7,
-	0x03, 0x32, 0xa1, 0x87, 0xe1, 0x59, 0x84, 0x25, 0xb7, 0xf9, 0x35, 0x98, 0x19, 0x84, 0x9a, 0x50,
-	0x3d, 0x67, 0xb1, 0x7b, 0x12, 0x31, 0x2e, 0x7d, 0xd6, 0x71, 0x66, 0x37, 0xaf, 0xa0, 0x24, 0x5c,
-	0xa1, 0x06, 0x14, 0x7c, 0x4f, 0xef, 0x16, 0x7c, 0x0f, 0x3d, 0x87, 0x4a, 0xc2, 0x09, 0x1f, 0x27,
-	0xd2, 0x6d, 0xa3, 0xbd, 0xf3, 0xc9, 0x5b, 0xb6, 0xfa, 0x92, 0x87, 0x35, 0xdf, 0x79, 0x08, 0x15,
-	0x85, 0xa0, 0x2a, 0x94, 0xf6, 0x8f, 0x7b, 0x5d, 0x6b, 0x0d, 0xd5, 0x60, 0x1d, 0x9f, 0xf6, 0x7a,
-	0x87, 0xbd, 0x37, 0x96, 0xe1, 0xbc, 0x80, 0xcd, 0xdc, 0x41, 0x49, 0x1c, 0x85, 0x09, 0x45, 0x5f,
-	0x41, 0x59, 0x04, 0x9b, 0xd8, 0xc6, 0x4e, 0x71, 0xb7, 0xd6, 0xde, 0x10, 0xee, 0x64, 0x0e, 0x94,
-	0x27, 0xac, 0x76, 0x9d, 0x3f, 0x0d, 0xa8, 0xe5, 0x60, 0xb4, 0x03, 0x35, 0x37, 0x0a, 0xdd, 0x31,
-	0x63, 0x34, 0x74, 0xa7, 0xfa, 0xfe, 0x79, 0x48, 0x04, 0xcf, 0x14, 0x59, 0x85, 0x52, 0xc7, 0x99,
-	0x8d, 0xee, 0x83, 0xc9, 0x08, 0xa7, 0x47, 0xfe, 0xc8, 0xe7, 0x76, 0x51, 0x6e, 0xce, 0x00, 0xe4,
-	0x40, 0xe9, 0x82, 0xf3, 0xd8, 0x2e, 0xc9, 0xbc, 0xdf, 0x92, 0x09, 0xe0, 0x3c, 0x16, 0xee, 0x0f,
-	0xd6, 0xb0, 0xdc, 0x43, 0xdf, 0x82, 0xf9, 0x81, 0x0e, 0x93, 0xc8, 0xbd, 0xa4, 0xdc, 0x2e, 0x4b,
-	0xe2, 0xa6, 0x20, 0xbe, 0x4f, 0x41, 0xcd, 0x9e, 0xb1, 0x5e, 0x55, 0xa0, 0xc4, 0xa7, 0x31, 0x75,
-	0xfe, 0x32, 0x00, 0x75, 0xaf, 0xa9, 0x3b, 0xe6, 0x34, 0x1f, 0xd1, 0x33, 0x28, 0xba, 0x23, 0x55,
-	0x89, 0x86, 0x2a, 0xf6, 0x32, 0xa9, 0xd5, 0x89, 0x46, 0x23, 0x12, 0x7a, 0x58, 0x50, 0xd1, 0x2e,
-	0x54, 0x65, 0xb3, 0xb9, 0x51, 0xa0, 0x8b, 0x25, 0xef, 0x7a, 0xa2, 0x31, 0x9c, 0xed, 0x8a, 0x5c,
-	0xb8, 0x24, 0x08, 0x86, 0xc4, 0xbd, 0x94, 0xe1, 0x9a, 0x38, 0xb3, 0xc5, 0x9e, 0x37, 0x66, 0x84,
-	0xfb, 0x51, 0x28, 0x23, 0xae, 0xe3, 0xcc, 0x46, 0x5f, 0xe8, 0x86, 0xad, 0xca, 0x00, 0x97, 0x6a,
-	0x23, 0x37, 0x9d, 0x07, 0xb0, 0xae, 0xaf, 0x85, 0x4c, 0x28, 0xf7, 0x07, 0x7b, 0x78, 0x60, 0xad,
-	0x89, 0x1e, 0xe8, 0x0f, 0x8e, 0x4f, 0x2c, 0xc3, 0xf9, 0xc3, 0x80, 0xad, 0xb9, 0x50, 0x74, 0xe5,
-	0x11, 0x94, 0x88, 0xe7, 0x31, 0x19, 0xb1, 0x89, 0xe5, 0x1a, 0x7d, 0xbf, 0xd0, 0x7d, 0xcb, 0x79,
-	0x50, 0x1f, 0x2f, 0xf4, 0x1e, 0xda, 0x86, 0x32, 0x65, 0x2c, 0x62, 0x3a, 0x3a, 0x65, 0xa0, 0x47,
-	0x50, 0x24, 0xe1, 0x54, 0xd7, 0x71, 0xbb, 0xa5, 0xa6, 0xb5, 0x95, 0x4e, 0x6b, 0x6b, 0x2f, 0x9c,
-	0x62, 0x41, 0x70, 0xee, 0xe7, 0x3b, 0xb7, 0x7f, 0xda, 0xe9, 0xa8, 0xfb, 0xbf, 0xde, 0x3b, 0x3c,
-	0xb2, 0x0c, 0xe7, 0x57, 0xa8, 0xcf, 0x55, 0x15, 0xdd, 0x81, 0x4a, 0xe2, 0x5e, 0xd0, 0x11, 0xd5,
-	0x57, 0xd7, 0x96, 0x08, 0xe8, 0x22, 0x4a, 0xb8, 0xbc, 0xba, 0x89, 0xe5, 0x5a, 0x60, 0x31, 0xe1,
-	0x17, 0xfa, 0x5e, 0x72, 0x8d, 0x6c, 0x58, 0xe7, 0xfe, 0x88, 0x46, 0x63, 0xae, 0x13, 0x9e, 0x9a,
-	0x82, 0x3d, 0x8c, 0xbc, 0xa9, 0x6c, 0x28, 0x13, 0xcb, 0xb5, 0xf3, 0x6f, 0x01, 0xaa, 0x69, 0xfb,
-	0x21, 0x0b, 0x8a, 0x63, 0x16, 0x68, 0xbf, 0x62, 0x29, 0x2e, 0x33, 0xa2, 0xfc, 0x22, 0xf2, 0xb4,
-	0x5b, 0x6d, 0x65, 0x47, 0x15, 0x67, 0x47, 0xe5, 0x1d, 0xaf, 0xcf, 0x3b, 0xde, 0x86, 0xb2, 0x68,
-	0xeb, 0xb6, 0xac, 0x74, 0x15, 0x2b, 0x03, 0x3d, 0x06, 0xcb, 0xf3, 0x13, 0x32, 0x0c, 0x28, 0xa6,
-	0x9e, 0xcf, 0xa8, 0xcb, 0x13, 0xdb, 0x94, 0x84, 0x25, 0x1c, 0x3d, 0x81, 0x4d, 0x8d, 0xbd, 0xa5,
-	0x34, 0x26, 0x81, 0x3f, 0xa1, 0x89, 0x0d, 0x92, 0xbc, 0xbc, 0x81, 0x5a, 0x80, 0x34, 0xd8, 0x89,
-	0x46, 0x31, 0xa3, 0x49, 0x22, 0xda, 0xaf, 0x26, 0xe9, 0x2b, 0x76, 0xc4, 0xc0, 0xc6, 0x2c, 0xba,
-	0x9e, 0xee, 0x89, 0x86, 0xb9, 0x25, 0x43, 0x9a, 0x01, 0x42, 0x0c, 0x46, 0xe4, 0xfa, 0xd0, 0x13,
-	0xdf, 0x84, 0xa1, 0x5d, 0x57, 0x62, 0x90, 0x83, 0x44, 0xe4, 0x17, 0x94, 0x78, 0x94, 0x25, 0x76,
-	0x63, 0xa7, 0xb8, 0x6b, 0xe2, 0xd4, 0xd4, 0x42, 0xc2, 0x69, 0xc8, 0x07, 0xd3, 0x98, 0xda, 0x1b,
-	0xf2, 0xec, 0x3c, 0xe4, 0xfc, 0x53, 0x80, 0x8d, 0xac, 0x01, 0x30, 0x4d, 0xc6, 0x01, 0x17, 0xf7,
-	0xe1, 0x11, 0x27, 0x41, 0xdf, 0xff, 0xa8, 0xba, 0xa0, 0x88, 0x67, 0x80, 0xa8, 0x12, 0x8b, 0x55,
-	0x0b, 0x1b, 0x58, 0x2c, 0xe7, 0x86, 0xac, 0x28, 0xe1, 0xd9, 0x90, 0x7d, 0x09, 0x75, 0xf9, 0xe9,
-	0x7e, 0x4a, 0x30, 0x25, 0x61, 0x1e, 0x9c, 0x93, 0xb3, 0x92, 0x74, 0x38, 0x93, 0xb3, 0xf4, 0x04,
-	0x9c, 0x12, 0xca, 0x92, 0x30, 0x0f, 0xa2, 0x47, 0xd0, 0xd0, 0x80, 0x9a, 0xa1, 0xc4, 0xae, 0x48,
-	0xda, 0x02, 0x2a, 0x72, 0x45, 0x26, 0xe7, 0x32, 0xb2, 0x75, 0x49, 0x48, 0x4d, 0xf4, 0x03, 0x54,
-	0x28, 0x63, 0xef, 0x48, 0x6c, 0x57, 0xa5, 0x58, 0x3f, 0x9c, 0x53, 0x3c, 0x95, 0x9a, 0x56, 0x57,
-	0x32, 0xba, 0x21, 0x67, 0x53, 0xac, 0xe9, 0xcd, 0x1f, 0xa1, 0x96, 0x83, 0x45, 0x7e, 0x2e, 0xe9,
-	0x34, 0xed, 0xe2, 0x4b, 0x3a, 0x15, 0xfd, 0x37, 0x21, 0xc1, 0x98, 0x6a, 0xa5, 0x56, 0xc6, 0x8b,
-	0xc2, 0x73, 0xc3, 0xf9, 0xdb, 0x04, 0x38, 0x18, 0x0c, 0x4e, 0x74, 0xe2, 0xf3, 0x9a, 0x67, 0x7c,
-	0x56, 0xf3, 0x72, 0x61, 0x14, 0xe6, 0xc3, 0x98, 0x2b, 0x5e, 0x71, 0xb1, 0x78, 0x9f, 0x4b, 0xb4,
-	0x2e, 0x6c, 0x79, 0x75, 0x61, 0x2b, 0x0b, 0x85, 0x7d, 0x04, 0x8d, 0x33, 0x92, 0x70, 0xa1, 0x94,
-	0xf4, 0x6a, 0xe0, 0x8f, 0x54, 0x3e, 0x0d, 0xbc, 0x80, 0x0a, 0x5e, 0x12, 0x44, 0x1f, 0x72, 0xbc,
-	0xaa, 0xe2, 0xcd, 0xa3, 0xe8, 0x01, 0x00, 0x99, 0x9c, 0xa7, 0x1c, 0xd5, 0x25, 0x39, 0x04, 0xed,
-	0x41, 0x4d, 0xc9, 0x61, 0x27, 0xf2, 0xe4, 0xf0, 0x65, 0x35, 0x9a, 0x25, 0x50, 0x0b, 0xa7, 0x64,
-	0xa8, 0x1a, 0xe5, 0xbf, 0x41, 0x03, 0xd8, 0x0a, 0x08, 0x17, 0xbf, 0x9f, 0xfb, 0x7e, 0xc2, 0x99,
-	0x3f, 0x1c, 0x73, 0x35, 0x98, 0xe2, 0x28, 0x67, 0xe1, 0xa8, 0xa3, 0x65, 0x26, 0x5e, 0xf5, 0x39,
-	0x7a, 0x02, 0x45, 0x2f, 0x4c, 0xe4, 0xdc, 0xd6, 0xda, 0xcd, 0x85, 0x53, 0xba, 0x01, 0x89, 0x13,
-	0xea, 0xc9, 0x37, 0x8c, 0xa0, 0xa1, 0x67, 0x50, 0xf6, 0x68, 0x40, 0xa6, 0x72, 0x8e, 0x3f, 0xcf,
-	0x57, 0x44, 0xd4, 0x82, 0x12, 0xa3, 0x49, 0x6c, 0x37, 0x6e, 0xfc, 0x40, 0xf2, 0x04, 0xdf, 0x15,
-	0x42, 0xb1, 0x71, 0x33, 0x5f, 0xf0, 0xc4, 0xfd, 0x19, 0xbd, 0xb2, 0xad, 0x9b, 0xef, 0xcf, 0xe8,
-	0x15, 0x72, 0xe0, 0x96, 0xf8, 0x2a, 0x1b, 0xe7, 0x4d, 0x59, 0xa8, 0x39, 0x4c, 0xa8, 0x8e, 0x17,
-	0x26, 0x19, 0x05, 0x49, 0x4a, 0x1e, 0x12, 0x0c, 0x46, 0xaf, 0x32, 0xc6, 0x96, 0x62, 0xe4, 0x20,
-	0xe1, 0x47, 0x44, 0x93, 0x51, 0xb6, 0x95, 0x9f, 0x3c, 0x26, 0x94, 0x41, 0xa6, 0x28, 0x23, 0xdd,
-	0x56, 0xda, 0x32, 0x07, 0xa2, 0x76, 0x36, 0xd7, 0x77, 0x64, 0xa1, 0x97, 0x42, 0x5c, 0x1e, 0xe9,
-	0x65, 0xcd, 0xb9, 0xbb, 0x4a, 0x73, 0x96, 0xb4, 0xcd, 0x5e, 0xa1, 0x6d, 0xcd, 0x63, 0xd8, 0x5a,
-	0xd1, 0x4b, 0xa2, 0xdf, 0x63, 0xca, 0x5c, 0x1a, 0x72, 0x72, 0x4e, 0xf5, 0x13, 0x2f, 0x87, 0x88,
-	0x09, 0xd7, 0xdd, 0xa6, 0xa5, 0x36, 0x35, 0x9b, 0x1d, 0xa8, 0xe5, 0xca, 0x22, 0xc6, 0x76, 0x44,
-	0xae, 0xe5, 0x09, 0x06, 0x16, 0x4b, 0x89, 0xf8, 0x61, 0xaa, 0xd0, 0x23, 0x3f, 0x14, 0x08, 0x99,
-	0x9c, 0x6b, 0x71, 0x16, 0xcb, 0xe6, 0x4b, 0xb0, 0x16, 0x87, 0x25, 0xaf, 0x5c, 0xf5, 0x1b, 0x94,
-	0xeb, 0x7f, 0x88, 0xde, 0xe3, 0x29, 0x54, 0x53, 0x45, 0x13, 0x4f, 0xe8, 0xd3, 0xde, 0xdb, 0xde,
-	0xf1, 0xfb, 0x9e, 0x7a, 0x95, 0x88, 0xba, 0x58, 0x06, 0x5a, 0x87, 0xe2, 0xa0, 0x73, 0x62, 0x15,
-	0xc4, 0xe2, 0x74, 0xff, 0xc4, 0x2a, 0x8a, 0xc7, 0x17, 0xee, 0xee, 0x1f, 0xf6, 0xad, 0x92, 0x58,
-	0xbe, 0xfb, 0xa5, 0xff, 0xf3, 0x91, 0x55, 0x96, 0xcb, 0xe3, 0xde, 0x9b, 0x63, 0xab, 0x22, 0x3e,
-	0x7e, 0x83, 0x4f, 0x3a, 0xd6, 0x3a, 0x02, 0xa8, 0x0c, 0x0e, 0xf0, 0xe1, 0xeb, 0x81, 0x55, 0x45,
-	0x75, 0x30, 0xdf, 0x77, 0x5f, 0xf5, 0x8f, 0x3b, 0x6f, 0xbb, 0x03, 0xcb, 0x6c, 0xff, 0x6e, 0x40,
-	0xa3, 0xaf, 0xfe, 0xe9, 0xf4, 0x29, 0x9b, 0xf8, 0x2e, 0x45, 0x3f, 0x41, 0x2d, 0xf7, 0x04, 0x43,
-	0x77, 0x56, 0xbf, 0x4d, 0x9b, 0x77, 0x3f, 0xf1, 0x56, 0x73, 0xd6, 0xd0, 0x4b, 0x30, 0xb3, 0x97,
-	0x3f, 0xda, 0x5e, 0xf5, 0x8f, 0xa2, 0x79, 0x7b, 0x01, 0x4d, 0xbf, 0xdd, 0x35, 0x9e, 0x19, 0xc3,
-	0x8a, 0x54, 0xf5, 0xef, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xdd, 0x05, 0xd8, 0xee, 0x84, 0x0d,
-	0x00, 0x00,
+	proto.RegisterEnum("pb.Protocol", Protocol_name, Protocol_value)
+	proto.RegisterEnum("pb.HeartBeatRequest_Task_Status", HeartBeatRequest_Task_Status_name, HeartBeatRequest_Task_Status_value)
+	proto.RegisterEnum("pb.ExecuteTaskRequest_Command", ExecuteTaskRequest_Command_name, ExecuteTaskRequest_Command_value)
+	proto.RegisterEnum("pb.ExecuteTaskResponse_Status", ExecuteTaskResponse_Status_name, ExecuteTaskResponse_Status_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1327,7 +867,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SqueezeServiceClient interface {
+	// ExecuteTask is used to perform tasks on the slave node
 	ExecuteTask(ctx context.Context, in *ExecuteTaskRequest, opts ...grpc.CallOption) (*ExecuteTaskResponse, error)
+	// HeartBeat is used to report task status to master node
 	HeartBeat(ctx context.Context, opts ...grpc.CallOption) (SqueezeService_HeartBeatClient, error)
 }
 
@@ -1381,7 +923,9 @@ func (x *squeezeServiceHeartBeatClient) Recv() (*HeartBeatResponse, error) {
 
 // SqueezeServiceServer is the server API for SqueezeService service.
 type SqueezeServiceServer interface {
+	// ExecuteTask is used to perform tasks on the slave node
 	ExecuteTask(context.Context, *ExecuteTaskRequest) (*ExecuteTaskResponse, error)
+	// HeartBeat is used to report task status to master node
 	HeartBeat(SqueezeService_HeartBeatServer) error
 }
 
@@ -1451,4 +995,68 @@ var _SqueezeService_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Metadata: "squeeze.proto",
+}
+
+func init() { proto.RegisterFile("squeeze.proto", fileDescriptor_squeeze_762fd7722b0faf7c) }
+
+var fileDescriptor_squeeze_762fd7722b0faf7c = []byte{
+	// 915 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x55, 0x5d, 0x6f, 0xe3, 0x44,
+	0x17, 0xae, 0xf3, 0xed, 0x93, 0x4d, 0xd6, 0x9d, 0xb7, 0xef, 0x62, 0xa2, 0x55, 0x89, 0x8c, 0x10,
+	0xd1, 0x0a, 0xa2, 0x25, 0x48, 0x08, 0x71, 0x81, 0x68, 0xd3, 0x6c, 0x1b, 0xb5, 0x24, 0x61, 0xec,
+	0xaa, 0xe2, 0x72, 0x62, 0xcf, 0x12, 0xab, 0xb1, 0xc7, 0x9d, 0x99, 0x94, 0x86, 0x7f, 0x01, 0xf7,
+	0x70, 0xcf, 0x3f, 0xe1, 0x4f, 0x21, 0xa1, 0x19, 0x4f, 0x52, 0x37, 0xe9, 0xde, 0x9d, 0xf3, 0x9c,
+	0x67, 0x7c, 0x3e, 0xe6, 0x99, 0x63, 0x68, 0x89, 0xbb, 0x15, 0xa5, 0xbf, 0xd1, 0x7e, 0xc6, 0x99,
+	0x64, 0xa8, 0x94, 0xcd, 0xbd, 0xdf, 0x4b, 0xe0, 0x5c, 0x50, 0xc2, 0xe5, 0x29, 0x25, 0x12, 0xd3,
+	0xbb, 0x15, 0x15, 0x12, 0x7d, 0x09, 0x15, 0x49, 0xc4, 0xad, 0x6b, 0x75, 0xad, 0x5e, 0x73, 0xf0,
+	0x71, 0x3f, 0x9b, 0xf7, 0x77, 0x39, 0xfd, 0x80, 0x88, 0x5b, 0xac, 0x69, 0x68, 0x00, 0x95, 0x38,
+	0x7d, 0xcf, 0xdc, 0x92, 0xa6, 0x1f, 0x3f, 0x4b, 0xf7, 0x97, 0xe4, 0x9e, 0x8e, 0xd3, 0xf7, 0x0c,
+	0x6b, 0x6e, 0xe7, 0x73, 0xb0, 0xb7, 0x10, 0xea, 0x40, 0xe3, 0x17, 0x9e, 0x85, 0x33, 0xc6, 0xa5,
+	0xce, 0xd9, 0xc2, 0x5b, 0xbf, 0x73, 0x07, 0x15, 0x95, 0x0a, 0xb5, 0xa1, 0x14, 0x47, 0x26, 0x5a,
+	0x8a, 0x23, 0xf4, 0x2d, 0xd4, 0x84, 0x24, 0x72, 0x25, 0x74, 0xda, 0xf6, 0xa0, 0xfb, 0xc1, 0x2a,
+	0xfb, 0xbe, 0xe6, 0x61, 0xc3, 0xf7, 0x3e, 0x81, 0x5a, 0x8e, 0xa0, 0x06, 0x54, 0xce, 0xa6, 0x93,
+	0x91, 0x73, 0x80, 0x9a, 0x50, 0xc7, 0xd7, 0x93, 0xc9, 0x78, 0x72, 0xee, 0x58, 0xde, 0x77, 0x70,
+	0x58, 0xf8, 0x90, 0xc8, 0x58, 0x2a, 0x28, 0xfa, 0x0c, 0xaa, 0xaa, 0x59, 0xe1, 0x5a, 0xdd, 0x72,
+	0xaf, 0x39, 0x78, 0xa9, 0xd2, 0xe9, 0x19, 0xe4, 0x99, 0x70, 0x1e, 0xf5, 0xfe, 0xb1, 0xa0, 0x59,
+	0x80, 0x51, 0x17, 0x9a, 0x21, 0x4b, 0xc3, 0x15, 0xe7, 0x34, 0x0d, 0xd7, 0xa6, 0xfe, 0x22, 0xa4,
+	0x9a, 0xe7, 0x39, 0x39, 0x6f, 0xa5, 0x85, 0xb7, 0x3e, 0x7a, 0x0d, 0x36, 0x27, 0x92, 0x5e, 0xc5,
+	0x49, 0x2c, 0xdd, 0xb2, 0x0e, 0x3e, 0x02, 0xc8, 0x83, 0xca, 0x42, 0xca, 0xcc, 0xad, 0xe8, 0xb9,
+	0xbf, 0xd0, 0x03, 0x90, 0x32, 0x53, 0xe9, 0x2f, 0x0e, 0xb0, 0x8e, 0xa1, 0xaf, 0xc0, 0xfe, 0x95,
+	0xce, 0x05, 0x0b, 0x6f, 0xa9, 0x74, 0xab, 0x9a, 0x78, 0xa8, 0x88, 0x37, 0x1b, 0xd0, 0xb0, 0x1f,
+	0x59, 0xa7, 0x35, 0xa8, 0xc8, 0x75, 0x46, 0xbd, 0x7f, 0x2d, 0x40, 0xa3, 0x07, 0x1a, 0xae, 0x24,
+	0x2d, 0x76, 0xf4, 0x16, 0xca, 0x61, 0x92, 0xdf, 0x44, 0x3b, 0xbf, 0xec, 0x7d, 0x52, 0x7f, 0xc8,
+	0x92, 0x84, 0xa4, 0x11, 0x56, 0x54, 0xd4, 0x83, 0x86, 0x16, 0x5c, 0xc8, 0x96, 0xe6, 0xb2, 0x74,
+	0xad, 0x33, 0x83, 0xe1, 0x6d, 0x54, 0xcd, 0x22, 0x24, 0xcb, 0xe5, 0x9c, 0x84, 0xb7, 0xba, 0x5d,
+	0x1b, 0x6f, 0x7d, 0x15, 0x8b, 0x56, 0x9c, 0xc8, 0x98, 0xa5, 0xba, 0xe3, 0x16, 0xde, 0xfa, 0x46,
+	0x1c, 0xd5, 0xad, 0x38, 0x3e, 0x35, 0x02, 0xae, 0xe9, 0x86, 0xf7, 0xee, 0x4a, 0x07, 0xbd, 0x63,
+	0xa8, 0x9b, 0x32, 0x91, 0x0d, 0x55, 0x3f, 0x38, 0xc1, 0x81, 0x73, 0xa0, 0x34, 0xe1, 0x07, 0xd3,
+	0x99, 0x63, 0x79, 0x7f, 0x5b, 0xf0, 0xbf, 0x27, 0xad, 0x19, 0x25, 0x20, 0xa8, 0x90, 0x28, 0xe2,
+	0x7a, 0x02, 0x36, 0xd6, 0x36, 0xfa, 0x66, 0x47, 0x8d, 0xfb, 0x73, 0xc9, 0x0f, 0xef, 0x68, 0x11,
+	0x1d, 0x41, 0x95, 0x72, 0xce, 0xb8, 0xe9, 0x36, 0x77, 0x54, 0x86, 0x88, 0x48, 0xa2, 0xdb, 0xb4,
+	0xb1, 0xb6, 0xbd, 0xd7, 0x45, 0xd5, 0xfa, 0xd7, 0xc3, 0x61, 0x5e, 0xeb, 0xbb, 0x93, 0xf1, 0x95,
+	0x63, 0x79, 0x7f, 0x5a, 0xd0, 0x7a, 0x72, 0xa5, 0xe8, 0x15, 0xd4, 0x44, 0xb8, 0xa0, 0x09, 0x35,
+	0x75, 0x1a, 0x4f, 0x7d, 0x7b, 0xc1, 0x84, 0xd4, 0x75, 0xda, 0x58, 0xdb, 0x0a, 0xcb, 0x88, 0x5c,
+	0x98, 0x22, 0xb4, 0x8d, 0x5c, 0xa8, 0xcb, 0x38, 0xa1, 0x6c, 0x25, 0xcd, 0xb4, 0x37, 0xae, 0x62,
+	0xcf, 0x59, 0xb4, 0xd6, 0xe3, 0xb6, 0xb1, 0xb6, 0xd1, 0x31, 0x40, 0x42, 0x1e, 0x30, 0x15, 0xab,
+	0xa5, 0x14, 0x7a, 0xec, 0x55, 0x5c, 0x40, 0xbc, 0xbf, 0xca, 0xd0, 0xd8, 0x68, 0x13, 0x39, 0x50,
+	0x5e, 0xf1, 0xa5, 0xa9, 0x4b, 0x99, 0xaa, 0xd8, 0x84, 0xca, 0x05, 0x8b, 0x4c, 0x59, 0xc6, 0xdb,
+	0xa6, 0x2a, 0x17, 0x52, 0x15, 0x0a, 0xab, 0x3f, 0x2d, 0xec, 0x08, 0xaa, 0x4a, 0xf3, 0x03, 0xb7,
+	0xd1, 0xb5, 0x7a, 0x0d, 0x9c, 0x3b, 0xe8, 0x0d, 0x38, 0x51, 0x2c, 0xc8, 0x7c, 0x49, 0x31, 0x8d,
+	0x62, 0x4e, 0x43, 0x29, 0x5c, 0x5b, 0x13, 0xf6, 0x70, 0xf4, 0x05, 0x1c, 0x1a, 0xec, 0x92, 0xd2,
+	0x8c, 0x2c, 0xe3, 0x7b, 0x2a, 0x5c, 0xd0, 0xe4, 0xfd, 0x00, 0xea, 0x03, 0x32, 0xe0, 0x90, 0x25,
+	0x19, 0xa7, 0x42, 0x28, 0x6d, 0x36, 0x35, 0xfd, 0x99, 0x88, 0x7a, 0xcd, 0x19, 0x67, 0x0f, 0xeb,
+	0x13, 0xa5, 0x9e, 0x17, 0xba, 0xa5, 0x47, 0x40, 0x6d, 0x8a, 0x84, 0x3c, 0x8c, 0x23, 0x75, 0x26,
+	0x4d, 0xdd, 0x56, 0xbe, 0x29, 0x0a, 0x90, 0xea, 0x7c, 0x41, 0x49, 0x44, 0xb9, 0x70, 0xdb, 0xdd,
+	0x72, 0xcf, 0xc6, 0x1b, 0xd7, 0x6c, 0x19, 0x49, 0x53, 0x19, 0xac, 0x33, 0xea, 0xbe, 0xd4, 0xdf,
+	0x2e, 0x42, 0x3b, 0x17, 0xe4, 0xec, 0x5e, 0xd0, 0x9b, 0x35, 0x34, 0x36, 0xef, 0x51, 0x2d, 0xc3,
+	0xeb, 0xc9, 0xe5, 0x64, 0x7a, 0x33, 0xc9, 0x35, 0x76, 0x11, 0x04, 0x33, 0xc7, 0x42, 0x75, 0x28,
+	0x07, 0xc3, 0x99, 0x53, 0x52, 0xc6, 0xf5, 0xd9, 0xcc, 0x29, 0xab, 0x67, 0x83, 0x47, 0x67, 0x63,
+	0xdf, 0xa9, 0x28, 0xf3, 0xc7, 0x9f, 0xfd, 0x9f, 0xae, 0x9c, 0xaa, 0x36, 0xa7, 0x93, 0xf3, 0xa9,
+	0x53, 0x53, 0x87, 0xcf, 0xf1, 0x6c, 0xe8, 0xd4, 0x11, 0x40, 0x2d, 0xb8, 0xc0, 0xe3, 0x77, 0x81,
+	0xd3, 0x40, 0x2d, 0xb0, 0x6f, 0x46, 0xa7, 0xfe, 0x74, 0x78, 0x39, 0x0a, 0x1c, 0x7b, 0xf0, 0x87,
+	0x05, 0x6d, 0x3f, 0xff, 0x31, 0xf9, 0x94, 0xdf, 0xc7, 0x21, 0x45, 0x3f, 0x40, 0xb3, 0xf0, 0x78,
+	0xd0, 0xab, 0xe7, 0xb7, 0x4c, 0xe7, 0xa3, 0x0f, 0xbc, 0x32, 0xef, 0x00, 0x7d, 0x0f, 0xf6, 0x76,
+	0x87, 0xa3, 0xa3, 0xe7, 0xfe, 0x0d, 0x9d, 0xff, 0xef, 0xa0, 0x9b, 0xb3, 0x3d, 0xeb, 0xad, 0x35,
+	0xaf, 0xe9, 0x9d, 0xf4, 0xf5, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x86, 0xd8, 0xaf, 0x92, 0x33,
+	0x07, 0x00, 0x00,
 }

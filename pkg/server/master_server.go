@@ -25,7 +25,6 @@ import (
 	log "github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
 	protobuf "github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
@@ -44,7 +43,7 @@ type MasterServer struct {
 	results chan protobuf.Message
 }
 
-func (m *MasterServer) Initialize(args ServerArgs) error {
+func (m *MasterServer) Initialize(args *ServerArgs) error {
 	m.ServerBase.Initialize(args)
 	m.Mode = Master
 
@@ -62,16 +61,20 @@ func (m *MasterServer) Initialize(args ServerArgs) error {
 
 func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveConn) (interface{}, error) {
 	count := len(conns)
-
 	var wg sync.WaitGroup
 	m.results = make(chan protobuf.Message, count)
 	mergedResults := make(chan interface{}, 1)
 
 	go func(mergedResults chan interface{}) {
-		m.runCollector(mergedResults, taskReq.Protocol)
+		m.runCollector(mergedResults, taskReq)
 	}(mergedResults)
 
 	if taskReq.Callback != "" {
+		err := m.dispatchTask(taskReq, conns, &wg)
+		if err != nil {
+			return nil, err
+		}
+
 		go func() {
 			wg.Wait()
 			close(m.results)
@@ -80,19 +83,22 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			// and then read the merged results.
 			response := <-mergedResults
 
-			data, err := json.Marshal(response)
+			data, err := json.Marshal(map[string]interface{} {
+				"error": "",
+				"data": response,
+			})
 			if err != nil {
 				log.Errorf("unable to marshal data : %v", err)
 				return
 			}
 
-			util.DoRequest("POST", taskReq.Callback, string(data))
+			resp, err := util.DoRequest("POST", taskReq.Callback, string(data), 30)
+			if err != nil {
+				log.Errorf("Failed to send results to callback address: %s, %s", err.Error(), resp)
+				return
+			}
+			log.Infof("Send results to callback address successfully: %s", resp)
 		}()
-
-		err := m.dispatchTask(taskReq, conns, &wg)
-		if err != nil {
-			return nil, err
-		}
 
 		return "success", nil
 	} else {
@@ -247,10 +253,13 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // runCollector is used to collect results which all slaves generated.
-func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Protocol) {
-	builder := builder.NewBuilder(protocol)
-	results := make([]protobuf.Message, 0)
-	squeezeResponse := &proto.SqueezeResponse{Result: nil}
+func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.ExecuteTaskRequest) {
+	builder := builder.NewBuilder(taskReq.Protocol)
+	results := make([]string, 0)
+	SqueezeResult := &proto.SqueezeResult{
+		ID: taskReq.Id,
+		Result: nil,
+	}
 
 	for r := range m.results {
 		res, ok := r.(*pb.ExecuteTaskResponse)
@@ -259,7 +268,7 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			continue
 		}
 
-		squeezeResponse.AgentStats = append(squeezeResponse.AgentStats, proto.SqueezeStats{
+		SqueezeResult.AgentStats = append(SqueezeResult.AgentStats, proto.SqueezeStats{
 			Addr: res.Addr,
 			Status: int32(res.Status),
 			Error: res.Error},
@@ -269,36 +278,30 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, protocol pb.Pr
 			continue
 		}
 
-		var dynamicAny ptypes.DynamicAny
-		if err := ptypes.UnmarshalAny(res.Any, &dynamicAny); err != nil {
-			log.Errorf("Could not unmarshal result from any field: %s", err)
-			return
-		}
-
-		results = append(results, dynamicAny.Message)
+		results = append(results, res.Data)
 	}
 
 	if len(results) != 0 {
 		ret, err := builder.Merge(results)
 		if err != nil {
-			log.Error("failed to merge result, %s", err.Error())
+			log.Error("failed to merge result, ", err.Error())
 			return
 		}
-		squeezeResponse.Result = ret
+		SqueezeResult.Result = ret
 	}
 
-	aggregation <- squeezeResponse
+	aggregation <- SqueezeResult
 }
 
-func (m *MasterServer) handleInfo(writer http.ResponseWriter, request *http.Request) {
+func (m *MasterServer) handleInfo(w http.ResponseWriter, r *http.Request) {
 	resp := []AgentStatusResp{}
 	slaveConnsMutex.Lock()
 	for connID, c := range slaveConns {
-		resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr})
+		resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr, Status: c.Status})
 	}
 	slaveConnsMutex.Unlock()
 
-	json.NewEncoder(writer).Encode(resp)
+	util.RespondWithJSON(w, http.StatusOK, resp)
 }
 
 func (m *MasterServer) ExecuteTask(ctx context.Context, in *pb.ExecuteTaskRequest) (*pb.ExecuteTaskResponse, error) {
@@ -340,6 +343,8 @@ func (m *MasterServer) HeartBeat(stream pb.SqueezeService_HeartBeatServer) error
 				defer m.removeConn(conn.ConnID, conn)
 			}
 
+			m.updateConn(conn.ConnID, pb.HeartBeatRequest_Task_Status_name[int32(req.Task.Status)])
+
 			if err := stream.Send(&pb.HeartBeatResponse{}); err != nil {
 				log.Error("send failed.")
 			}
@@ -378,8 +383,8 @@ func (m *MasterServer) Start(stopChan <-chan struct{}) error {
 
 	// grpc server
 	go func() {
-		log.Infof("grpc listening on %s", m.args.GrpcAddr)
-		listener, err := net.Listen("tcp", m.args.GrpcAddr)
+		log.Infof("grpc listening on %s", m.args.GRPCAddr)
+		listener, err := net.Listen("tcp", m.args.GRPCAddr)
 		if err != nil {
 			log.Errorf("GRPC failed to listen: %v", err)
 			return

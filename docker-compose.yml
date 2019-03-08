@@ -2,13 +2,13 @@ version: '3'
 services:
   master-server:
     image: 'agile6v/squeeze:v0.1.0'
-    command: '/home/agile6v/squeeze master --alsologtostderr'
+    command: 'squeeze master --alsologtostderr'
     networks:
       - "squeeze"
 
   slave:
     image: 'agile6v/squeeze:v0.1.0'
-    command: '/home/agile6v/squeeze slave --grpcMasterAddr=master-server:9997 --masterAddr=master-server:9998 --grpcAddr=0.0.0.0:9991 --alsologtostderr -v=2'
+    command: 'squeeze slave --grpcMasterAddr=master-server:9997 --masterAddr=master-server:9998 --grpcAddr=0.0.0.0:9991 --alsologtostderr -v=2'
     depends_on:
       - master-server
     networks:
@@ -16,7 +16,7 @@ services:
 
   web:
     image: 'agile6v/squeeze:v0.1.0'
-    command: '/home/agile6v/squeeze web --type="sqlite" --masterAddr="http://master-server:9998"  --alsologtostderr'
+    command: 'squeeze web --type="sqlite" --masterAddr="http://master-server:9998"  --alsologtostderr'
     depends_on:
       - master-server
     networks:

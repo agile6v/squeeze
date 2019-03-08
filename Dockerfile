@@ -17,6 +17,6 @@ FROM alpine:3.8
 RUN apk add --no-cache \
         libc6-compat
 
-COPY --from=builder /tmp/squeeze/squeeze /home/agile6v/squeeze
+COPY --from=builder /tmp/squeeze/squeeze /bin/squeeze
 
-CMD ["/home/agile6v/squeeze"]
+CMD ["squeeze"]

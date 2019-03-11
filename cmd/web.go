@@ -20,12 +20,12 @@ import (
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/server"
 	"github.com/spf13/cobra"
-	"github.com/agile6v/squeeze/pkg/server/web/db"
-	"github.com/agile6v/squeeze/pkg/server/web/dao"
 )
 
 func WebCmd() *cobra.Command {
 	serverArgs := server.NewServerArgs()
+	webOptions := config.NewWebOptions()
+	serverArgs.Args = webOptions
 
 	// webCmd represents the web command
 	webCmd := &cobra.Command{
@@ -33,7 +33,7 @@ func WebCmd() *cobra.Command {
 		Short: "Backend server that supports the Squeeze UI.",
 		Long:  `Backend server that supports the Squeeze UI.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return validate(args)
+			return validate(args, webOptions)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("run squeeze with web mode.")
@@ -48,15 +48,6 @@ func WebCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to initialize web server: %v", err)
 			}
-
-			err = db.Init(config.ConfigArgs.WebOpts.Type,
-				config.ConfigArgs.WebOpts.DSN,
-				config.ConfigArgs.WebOpts.File)
-			if err != nil {
-				return fmt.Errorf("failed to init database: %v", err)
-			}
-
-			dao.Init()
 
 			// Start the server
 			err = srv.Start(stopChan)
@@ -73,12 +64,12 @@ func WebCmd() *cobra.Command {
 		"The address and port of the web server.")
 	webCmd.PersistentFlags().StringVar(&serverArgs.MasterAddr, "masterAddr", "",
 		"The address of the master server")
-	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.DSN, "dsn", "",
+	webCmd.PersistentFlags().StringVar(&webOptions.DSN, "dsn", "",
 		`Data Source Name. If you specify --type=mysql, need to set this option.
 Format: username:password@protocol(address)/dbname?param=value`)
-	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.File, "file", "/tmp/sqlite.db",
+	webCmd.PersistentFlags().StringVar(&webOptions.File, "file", "/tmp/sqlite.db",
 		"SQLite database files. If you specify --type=sqlite, need to set this option.")
-	webCmd.PersistentFlags().StringVar(&config.ConfigArgs.WebOpts.Type, "type", "sqlite",
+	webCmd.PersistentFlags().StringVar(&webOptions.Type, "type", "sqlite",
 		"The type of the database, one of the mysql and sqlite.")
 	webCmd.MarkPersistentFlagRequired("type")
 	webCmd.MarkPersistentFlagRequired("masterAddr")
@@ -86,12 +77,12 @@ Format: username:password@protocol(address)/dbname?param=value`)
 	return webCmd
 }
 
-func validate(args []string) error {
-	if config.ConfigArgs.WebOpts.Type != "mysql" && config.ConfigArgs.WebOpts.Type != "sqlite" {
+func validate(args []string, webOptions *config.WebOptions) error {
+	if webOptions.Type != "mysql" && webOptions.Type != "sqlite" {
 		return fmt.Errorf("option --type must be one of the mysql and sqlite.")
 	}
 
-	if config.ConfigArgs.WebOpts.Type == "mysql" && config.ConfigArgs.WebOpts.DSN == "" {
+	if webOptions.Type == "mysql" && webOptions.DSN == "" {
 		return fmt.Errorf("option --dsn cannot be empty.")
 	}
 

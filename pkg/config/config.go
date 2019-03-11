@@ -14,6 +14,14 @@
 
 package config
 
+import (
+	"fmt"
+	"errors"
+	"net/url"
+	"github.com/agile6v/squeeze/pkg/util"
+)
+
+
 var ConfigArgs ProtoConfigArgs
 
 type ProtoConfigArgs struct {
@@ -21,9 +29,12 @@ type ProtoConfigArgs struct {
 	HttpAddr    string          // Usually used to save the address of the master
 	Callback    string          // If it is asynchronous mode, the response
 								// will be sent to the address specified by Callback
-	WebOpts     WebOptions      // Parameters of the web command
-	HttpOpts    HttpOptions     // Parameters of the HTTP protocol
 	WsOpts      WsOptions       // Parameters of the WEBSOCKET protocol
+	Options     interface{}
+}
+
+func NewConfigArgs(opts interface{}) *ProtoConfigArgs {
+	return &ProtoConfigArgs{Options: opts}
 }
 
 // HttpOptions contains http protocol runtime parameters
@@ -39,10 +50,63 @@ type HttpOptions struct {
 	Timeout          int
 	Duration         int
 	Body             string
-	ContentType      string
 	BodyFile         string
+	ContentType      string
 	MaxResults       int
 	DisableKeepAlive bool
+	DisableCompression bool
+}
+
+func NewHttpOptions() *HttpOptions {
+	return &HttpOptions{}
+}
+
+func (httpOpts *HttpOptions) Validate(args []string) error {
+	// Check the validity of the concurrency
+	if httpOpts.Concurrency < 1 {
+		return fmt.Errorf("option --concurrency must be greater than 0.")
+	}
+
+	// Check if the options are missing
+	if httpOpts.Requests == 0 && httpOpts.Duration == 0 {
+		return fmt.Errorf("option --requests or --duration must be specified one of them.")
+	}
+
+	//
+	if httpOpts.Duration == 0 {
+		if httpOpts.Requests < httpOpts.Concurrency {
+			return fmt.Errorf("option --concurrecny must be greater than --requests.")
+		}
+	}
+
+	// Check if the format of http headers' is vaild
+	if len(httpOpts.Headers) > 0 {
+		for _, h := range httpOpts.Headers {
+			_, err := util.ParseHTTPHeader(h)
+			if err != nil {
+				return fmt.Errorf("HTTP Header format is invalid, %v", err)
+			}
+		}
+	}
+
+	// Check the validity of the target URL
+	u, err := url.ParseRequestURI(args[0])
+	if err != nil {
+		return err
+	}
+
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return fmt.Errorf("Please specify the url scheme, like http://abc.com or https://abc.com")
+	}
+
+	if httpOpts.ProxyAddr != "" {
+		_, err := url.Parse(httpOpts.ProxyAddr)
+		if err != nil {
+			return fmt.Errorf("invalid argument %s: %s", httpOpts.ProxyAddr, err.Error())
+		}
+	}
+
+	return nil
 }
 
 // WsOptions contains websocket protocol runtime parameters
@@ -58,9 +122,39 @@ type WsOptions struct {
 	MaxResults  int
 }
 
+func NewWsOptions() *WsOptions {
+	return &WsOptions{}
+}
+
+func (wsOptions *WsOptions) Validate(args []string) error {
+	if wsOptions.Concurrency < 1 {
+		return fmt.Errorf("option --concurrency must be greater than 0.")
+	}
+
+	// Check the validity of the target URL
+	u, err := url.Parse(args[0])
+	if err != nil {
+	return err
+}
+
+	if u.Scheme == "" || u.Path == "" {
+	return errors.New("URL Scheme or Path cannot be empty.")
+	}
+
+	wsOptions.Scheme = u.Scheme
+	wsOptions.Host = u.Host
+	wsOptions.Path = u.Path
+
+	return nil
+}
+
 // WebOptions contains options of the web command
 type WebOptions struct {
 	DSN     string
 	File    string
 	Type    string
+}
+
+func NewWebOptions() *WebOptions {
+	return &WebOptions{}
 }

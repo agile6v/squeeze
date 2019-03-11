@@ -1,11 +1,10 @@
 # Squeeze
 
-
+Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create test tasks and display test results.
 
 # Table of Contents
 - [Features](#features)
 - [Project Status](#project-status)
-- [How it works](#how-it-works)
 - [Architecture](#architecture)
 - [Documentation](#documentation)
 - [Prerequisite](#prerequisite)
@@ -16,15 +15,11 @@
 - [License](#license)
 
 # Features
-* **Multiple Protocols**: http1.0,http1.1,http2.0,https,websocket
+* **Multiple Protocols**: HTTP1.0, HTTP1.1, HTTP2.0, HTTPS, Websocket
 
 # Project Status
-***Experimental***.
+***Experimental***. This project is still under development.
 
-This project is still under development.
-
-
-# How it works
 
 # Architecture
 
@@ -37,11 +32,46 @@ This project is still under development.
 * Requires [protoc-gen-go](https://github.com/google/protobuf)
 
 # Installation
+### 1. From source
+
+### 2. From a pre-built binary
+
+### 3. With Docker or Kubernetes
+Squeeze provides a corresponding docker image for each version and hosted on [Docker Hub](https://hub.docker.com/r/agile6v/squeeze). Therefore we can use docker-compose to quickly build a squeeze cluster to experience all the features.  Deployment on kubernetes will also support in the near future.
+
+**Starting squeeze cluster with docker-compose:**
+
+```shell
+$ docker-compose up -d
+```
+
+**Scaling the slave with docker-compose:**
+
+```shell
+$ docker-compose up -d --scale slave=3
+```
+
+**Stoping squeeze cluster with docker-compose:**
+
+```shell
+$ docker-compose down
+```
+
+**Deploying on Kubernetes:**
+
+```shell
+
+```
+
+
 
 # Usage
 
 # Contributing
 If you are interested in contributing to the Squeeze project, welcome to submit a PR.
+Please, check this section before opening a new issue.
+
+
 
 # Future Works
 

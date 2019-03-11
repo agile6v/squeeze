@@ -153,8 +153,13 @@ func NewBuilder() *HttpBuilder {
 }
 
 func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
-	if ConfigArgs.HttpOpts.Duration > 0 {
-		ConfigArgs.HttpOpts.Requests = math.MaxInt32
+	httpOptions, ok := ConfigArgs.Options.(config.HttpOptions)
+	if !ok {
+		return "", fmt.Errorf("Expected HttpOptions type, but got %T", ConfigArgs.Options)
+	}
+
+	if httpOptions.Duration > 0 {
+		httpOptions.Requests = math.MaxInt32
 	}
 
 	req := &pb.ExecuteTaskRequest{
@@ -162,23 +167,24 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
 		Callback: ConfigArgs.Callback,
-		Duration: uint32(ConfigArgs.HttpOpts.Duration),
+		Duration: uint32(httpOptions.Duration),
 		Task: &pb.TaskRequest{
-			Requests:    uint32(ConfigArgs.HttpOpts.Requests),
-			Concurrency: uint32(ConfigArgs.HttpOpts.Concurrency),
-			RateLimit:   uint32(ConfigArgs.HttpOpts.RateLimit),
+			Requests:    uint32(httpOptions.Requests),
+			Concurrency: uint32(httpOptions.Concurrency),
+			RateLimit:   uint32(httpOptions.RateLimit),
 			Type: &pb.TaskRequest_Http{
 				Http: &pb.HttpTask{
-					Url:               ConfigArgs.HttpOpts.URL,
-					Http2:             ConfigArgs.HttpOpts.HTTP2,
-					Method:            ConfigArgs.HttpOpts.Method,
-					Body:              ConfigArgs.HttpOpts.Body,
-					Timeout:           uint32(ConfigArgs.HttpOpts.Timeout),
-					DisableKeepalives: ConfigArgs.HttpOpts.DisableKeepAlive,
-					Headers:           ConfigArgs.HttpOpts.Headers,
-					ProxyAddr:         ConfigArgs.HttpOpts.ProxyAddr,
-					ContentType:       ConfigArgs.HttpOpts.ContentType,
-					MaxResults:        int32(ConfigArgs.HttpOpts.MaxResults),
+					Url:               httpOptions.URL,
+					Http2:             httpOptions.HTTP2,
+					Method:            httpOptions.Method,
+					Body:              httpOptions.Body,
+					Timeout:           uint32(httpOptions.Timeout),
+					DisableKeepalives: httpOptions.DisableKeepAlive,
+					DisableCompression:httpOptions.DisableCompression,
+					Headers:           httpOptions.Headers,
+					ProxyAddr:         httpOptions.ProxyAddr,
+					ContentType:       httpOptions.ContentType,
+					MaxResults:        int32(httpOptions.MaxResults),
 				},
 			},
 		},

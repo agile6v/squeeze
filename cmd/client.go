@@ -37,8 +37,8 @@ to your contribution.
 	clientCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
 		"The address and port of the Squeeze master or slave.")
 
-	clientCmd.AddCommand(http.Command)
-	clientCmd.AddCommand(websocket.Command)
+	clientCmd.AddCommand(http.HttpCmd())
+	clientCmd.AddCommand(websocket.WsCmd())
 	clientCmd.AddCommand(stopCmd)
 
 	return clientCmd

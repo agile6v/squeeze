@@ -19,132 +19,91 @@ import (
 	"fmt"
 	"math"
 	"errors"
-	"net/url"
 	"os/signal"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-var Command = &cobra.Command{
-	Use:   "http",
-	Short: "http protocol benchmark",
-	Long:  `http protocol benchmark`,
-	Args:  cobra.ExactArgs(1),
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return validate(args)
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		config.ConfigArgs.HttpOpts.URL = args[0]
-		builder := builder.NewBuilder(pb.Protocol_HTTP)
+func HttpCmd() *cobra.Command {
+	httpOptions := config.NewHttpOptions()
+	configArgs := config.NewConfigArgs(httpOptions)
 
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
-		go func() {
-			<-c
-			fmt.Printf("\nCanceling...\n")
-			_, err := builder.CancelTask(&config.ConfigArgs)
+	httpCmd := &cobra.Command{
+		Use:   "http",
+		Short: "http protocol benchmark",
+		Long:  `http protocol benchmark`,
+		Args:  cobra.ExactArgs(1),
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			return httpOptions.Validate(args)
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			httpOptions.URL = args[0]
+			builder := builder.NewBuilder(pb.Protocol_HTTP)
+
+			c := make(chan os.Signal, 1)
+			signal.Notify(c, os.Interrupt)
+			go func() {
+				<-c
+				fmt.Printf("\nCanceling...\n")
+				_, err := builder.CancelTask(configArgs)
+				if err != nil {
+					log.Errorf("failed to cancel task %s", err)
+				}
+			}()
+
+			resp, err := builder.CreateTask(configArgs)
 			if err != nil {
-				log.Errorf("failed to cancel task %s", err)
+				log.Errorf("failed to create task %s", err)
+				if resp != "" {
+					return errors.New(resp)
+				}
+				return err
 			}
-		}()
 
-		resp, err := builder.CreateTask(&config.ConfigArgs)
-		if err != nil {
-			log.Errorf("failed to create task %s", err)
-			if resp != "" {
-				return errors.New(resp)
+			ret, err := builder.Render(resp)
+			if err != nil {
+				log.Errorf("failed to render response, %s", err)
+				return err
 			}
-			return err
-		}
 
-		ret, err := builder.Render(resp)
-		if err != nil {
-			log.Errorf("failed to render response, %s", err)
-			return err
-		}
+			fmt.Printf("%s", ret)
+			return nil
+		},
+	}
 
-		fmt.Printf("%s", ret)
-		return nil
-	},
-}
-
-func init() {
-	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Requests, "requests", "n",
+	httpCmd.PersistentFlags().IntVarP(&httpOptions.Requests, "requests", "n",
 		math.MaxInt32, "Number of requests to perform")
-	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.Method, "method", "m",
+	httpCmd.PersistentFlags().StringVarP(&httpOptions.Method, "method", "m",
 		"GET", "Method name")
-	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Concurrency, "concurrency", "c",
+	httpCmd.PersistentFlags().IntVarP(&httpOptions.Concurrency, "concurrency", "c",
 		1, "Number of multiple requests to make at a time")
-	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Timeout, "timeout", "s",
+	httpCmd.PersistentFlags().IntVarP(&httpOptions.Timeout, "timeout", "s",
 		30, "Seconds to max. wait for each response(Default is 30 seconds)")
-	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.RateLimit, "rateLimit", "q",
+	httpCmd.PersistentFlags().IntVarP(&httpOptions.RateLimit, "rateLimit", "q",
 		0, "Rate limit, in queries per second (QPS). Default is no rate limit")
-	Command.PersistentFlags().IntVarP(&config.ConfigArgs.HttpOpts.Duration, "duration", "z",
+	httpCmd.PersistentFlags().IntVarP(&httpOptions.Duration, "duration", "z",
 		0, "Duration of application to send requests. if duration is specified, n is ignored.")
-	Command.PersistentFlags().BoolVar(&config.ConfigArgs.HttpOpts.DisableKeepAlive, "disable-keepalive",
+	httpCmd.PersistentFlags().BoolVar(&httpOptions.DisableKeepAlive, "disable-keepalive",
 		false, "Disable keepalive, connection will use keepalive by default.")
-	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.ProxyAddr, "proxy", "x",
+	httpCmd.PersistentFlags().BoolVar(&httpOptions.DisableCompression, "disable-compression",
+		false, "Disable compression of body received from the server.")
+	httpCmd.PersistentFlags().StringVarP(&httpOptions.ProxyAddr, "proxy", "x",
 		"", "HTTP Proxy address as host:port")
-	Command.PersistentFlags().StringSliceVar(&config.ConfigArgs.HttpOpts.Headers, "header", nil,
+	httpCmd.PersistentFlags().StringSliceVar(&httpOptions.Headers, "header", nil,
 		"Custom HTTP header.(Repeatable)")
-	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.Body, "body", "b",
+	httpCmd.PersistentFlags().StringVarP(&httpOptions.Body, "body", "d",
 		"", "Request body string")
-	Command.PersistentFlags().StringVarP(&config.ConfigArgs.HttpOpts.ContentType, "content-type", "T",
+	httpCmd.PersistentFlags().StringVarP(&httpOptions.BodyFile, "bodyfile", "D",
+		"", "Request body from file")
+	httpCmd.PersistentFlags().StringVarP(&httpOptions.ContentType, "content-type", "T",
 		"text/plain", "Content-type header to use for POST/PUT data")
-	Command.PersistentFlags().IntVar(&config.ConfigArgs.HttpOpts.MaxResults, "maxResults", 1000000,
+	httpCmd.PersistentFlags().IntVar(&httpOptions.MaxResults, "maxResults", 1000000,
 		"The maximum number of response results that can be used")
-	Command.PersistentFlags().BoolVar(&config.ConfigArgs.HttpOpts.HTTP2, "http2",
+	httpCmd.PersistentFlags().BoolVar(&httpOptions.HTTP2, "http2",
 		false, "Enable http2")
-}
 
-func validate(args []string) error {
-	// Check the validity of the concurrency
-	if config.ConfigArgs.HttpOpts.Concurrency < 1 {
-		return fmt.Errorf("option --concurrency must be greater than 0.")
-	}
-
-	// Check if the options are missing
-	if config.ConfigArgs.HttpOpts.Requests == 0 && config.ConfigArgs.HttpOpts.Duration == 0 {
-		return fmt.Errorf("option --requests or --duration must be specified one of them.")
-	}
-
-	//
-	if config.ConfigArgs.HttpOpts.Duration == 0 {
-		if config.ConfigArgs.HttpOpts.Requests < config.ConfigArgs.HttpOpts.Concurrency {
-			return fmt.Errorf("option --concurrecny must be greater than --requests.")
-		}
-	}
-
-	// Check if the format of http headers' is vaild
-	if len(config.ConfigArgs.HttpOpts.Headers) > 0 {
-		for _, h := range config.ConfigArgs.HttpOpts.Headers {
-			_, err := util.ParseHTTPHeader(h)
-			if err != nil {
-				return fmt.Errorf("HTTP Header format is invalid, %v", err)
-			}
-		}
-	}
-
-	// Check the validity of the target URL
-	u, err := url.ParseRequestURI(args[0])
-	if err != nil {
-		return err
-	}
-
-	if u.Scheme != "http" && u.Scheme != "https" {
-		return fmt.Errorf("Please specify the url scheme, like http://abc.com or https://abc.com")
-	}
-
-	if config.ConfigArgs.HttpOpts.ProxyAddr != "" {
-		_, err := url.Parse(config.ConfigArgs.HttpOpts.ProxyAddr)
-		if err != nil {
-			return fmt.Errorf("invalid argument %s: %s", config.ConfigArgs.HttpOpts.ProxyAddr, err.Error())
-		}
-	}
-
-	return nil
+	return httpCmd
 }

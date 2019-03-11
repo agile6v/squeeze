@@ -69,6 +69,7 @@ type ServerArgs struct {
 	GrpcMasterAddr string   // Master's GRPC Address
 	ReportInterval time.Duration // Heartbeat reporting interval
 	ResultCapacity int
+	Args           interface{}
 }
 
 func NewServerArgs() *ServerArgs {

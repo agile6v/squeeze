@@ -34,7 +34,13 @@ Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses
 # Installation
 ### 1. From source
 
+Squeeze use the golang module mechanism to manage dependencies. We just need to type `make build`,  it will automatically download dependencies and generate binary. 
+
+If you are a mainland China user, you may compile binary using golang vendor mechanism, type `make build-vendor`.
+
 ### 2. From a pre-built binary
+
+We provide release binary for three platforms: Linux, OSX and Windows. You can download an appropriate release binary for your operating system. The list of binary releases is available for download from the [Release Pages](https://github.com/agile6v/squeeze/releases). If the binary doesn't work for you, you'll have to build from source.
 
 ### 3. With Docker or Kubernetes
 Squeeze provides a corresponding docker image for each version and hosted on [Docker Hub](https://hub.docker.com/r/agile6v/squeeze). Therefore we can use docker-compose to quickly build a squeeze cluster to experience all the features.  Deployment on kubernetes will also support in the near future.
@@ -69,9 +75,6 @@ $ docker-compose down
 
 # Contributing
 If you are interested in contributing to the Squeeze project, welcome to submit a PR.
-Please, check this section before opening a new issue.
-
-
 
 # Future Works
 

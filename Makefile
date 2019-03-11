@@ -34,6 +34,11 @@ build:
 	@echo "### Building binary"
 	$(GO_BIN) build -ldflags ${VERSION_FLAGS} -o $(BINARY)
 
+.PHONY: build-vendor
+build-vendor:
+	@echo "### Building binary using vendor folder"
+	$(GO_BIN) build -mod=vendor -ldflags ${VERSION_FLAGS} -o $(BINARY)
+
 .PHONY: fmt
 fmt:
 	@echo "### Formatting project"

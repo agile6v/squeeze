@@ -1,27 +1,38 @@
 version: '3'
 services:
-  master-server:
+  master:
     image: 'agile6v/squeeze:v0.1.0'
     command: 'squeeze master --alsologtostderr'
     networks:
-      - "squeeze"
+      squeeze:
+        ipv4_address: 172.22.0.3
 
   slave:
     image: 'agile6v/squeeze:v0.1.0'
-    command: 'squeeze slave --grpcMasterAddr=master-server:9997 --masterAddr=master-server:9998 --grpcAddr=0.0.0.0:9991 --alsologtostderr -v=2'
+    command: 'squeeze slave --grpcMasterAddr=master:9997 --masterAddr=master:9998 --grpcAddr=0.0.0.0:9991 --alsologtostderr -v=2'
     depends_on:
-      - master-server
+      - master
     networks:
-      - "squeeze"
+      squeeze:
+        ipv4_address: 172.22.0.4
+    extra_hosts:
+      - "master:172.22.0.3"
 
   web:
     image: 'agile6v/squeeze:v0.1.0'
-    command: 'squeeze web --type="sqlite" --masterAddr="http://master-server:9998"  --alsologtostderr'
+    command: 'squeeze web --type="sqlite" --masterAddr="http://master:9998"  --alsologtostderr'
     depends_on:
-      - master-server
+      - master
     networks:
-      - "squeeze"
+      squeeze:
+        ipv4_address: 172.22.0.5
+    extra_hosts:
+      - "master:172.22.0.3"
 
 networks:
   squeeze:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.22.0.0/16

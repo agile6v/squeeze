@@ -161,6 +161,7 @@ func (m *MasterServer) stopTask(conns []*SlaveConn) error {
 func (m *MasterServer) dispatchTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveConn, wg *sync.WaitGroup) error {
 	reqs := builder.NewBuilder(taskReq.Protocol).Split(taskReq, len(conns))
 	wg.Add(util.Min(len(conns), len(reqs)))
+	log.V(2).Infof("connections: %d, requests: %d", len(conns), len(reqs))
 
 	for i, conn := range conns {
 		go func(conn *SlaveConn, index int) {

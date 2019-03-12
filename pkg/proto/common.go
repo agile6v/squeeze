@@ -65,10 +65,10 @@ type ProtoBuilderBase struct {
 	Stats    interface{}
 }
 
-func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+func (proto *ProtoBuilderBase) CancelTask(configArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_STOP,
-		Callback: ConfigArgs.Callback,
+		Callback: configArgs.Callback,
 	}
 
 	m := jsonpb.Marshaler{}
@@ -77,7 +77,7 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (s
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
 	if err != nil {
 		return "", err
 	}

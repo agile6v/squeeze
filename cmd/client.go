@@ -22,6 +22,7 @@ import (
 )
 
 func ClientCmd() *cobra.Command {
+	configArgs := config.NewConfigArgs(nil)
 	// clientCmd represents the client command
 	clientCmd := &cobra.Command{
 		Use:   "client",
@@ -32,13 +33,13 @@ to your contribution.
 	`,
 	}
 
-	clientCmd.PersistentFlags().StringVar(&config.ConfigArgs.Callback, "callback", "",
+	clientCmd.PersistentFlags().StringVar(&configArgs.Callback, "callback", "",
 		"If this call is asynchronous then stress result will be sent to the address.")
-	clientCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
+	clientCmd.PersistentFlags().StringVar(&configArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
 		"The address and port of the Squeeze master or slave.")
 
-	clientCmd.AddCommand(http.HttpCmd())
-	clientCmd.AddCommand(websocket.WsCmd())
+	clientCmd.AddCommand(http.HttpCmd(configArgs))
+	clientCmd.AddCommand(websocket.WsCmd(configArgs))
 	clientCmd.AddCommand(stopCmd)
 
 	return clientCmd

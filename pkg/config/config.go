@@ -21,9 +21,6 @@ import (
 	"github.com/agile6v/squeeze/pkg/util"
 )
 
-
-var ConfigArgs ProtoConfigArgs
-
 type ProtoConfigArgs struct {
 	ID          int             // The ID of the task
 	HttpAddr    string          // Usually used to save the address of the master

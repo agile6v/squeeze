@@ -27,10 +27,8 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-func HttpCmd() *cobra.Command {
+func HttpCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
 	httpOptions := config.NewHttpOptions()
-	configArgs := config.NewConfigArgs(httpOptions)
-
 	httpCmd := &cobra.Command{
 		Use:   "http",
 		Short: "http protocol benchmark",
@@ -40,6 +38,7 @@ func HttpCmd() *cobra.Command {
 			return httpOptions.Validate(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			configArgs.Options = httpOptions
 			httpOptions.URL = args[0]
 			builder := builder.NewBuilder(pb.Protocol_HTTP)
 

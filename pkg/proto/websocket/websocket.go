@@ -72,23 +72,28 @@ func NewBuilder() *WebSocketBuilder {
 	return &WebSocketBuilder{}
 }
 
-func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+func (builder *WebSocketBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
+	wsOptions, ok := configArgs.Options.(*config.WsOptions)
+	if !ok {
+		return "", fmt.Errorf("Expected WsOptions type, but got %T", configArgs.Options)
+	}
+
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(ConfigArgs.ID),
+		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_WEBSOCKET,
-		Callback: ConfigArgs.Callback,
-		Duration: uint32(ConfigArgs.WsOpts.Duration),
+		Callback: configArgs.Callback,
+		Duration: uint32(wsOptions.Duration),
 		Task: &pb.TaskRequest{
-			Requests:    uint32(ConfigArgs.WsOpts.Requests),
-			Concurrency: uint32(ConfigArgs.WsOpts.Concurrency),
+			Requests:    uint32(wsOptions.Requests),
+			Concurrency: uint32(wsOptions.Concurrency),
 			Type: &pb.TaskRequest_Websocket{
 				Websocket: &pb.WebsocketTask{
-					Scheme:  ConfigArgs.WsOpts.Scheme,
-					Host:    ConfigArgs.WsOpts.Host,
-					Path:    ConfigArgs.WsOpts.Path,
-					Body:    ConfigArgs.WsOpts.Body,
-					Timeout: uint32(ConfigArgs.WsOpts.Timeout),
+					Scheme:  wsOptions.Scheme,
+					Host:    wsOptions.Host,
+					Path:    wsOptions.Path,
+					Body:    wsOptions.Body,
+					Timeout: uint32(wsOptions.Timeout),
 				},
 			},
 		},
@@ -100,7 +105,7 @@ func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) 
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -112,10 +117,10 @@ func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int
 
 	if count > int(request.Task.Concurrency) {
 		count = int(request.Task.Concurrency)
-	} else if (count > int(request.Task.Requests)) {
+	} else if count > int(request.Task.Requests) {
 		count = int(request.Task.Requests)
 	}
-
+	
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
 		*req = *request

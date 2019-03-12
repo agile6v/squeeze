@@ -26,13 +26,15 @@ import (
 )
 
 func InfoCmd() *cobra.Command {
+	configArgs := config.NewConfigArgs(nil)
+
 	// infoCmd represents the info command
 	infoCmd := &cobra.Command{
 		Use:   "info",
 		Short: "Show information about the squeeze cluster.",
 		Long:  `Show information about the squeeze cluster.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := util.DoRequest("GET", config.ConfigArgs.HttpAddr+"/info", "", 5)
+			resp, err := util.DoRequest("GET", configArgs.HttpAddr+"/info", "", 5)
 			if err != nil {
 				return err
 			}
@@ -50,7 +52,7 @@ func InfoCmd() *cobra.Command {
 		},
 	}
 
-	infoCmd.PersistentFlags().StringVar(&config.ConfigArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
+	infoCmd.PersistentFlags().StringVar(&configArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
 		"The address and port of the Squeeze master or slave.")
 	return infoCmd
 }

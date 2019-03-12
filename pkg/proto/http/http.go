@@ -152,10 +152,10 @@ func NewBuilder() *HttpBuilder {
 	return &HttpBuilder{}
 }
 
-func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
-	httpOptions, ok := ConfigArgs.Options.(config.HttpOptions)
+func (builder *HttpBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
+	httpOptions, ok := configArgs.Options.(*config.HttpOptions)
 	if !ok {
-		return "", fmt.Errorf("Expected HttpOptions type, but got %T", ConfigArgs.Options)
+		return "", fmt.Errorf("Expected HttpOptions type, but got %T", configArgs.Options)
 	}
 
 	if httpOptions.Duration > 0 {
@@ -163,10 +163,10 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(ConfigArgs.ID),
+		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
-		Callback: ConfigArgs.Callback,
+		Callback: configArgs.Callback,
 		Duration: uint32(httpOptions.Duration),
 		Task: &pb.TaskRequest{
 			Requests:    uint32(httpOptions.Requests),
@@ -196,10 +196,11 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
+
 	return resp, nil
 }
 

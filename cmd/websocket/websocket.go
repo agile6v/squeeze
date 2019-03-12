@@ -27,10 +27,8 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-func WsCmd() *cobra.Command {
+func WsCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
 	wsOptions := config.NewWsOptions()
-	configArgs := config.NewConfigArgs(wsOptions)
-	
 	wsCmd := &cobra.Command{
 		Use:   "websocket",
 		Short: "websocket protocol benchmark",
@@ -40,6 +38,7 @@ func WsCmd() *cobra.Command {
 			return wsOptions.Validate(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			configArgs.Options = wsOptions
 			builder := builder.NewBuilder(pb.Protocol_WEBSOCKET)
 
 			c := make(chan os.Signal, 1)

@@ -50,9 +50,9 @@ func (s *WebServer) Initialize(args *ServerArgs) error {
 
 	api.Init()
 
-	webOptions, ok := args.Args.(config.WebOptions)
+	webOptions, ok := args.Args.(*config.WebOptions)
 	if !ok {
-		return fmt.Errorf("Expected WebOptions type, but got %T", args.Args)
+		return fmt.Errorf("Expected *WebOptions type, but got %T", args.Args)
 	}
 
 	err = db.Init(webOptions.Type, webOptions.DSN, webOptions.File)

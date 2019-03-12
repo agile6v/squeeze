@@ -27,6 +27,7 @@ const webpackDevConfig = merge(webpackBaseConfig, {
         hotOnly: true,
         host: "0.0.0.0",
         disableHostCheck: true,
+        historyApiFallback: true,
         overlay: {
             warnings: true,
             errors: true

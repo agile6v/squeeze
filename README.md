@@ -22,7 +22,7 @@ Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses
 
 # Architecture
 
-![architecutre](https://github.com/agile6v/squeeze/blob/master/squeeze.jpg)
+<img src="https://github.com/agile6v/squeeze/blob/master/squeeze.jpg" width="60%" height="50%">
 
 
 # Documentation

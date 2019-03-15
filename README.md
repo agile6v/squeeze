@@ -1,4 +1,4 @@
-# Squeeze [![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master)]
+# Squeeze ![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master)
 
 Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create test tasks and display test results.
 

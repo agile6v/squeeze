@@ -1,6 +1,7 @@
-# Squeeze ![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master) ![version](https://img.shields.io/badge/version-0.1.0--beta-bule.svg)
+# Squeeze 
+![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master) ![version](https://img.shields.io/badge/version-0.1.0--beta-bule.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create test tasks and display test results.
+**Squeeze** is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create test tasks and display test results.
 
 # Table of Contents
 - [Features](#features)
@@ -16,9 +17,11 @@ Squeeze is a modern, easy-to-use, and highly capable load-testing tool.  It uses
 
 # Features
 * **Multiple Protocols**: HTTP1.0, HTTP1.1, HTTP2.0, HTTPS, Websocket
+* **Cross-Platform**: Linux, MacOSX, Windows
+* **Scalability**: With the Master-Slave model, Slave can be expanded indefinitely. In other words, you can simulate as many users as you want.
 
 # Project Status
-***Experimental***. This project is still under development.
+***Experimental***. This project is still under development and not fully stable yet.
 
 # Architecture
 

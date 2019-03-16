@@ -120,7 +120,7 @@ func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int
 	} else if count > int(request.Task.Requests) {
 		count = int(request.Task.Requests)
 	}
-	
+
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
 		*req = *request

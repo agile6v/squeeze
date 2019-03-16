@@ -38,6 +38,8 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto"
 )
 
+var currentReq *pb.ExecuteTaskRequest
+
 type MasterServer struct {
 	ServerBase
 	results chan protobuf.Message
@@ -224,8 +226,16 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Check if it can run start request.
-	//log.Infof("task: %s, %s, %d", taskReq.URL, taskReq.Callback, taskReq.Cmd)
+	// Check if it can run execute request.
+	if currentReq != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "There are task in progress, please try again later.")
+		return
+	}
+
+	currentReq = taskReq
+	defer func() {
+		currentReq = nil
+	}()
 
 	slaveConns := GetConnections()
 	if len(slaveConns) == 0 {

@@ -546,7 +546,7 @@ Summary:
   Total data:	{{ .TotalSize }} bytes
   Size/request:	{{ .AvgSize }} bytes{{ end }}
 
-Latency distribution:{{ range .LatencyDistribution }}
+Latency Distribution:{{ range .LatencyDistribution }}
   {{ .Percentage }}% in {{ formatNumber .Latency }} secs{{ end }}
 
 Details (average, fastest, slowest):

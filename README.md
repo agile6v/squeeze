@@ -1,7 +1,7 @@
 # Squeeze 
-![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master) ![version](https://img.shields.io/badge/version-0.1.0--beta-bule.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+![Build Status](https://travis-ci.org/agile6v/squeeze.svg?branch=master) [![version](https://img.shields.io/badge/version-0.1.0--beta-bule.svg)](https://github.com/agile6v/squeeze/releases/tag/v0.1.0) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**Squeeze** is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create test tasks and display test results.
+**Squeeze** is a modern, easy-to-use, and highly capable load-testing tool.  It uses the Master-Slave pattern to simulate any number of users hitting the target.  In addition, Squeeze provides the command line and web-based tool to create tasks and display results.
 
 # Table of Contents
 - [Features](#features)

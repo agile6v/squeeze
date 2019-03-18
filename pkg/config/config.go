@@ -16,6 +16,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"errors"
 	"net/url"
 	"github.com/agile6v/squeeze/pkg/util"
@@ -106,6 +107,35 @@ func (httpOpts *HttpOptions) Validate(args []string) error {
 	return nil
 }
 
+type UDPOptions struct {
+	Addr        string
+	Requests    int
+	Concurrency int
+	Timeout     int
+	Duration    int
+	MsgLength   int
+	MaxResults  int
+}
+
+func NewUDPOptions() *UDPOptions {
+	return &UDPOptions{}
+}
+
+func (udpOptions *UDPOptions) Validate(args []string) error {
+	if udpOptions.Concurrency < 1 {
+		return fmt.Errorf("option --concurrency must be greater than 0.")
+	}
+
+	// Check the validity of the target address
+	_, _, err := net.SplitHostPort(args[0])
+	if err != nil {
+		return err
+	}
+
+	udpOptions.Addr = args[0]
+	return nil
+}
+
 // WsOptions contains websocket protocol runtime parameters
 type WsOptions struct {
 	Scheme      string
@@ -131,11 +161,11 @@ func (wsOptions *WsOptions) Validate(args []string) error {
 	// Check the validity of the target URL
 	u, err := url.Parse(args[0])
 	if err != nil {
-	return err
-}
+		return err
+	}
 
 	if u.Scheme == "" || u.Path == "" {
-	return errors.New("URL Scheme or Path cannot be empty.")
+		return errors.New("URL Scheme or Path cannot be empty.")
 	}
 
 	wsOptions.Scheme = u.Scheme

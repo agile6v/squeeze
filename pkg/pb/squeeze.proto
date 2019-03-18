@@ -55,6 +55,7 @@ message TaskRequest {
     oneof type {
         HttpTask http = 4;
         WebsocketTask websocket = 5;
+        UDPTask udp = 6;
     }
 }
 
@@ -108,6 +109,13 @@ message WebsocketTask {
     string path = 3;
     uint32 timeout = 4;
     string body = 5;
+    int32 maxResults = 6;
+}
+
+message UDPTask {
+    string addr = 1;
+    uint32 timeout = 4;
+    uint32 msgLength = 5;
     int32 maxResults = 6;
 }
 

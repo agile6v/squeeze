@@ -4,21 +4,20 @@ import { Layout, Menu, Icon } from 'antd';
 import { IntlProvider } from 'react-intl';
 import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
 
-import TaskListPage from './components/TaskListPage';
-import './index.less';
+import TaskListPage from './pages/TaskListPage';
+import styles from './index.less';
 
-const { Header, Content, Footer } = Layout;
+const { Header, Footer } = Layout;
 
 const App = () => {
   return (
     <Router>
-      <Layout className="layout">
-        <Header className="header">
-          <div className="logo" />
+      <Layout className={styles.layout}>
+        <Header className={styles.header}>
+          <div className={styles.logo}/>
           <Menu
             theme="dark"
             mode="horizontal"
-            defaultSelectedKeys={['1']}
           >
             <Menu.Item key="1">
               <RouterLink to="/tasks">
@@ -27,15 +26,13 @@ const App = () => {
             </Menu.Item>
           </Menu>
         </Header>
-        <Content style={{ background: '#fff', padding: 24, margin: 0, minHeight: 600 }}>
-          <Switch>
+        <Switch>
             <Route exact path='/' component={Tasks} />
             <Route path='/tasks' component={Tasks} />
             {/* <Route path='/tasks/:tasksId' component={Projects} />
             <Route path='/about' component={Info} /> */}
           </Switch>
-        </Content>
-        <Footer style={{ textAlign: 'center' }}>
+        <Footer className={styles.footer}>
           Created by tayir-m
         </Footer>
       </Layout>
@@ -51,7 +48,7 @@ function Tasks({ match }) {
 }
 
 ReactDOM.render(
-  <IntlProvider locale="en">
+  <IntlProvider locale="cn">
     <App />
   </IntlProvider>
   , document.getElementById("app"));

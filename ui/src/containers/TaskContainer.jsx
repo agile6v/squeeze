@@ -9,25 +9,25 @@ require("babel-polyfill");
 const api = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
 
 export default class TaskContainer extends Container {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = {
-      taskList: null,
+      taskList: [],
       loading: false
     }
   }
 
-  async fetchList () {
+  async fetchList() {
     this.setState({
       loading: true
     })
 
     try {
-      const taskList = await api.get('list').json()
-
+      const res = await api.get('list').json()
+      const { data } = res;
       this.setState({
-        taskList,
+        taskList: data,
         loading: false
       })
     } catch (err) {

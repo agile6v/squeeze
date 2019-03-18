@@ -20,6 +20,9 @@ const webpackDevConfig = merge(webpackBaseConfig, {
             hash: false,
             maxModules: 0
         },
+        proxy: {
+            '/api': 'http://localhost:3000'
+        },
         compress: false,
         clientLogLevel: "none",
         port: 8082,

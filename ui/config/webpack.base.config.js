@@ -30,28 +30,31 @@ module.exports = {
                     options: {
                         babelrc: false,
                         presets: [
-                            require('babel-preset-react'),
-                            [require('babel-preset-env'), { modules: false }],
+                            '@babel/preset-react',
+                            ['@babel/preset-env', {
+                                modules: false,
+                                "targets": {
+                                    "browsers": ["last 2 versions"]
+                                }
+                            }],
                         ],
                         cacheDirectory: true,
                         plugins: [
                             ["import", { "libraryName": "antd", "style": true }],
-                            // [
-                            //     "@babel/plugin-transform-runtime",
-                            //     {
-                            //       "corejs": false,
-                            //       "helpers": true,
-                            //       "regenerator": true,
-                            //       "useESModules": false
-                            //     }
-                            //   ]
-                        ]
+                            "@babel/plugin-transform-runtime",
+                            "@babel/plugin-proposal-class-properties",
+                        ],
+                        env: {
+                            "production": {
+                                plugins: ["@babel/runtime"]
+                            }
+                        }
                     },
                 },
             },
             {
                 test: /\.less|css$/,
-                exclude:/node_modules/,
+                exclude: /node_modules/,
                 use: [{
                     loader: "style-loader" // creates style nodes from JS strings
                 }, {
@@ -74,7 +77,7 @@ module.exports = {
             },
             {
                 test: /\.less|css$/,
-                include:/node_modules/,
+                include: /node_modules/,
                 use: [{
                     loader: "style-loader" // creates style nodes from JS strings
                 }, {

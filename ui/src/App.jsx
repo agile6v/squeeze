@@ -1,43 +1,82 @@
-import React from "react";
+import React, { Component } from "react";
 import ReactDOM from "react-dom";
-import { Layout, Menu, Icon } from 'antd';
-import { IntlProvider } from 'react-intl';
+import { Layout, Menu, LocaleProvider, Button } from 'antd';
+import { IntlProvider, addLocaleData, FormattedMessage } from 'react-intl';
 import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
+import en from 'react-intl/locale-data/en';
+import zh from 'react-intl/locale-data/zh';
+import zhCN from 'antd/lib/locale-provider/zh_CN';
+import enUS from 'antd/lib/locale-provider/en_US';
+import zh_CN from './zh_CN'     // import defined messages in Chinese
+import en_US from './en_US'     // import defined messages in English
 
 import TaskListPage from './pages/TaskListPage';
 import styles from './index.less';
-
 const { Header, Footer } = Layout;
 
-const App = () => {
-  return (
-    <Router>
-      <Layout className={styles.layout}>
-        <Header className={styles.header}>
-          <div className={styles.logo}/>
-          <Menu
-            theme="dark"
-            mode="horizontal"
-          >
-            <Menu.Item key="1">
-              <RouterLink to="/tasks">
-                <p>TASKS</p>
-              </RouterLink>
-            </Menu.Item>
-          </Menu>
-        </Header>
-        <Switch>
-            <Route exact path='/' component={Tasks} />
-            <Route path='/tasks' component={Tasks} />
-            {/* <Route path='/tasks/:tasksId' component={Projects} />
-            <Route path='/about' component={Info} /> */}
-          </Switch>
-        <Footer className={styles.footer}>
-          Created by tayir-m
-        </Footer>
-      </Layout>
-    </Router>
-  );
+addLocaleData([...en, ...zh]);
+class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      lang: 'en'
+    }
+  }
+  componentDidMount() {
+    const lang = window.localStorage.getItem('lang') || 'en';
+    this.setState({ lang })
+  }
+  changeLang = () => {
+    const lang = this.state.lang === 'en' ? 'zh' : 'en';
+    window.localStorage.setItem('lang', lang)
+    this.setState({ lang })
+  }
+  render() {
+    const reactIntlLocale = {
+      'en': en_US,
+      'zh': zh_CN,
+    }
+    const antdLocale = {
+      'en': enUS,
+      'zh': zhCN,
+    }
+    const { lang } = this.state;
+    console.log(lang)
+    return (
+      <LocaleProvider locale={antdLocale[lang]}>
+        <IntlProvider
+          locale={lang} messages={reactIntlLocale[lang]}
+        >
+          <Router>
+            <Layout className={styles.layout}>
+              <Header className={styles.header}>
+                <div className={styles.menuContainer}>
+                  <div className={styles.logo} >SQUEEZE</div>
+                  <div className={styles.menu}>
+                    <RouterLink to="/tasks">
+                      <p><FormattedMessage id="app.tasks" /></p>
+                    </RouterLink>
+                  </div>
+                </div>
+                <div className={styles.langButton}>
+                  <span onClick={this.changeLang} >{lang === 'zh' ? 'English' : '中文'}</span>
+                </div>
+              </Header>
+              <Switch>
+                <Route exact path='/' component={Tasks} />
+                <Route path='/tasks' component={Tasks} />
+                {/* <Route path='/tasks/:tasksId' component={Projects} />
+              <Route path='/about' component={Info} /> */}
+              </Switch>
+              <Footer className={styles.footer}>
+                Created by tayir-m
+          </Footer>
+            </Layout>
+          </Router >
+        </IntlProvider>
+      </LocaleProvider>
+    );
+  }
 };
 
 
@@ -47,11 +86,8 @@ function Tasks({ match }) {
   )
 }
 
-ReactDOM.render(
-  <IntlProvider locale="cn">
-    <App />
-  </IntlProvider>
-  , document.getElementById("app"));
+ReactDOM.render(<App />, document.getElementById("app"));
+
 if (module.hot) {
   module.hot.accept()
 }

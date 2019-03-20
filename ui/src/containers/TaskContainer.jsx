@@ -4,8 +4,6 @@ import { message } from 'antd'
 
 import { getAppRoot } from '../lib/common'
 
-require("babel-polyfill");
-
 const api = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
 
 export default class TaskContainer extends Container {

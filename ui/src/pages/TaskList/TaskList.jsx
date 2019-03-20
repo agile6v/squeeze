@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Table, Input, Icon } from 'antd';
 import { IntlProvider, addLocaleData, FormattedMessage } from 'react-intl';
 
-import ContentWrapper from '../components/ContentWrapper';
+import ContentWrapper from '../../components/ContentWrapper';
 
 import styles from './TaskList.less';
 
@@ -17,11 +17,13 @@ export default class TaskList extends Component {
     }
 
     componentDidMount() {
-        this.props.taskStore.fetchList()
+        this.props.taskListStore.fetchList()
     }
 
+    
+
     render() {
-        const { state: { taskList, loading } } = this.props.taskStore
+        const { state: { taskList, loading } } = this.props.taskListStore
         console.log(taskList)
         const columns = [{
             title: <FormattedMessage id="app.tasks" />,
@@ -55,8 +57,8 @@ export default class TaskList extends Component {
             // sortOrder: sortedInfo.columnKey === 'address' && sortedInfo.order,
         }];
         const header = [
-            (<div className={styles.header}><FormattedMessage id="app.tasks" /></div>),
-            (<div className={styles.addButton}>new<Icon type="plus" /></div>)
+            (<div className={styles.header}><FormattedMessage id="tasklist.title" /></div>),
+            (<div className={styles.addButton}><FormattedMessage id="tasklist.new" /><Icon type="plus" /></div>)
         ]
         return (
             <ContentWrapper title="Tasks" header={header} >

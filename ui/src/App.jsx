@@ -11,7 +11,7 @@ import enUS from 'antd/lib/locale-provider/en_US';
 import zh_CN from './zh_CN'     // import defined messages in Chinese
 import en_US from './en_US'     // import defined messages in English
 
-import TaskListPage from './pages/TaskListPage';
+import TaskListPage from './pages/TaskList';
 import styles from './index.less';
 const { Header, Footer } = Layout;
 

@@ -3,15 +3,15 @@ import { Provider, Subscribe } from 'unstated'
 
 import TaskList from './TaskList'
 
-import TaskContainer from '../containers/TaskContainer'
+import TaskListContainer from '../../containers/TaskListContainer'
 
 export default class ProjectListPage extends Component {
   render () {
     return (
       <Provider>
-        <Subscribe to={[TaskContainer]}>
-          {(taskStore) => (
-              <TaskList taskStore={taskStore} />
+        <Subscribe to={[TaskListContainer]}>
+          {(taskListStore) => (
+              <TaskList taskListStore={taskListStore} />
           )}
         </Subscribe>
       </Provider >

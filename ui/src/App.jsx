@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { Layout, Menu, LocaleProvider, Button } from 'antd';
 import { IntlProvider, addLocaleData, FormattedMessage } from 'react-intl';
 import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
+import browserLang from 'browser-lang';
 import en from 'react-intl/locale-data/en';
 import zh from 'react-intl/locale-data/zh';
 import zhCN from 'antd/lib/locale-provider/zh_CN';
@@ -15,6 +16,7 @@ import styles from './index.less';
 const { Header, Footer } = Layout;
 
 addLocaleData([...en, ...zh]);
+
 class App extends Component {
   constructor(props) {
     super(props)
@@ -23,7 +25,7 @@ class App extends Component {
     }
   }
   componentDidMount() {
-    const lang = window.localStorage.getItem('lang') || 'en';
+    const lang = window.localStorage.getItem('lang') || browserLang({ languages: ['zh', 'en'], fallback: 'en' });
     this.setState({ lang })
   }
   changeLang = () => {

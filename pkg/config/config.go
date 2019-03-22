@@ -37,22 +37,22 @@ func NewConfigArgs(opts interface{}) *ProtoConfigArgs {
 
 // HttpOptions contains http protocol runtime parameters
 type HttpOptions struct {
-	URL              string
-	HTTP2            bool
-	Requests         int
-	Method           string
-	ProxyAddr        string
-	Headers          []string
-	Concurrency      int
-	RateLimit        int
-	Timeout          int
-	Duration         int
-	Body             string
-	BodyFile         string
-	ContentType      string
-	MaxResults       int
-	DisableKeepAlive bool
-	DisableCompression bool
+	URL              string         `json:"url,omitempty"`
+	HTTP2            bool           `json:"http2,omitempty"`
+	Requests         int            `json:"requests,omitempty"`
+	Method           string         `json:"method,omitempty"`
+	ProxyAddr        string         `json:"proxyAddr,omitempty"`
+	Headers          []string       `json:"headers,omitempty"`
+	Concurrency      int            `json:"concurrency,omitempty"`
+	RateLimit        int            `json:"rateLimit,omitempty"`
+	Timeout          int            `json:"timeout,omitempty"`
+	Duration         int            `json:"duration,omitempty"`
+	Body             string         `json:"body,omitempty"`
+	BodyFile         string         `json:"bodyFile,omitempty"`
+	ContentType      string         `json:"contentType,omitempty"`
+	MaxResults       int            `json:"maxResults,omitempty"`
+	DisableKeepAlive bool           `json:"disableKeepAlive,omitempty"`
+	DisableCompression bool         `json:"disableCompression,omitempty"`
 }
 
 func NewHttpOptions() *HttpOptions {
@@ -138,15 +138,15 @@ func (udpOptions *UDPOptions) Validate(args []string) error {
 
 // WsOptions contains websocket protocol runtime parameters
 type WsOptions struct {
-	Scheme      string
-	Host        string
-	Path        string
-	Requests    int
-	Concurrency int
-	Timeout     int
-	Duration    int
-	Body        string
-	MaxResults  int
+	Scheme      string      `json:"scheme,omitempty"`
+	Host        string      `json:"host,omitempty"`
+	Path        string      `json:"path,omitempty"`
+	Requests    int         `json:"requests,omitempty"`
+	Concurrency int         `json:"concurrency,omitempty"`
+	Timeout     int         `json:"timeout,omitempty"`
+	Duration    int         `json:"duration,omitempty"`
+	Body        string      `json:"body,omitempty"`
+	MaxResults  int         `json:"maxResults,omitempty"`
 }
 
 func NewWsOptions() *WsOptions {
@@ -177,9 +177,9 @@ func (wsOptions *WsOptions) Validate(args []string) error {
 
 // WebOptions contains options of the web command
 type WebOptions struct {
-	DSN     string
-	File    string
-	Type    string
+	DSN     string      `json:"dsn,omitempty"`
+	File    string      `json:"file,omitempty"`
+	Type    string      `json:"type,omitempty"`
 }
 
 func NewWebOptions() *WebOptions {

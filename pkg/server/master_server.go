@@ -168,11 +168,15 @@ func (m *MasterServer) dispatchTask(taskReq *pb.ExecuteTaskRequest, conns []*Sla
 	for i, conn := range conns {
 		go func(conn *SlaveConn, index int) {
 			defer wg.Done()
+			log.V(2).Infof("slave address: %s", conn.PeerAddr)
 			slaveAddr, err := util.BuildHostname(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
 			if err != nil {
 				log.Errorf("failed to build slave hostname: %s", err.Error())
 				return
 			}
+
+			log.V(2).Infof("dispatch to slave: %s", slaveAddr)
+
 			ret, err := m.DoExecuteTask(slaveAddr, reqs[index])
 			if err != nil {
 				log.Errorf("failed to dispatch task to %s: %s", slaveAddr, err.Error())

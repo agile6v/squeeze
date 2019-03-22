@@ -42,8 +42,8 @@ type ElapsedInfo struct {
 }
 
 type LatencyDistribution struct {
-	Percentage  uint32
-    Latency     float64
+	Percentage  uint32      `json:"percentage,omitempty"`
+    Latency     float64     `json:"latency,omitempty"`
 }
 
 type HttpStats struct {
@@ -64,8 +64,8 @@ type HttpStats struct {
 	Resp                ElapsedInfo `json:"resp,omitempty"`
 	Conn                ElapsedInfo `json:"conn,omitempty"`
 	Req                 ElapsedInfo `json:"req,omitempty"`
-	StatusCodes         map[uint32]uint32
-	ErrMap              map[string]uint32
+	StatusCodes         map[uint32]uint32 `json:"statusCodes,omitempty"`
+	ErrMap              map[string]uint32 `json:"errMap,omitempty"`
 	ConnDuration        float64      `json:"connDuration,omitempty"`
 	DnsDuration         float64      `json:"dnsDuration,omitempty"`
 	ReqDuration         float64      `json:"reqDuration,omitempty"`
@@ -74,7 +74,7 @@ type HttpStats struct {
 	// Total number of requests
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
-	LatencyDistribution []LatencyDistribution `json:latencyDistribution,omitempty`
+	LatencyDistribution []LatencyDistribution `json:"latencyDistribution,omitempty"`
 	// time spent per request
 	Lats                []float64    `json:"latencies,omitempty"`
 }

@@ -26,8 +26,8 @@ import (
 )
 
 type CreateTask struct {
-    Protocol string
-    Data     json.RawMessage
+    Protocol string             `json:"protocol"`
+    Data     json.RawMessage    `json:"data"`
 }
 
 func (c *CreateTask) Handle(data string) error {
@@ -39,7 +39,7 @@ func (c *CreateTask) Handle(data string) error {
 }
 
 type GenericTask struct {
-    ID      int
+    ID      int                 `json:"id"`
 }
 
 func (task *GenericTask) Delete() error {

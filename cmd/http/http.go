@@ -62,7 +62,7 @@ func HttpCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
 				return err
 			}
 
-			ret, err := builder.Render(resp)
+			ret, err := builder.Render(resp, configArgs.Callback)
 			if err != nil {
 				log.Errorf("failed to render response, %s", err)
 				return err

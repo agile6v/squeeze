@@ -68,7 +68,6 @@ type ProtoBuilderBase struct {
 func (proto *ProtoBuilderBase) CancelTask(configArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_STOP,
-		Callback: configArgs.Callback,
 	}
 
 	m := jsonpb.Marshaler{}
@@ -84,7 +83,25 @@ func (proto *ProtoBuilderBase) CancelTask(configArgs *config.ProtoConfigArgs) (s
 	return resp, nil
 }
 
-func (proto *ProtoBuilderBase) Render(data string) (string, error) {
+func (proto *ProtoBuilderBase) Render(data string, callback string) (string, error) {
+	if callback != "" {
+		response := struct {
+			Data string
+			Error string
+		}{}
+
+		err := json.Unmarshal([]byte(data), &response)
+		if err != nil {
+			return "", err
+		}
+
+		if response.Error != "" {
+			return response.Error, nil
+		} else {
+			return response.Data, nil
+		}
+	}
+
 	response := &SqueezeResponse{
 		Data: &SqueezeResult{
 			Result: proto.Stats,

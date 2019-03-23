@@ -71,6 +71,8 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 		m.runCollector(mergedResults, taskReq)
 	}(mergedResults)
 
+	currentReq = taskReq
+
 	if taskReq.Callback != "" {
 		err := m.dispatchTask(taskReq, conns, &wg)
 		if err != nil {
@@ -78,6 +80,10 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 		}
 
 		go func() {
+			defer func() {
+				currentReq = nil
+			}()
+
 			wg.Wait()
 			close(m.results)
 
@@ -102,8 +108,12 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			log.Infof("Send results to callback address successfully: %s", resp)
 		}()
 
-		return "success", nil
+		return "Start Successfully\n", nil
 	} else {
+		defer func() {
+			currentReq = nil
+		}()
+
 		err := m.dispatchTask(taskReq, conns, &wg)
 		if err != nil {
 			return nil, err
@@ -230,17 +240,6 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if it can run execute request.
-	if currentReq != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "There are task in progress, please try again later.")
-		return
-	}
-
-	currentReq = taskReq
-	defer func() {
-		currentReq = nil
-	}()
-
 	slaveConns := GetConnections()
 	if len(slaveConns) == 0 {
 		util.RespondWithError(w, http.StatusInternalServerError, "No slave available.")
@@ -252,8 +251,14 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
-			util.RespondWithJSON(w, http.StatusOK, "success")
+			util.RespondWithJSON(w, http.StatusOK, "Stop Successfully\n")
 		}
+		return
+	}
+
+	// Check if it can run execute request.
+	if currentReq != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "There are task in progress, please try again later.")
 		return
 	}
 

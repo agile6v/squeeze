@@ -15,10 +15,13 @@
 package cmd
 
 import (
+	"fmt"
+	log "github.com/golang/glog"
+	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/cmd/http"
 	"github.com/agile6v/squeeze/cmd/websocket"
 	"github.com/agile6v/squeeze/pkg/config"
-	"github.com/spf13/cobra"
+	"github.com/agile6v/squeeze/pkg/proto"
 )
 
 func ClientCmd() *cobra.Command {
@@ -40,14 +43,26 @@ to your contribution.
 
 	clientCmd.AddCommand(http.HttpCmd(configArgs))
 	clientCmd.AddCommand(websocket.WsCmd(configArgs))
-	clientCmd.AddCommand(stopCmd)
+	clientCmd.AddCommand(StopCmd(configArgs))
 
 	return clientCmd
 }
 
 // stopCmd represents the stop command
-var stopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "",
-	Long:  ``,
+func StopCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
+	stopCmd := &cobra.Command{
+		Use:   "stop",
+		Short: "Stop the running task",
+		Long:  `Stop the running task`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			builder := &proto.ProtoBuilderBase{}
+			_, err := builder.CancelTask(configArgs)
+			if err != nil {
+				log.Errorf("failed to cancel task %s", err)
+			}
+			fmt.Printf("\nCancelled\n")
+			return nil
+		},
+	}
+	return stopCmd
 }

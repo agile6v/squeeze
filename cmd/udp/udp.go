@@ -66,7 +66,7 @@ func UDPCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
 				return nil
 			}
 
-			ret, err := builder.Render(resp)
+			ret, err := builder.Render(resp, configArgs.Callback)
 			if err != nil {
 				log.Errorf("failed to render response, %s", err)
 				return err

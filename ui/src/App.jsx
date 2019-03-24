@@ -20,14 +20,12 @@ addLocaleData([...en, ...zh]);
 class App extends Component {
   constructor(props) {
     super(props)
+    const lang = window.localStorage.getItem('lang') || browserLang({ languages: ['zh', 'en'], fallback: 'en' });
     this.state = {
-      lang: 'en'
+      lang,
     }
   }
-  componentDidMount() {
-    const lang = window.localStorage.getItem('lang') || browserLang({ languages: ['zh', 'en'], fallback: 'en' });
-    this.setState({ lang })
-  }
+ 
   changeLang = () => {
     const lang = this.state.lang === 'en' ? 'zh' : 'en';
     window.localStorage.setItem('lang', lang)
@@ -43,7 +41,6 @@ class App extends Component {
       'zh': zhCN,
     }
     const { lang } = this.state;
-    console.log(lang)
     return (
       <LocaleProvider locale={antdLocale[lang]}>
         <IntlProvider
@@ -71,7 +68,7 @@ class App extends Component {
               <Route path='/about' component={Info} /> */}
               </Switch>
               <Footer className={styles.footer}>
-                Created by tayir-m
+                <a href="https://github.com/agile6v/squeeze">GitHub</a>
           </Footer>
             </Layout>
           </Router >

@@ -1,34 +1,31 @@
 import { Container } from 'unstated'
-import ky from 'ky'
 import { message } from 'antd'
 
-import { getAppRoot } from '../lib/common'
-
-const api = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
+import { request } from '../lib/common';
 
 export default class TaskContainer extends Container {
   constructor(props) {
     super(props)
-
     this.state = {
       taskList: [],
       loading: false
     }
   }
 
-  async fetchList() {
+  fetchList = async () => {
     this.setState({
       loading: true
     })
 
     try {
-      const res = await api.get('list').json()
+      const res = await request.get('list').json()
       const { data } = res;
       this.setState({
         taskList: data,
         loading: false
       })
     } catch (err) {
+      this.setState({ loading: false })
       message.error(err.message)
       console.log('error: ', err)
     }

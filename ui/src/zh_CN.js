@@ -1,6 +1,47 @@
 const zh_CN = {
     'app.tasks': '任务列表',
+
     'tasklist.title': '任务列表',
     'tasklist.new': '新建',
+    'tasklist.table.protocol': '协议',
+    'tasklist.table.Id': 'ID',
+    'tasklist.table.host': '目标地址',
+    'tasklist.table.createdTime': '创建时间',
+    'tasklist.table.updatedTime': '更新时间',
+    'tasklist.table.operation': '操作',
+    'tasklist.table.start': '启动',
+    'tasklist.table.delete': '删除',
+    'tasklist.table.stop': '停止',
+
+    'taskmodal.title': '新建任务',
+
+    'taskform.nickname.message': '请输入昵称',
+    'taskform.protocol.label': '协议',
+    'taskform.protocol.placeholder': '请选择协议',
+    'taskform.URL.label': 'URL',
+    'taskform.URL.placeholder': '请输入URL',
+    'taskform.Requests.label': '请求数',
+    'taskform.Requests.placeholder': '请输入请求数',
+    'taskform.Method.label': '请求类型',
+    'taskform.Method.placeholder': '请选择请求类型',
+    'taskform.Concurrency.label': '并发数量',
+    'taskform.Concurrency.placeholder': '请输入并发数量',
+    'taskform.Timeout.label': '超时时间',
+    'taskform.Timeout.placeholder': '请输入超时时间(秒)',
+    'taskform.Duration.label': '持续时间',
+    'taskform.Duration.placeholder': '请输入持续时间(秒)',
+    'taskform.ContentType.label': 'ContentType',
+    'taskform.ContentType.placeholder': '请选择ContentType',
+    'taskform.DisableKeepAlive.label': 'DisableKeepAlive',
+    //websocket options
+
+    'taskform.Scheme.placeholder': '其请输入Scheme',
+    'taskform.Scheme.label': 'Scheme',
+    'taskform.Host.placeholder': '请输入Host',
+    'taskform.Host.label': 'Host',
+    'taskform.Path.placeholder': '请输入Path',
+    'taskform.Path.label': 'Path',
+    'taskform.Body.placeholder': '请输入Body',
+    'taskform.Body.label': 'Body',
 }
 export default zh_CN;

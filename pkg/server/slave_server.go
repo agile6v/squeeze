@@ -89,7 +89,7 @@ func (s *SlaveServer) HeartBeat(stream pb.SqueezeService_HeartBeatServer) error 
 
 func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskRequest) (*pb.ExecuteTaskResponse, error) {
 	log.V(2).Infof("Execute Task ... %s: %v",
-		pb.ExecuteTaskRequest_Command_name[int32(req.Cmd)], req.Task)
+		pb.ExecuteTaskRequest_Command_name[int32(req.Cmd)], req)
 
 	if req.Cmd == pb.ExecuteTaskRequest_STOP {
 		if s.work != nil {
@@ -99,7 +99,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 		return &pb.ExecuteTaskResponse{Status: pb.ExecuteTaskResponse_SUCC}, nil
 	}
 
-	if req.Task.Concurrency < 1 {
+	if req.Concurrency < 1 {
 		return &pb.ExecuteTaskResponse{Status: pb.ExecuteTaskResponse_FAIL,
 			Error: fmt.Sprintf("Concurrency is invalid")}, nil
 	}
@@ -107,10 +107,10 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 	s.work = &Work{
 		Req:       req,
 		Builder:   builder.NewBuilder(req.Protocol),
-		Requests:  int(req.Task.Requests),
-		Workers:   int(req.Task.Concurrency),
+		Requests:  int(req.Requests),
+		Workers:   int(req.Concurrency),
 		ResultCapacity: s.args.ResultCapacity,
-		RateLimit: float64(req.Task.RateLimit),
+		RateLimit: float64(req.RateLimit),
 	}
 
 	if req.Duration > 0 {

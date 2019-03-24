@@ -51,6 +51,7 @@ type HttpOptions struct {
 	BodyFile         string         `json:"bodyFile,omitempty"`
 	ContentType      string         `json:"contentType,omitempty"`
 	MaxResults       int            `json:"maxResults,omitempty"`
+	DisableRedirects bool           `json:"disableRedirects,omitempty"`
 	DisableKeepAlive bool           `json:"disableKeepAlive,omitempty"`
 	DisableCompression bool         `json:"disableCompression,omitempty"`
 }

@@ -45,9 +45,9 @@ type SqueezeResult struct {
 type ProtoBuilder interface {
 	// slave side
 	// These functions are executed in the following order
-	Init(context.Context, *pb.TaskRequest) error
-	PreRequest(*pb.TaskRequest) (interface{}, interface{})
-	Request(context.Context, interface{}, *pb.TaskRequest) interface{}
+	Init(context.Context, *pb.ExecuteTaskRequest) error
+	PreRequest(*pb.ExecuteTaskRequest) (interface{}, interface{})
+	Request(context.Context, interface{}, *pb.ExecuteTaskRequest) interface{}
 	PostRequest(interface{}) error
 	Done(time.Duration) (interface{}, error)
 

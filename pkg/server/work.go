@@ -58,7 +58,7 @@ type Work struct {
 // all work is done or receive cancel signal.
 func (w *Work) Run(ctx context.Context) (time.Duration, error) {
 	// Initialization before calling the request handler
-	err := w.Builder.Init(ctx, w.Req.Task)
+	err := w.Builder.Init(ctx, w.Req)
 	if err != nil {
 		log.Infof("failed to execute Init: %s", err.Error())
 		return 0, err
@@ -103,7 +103,7 @@ func (w *Work) runWorker(ctx context.Context, n int) {
 		throttle = time.Tick(time.Duration(1e6/(w.RateLimit)) * time.Microsecond)
 	}
 
-	obj, result := w.Builder.PreRequest(w.Req.Task)
+	obj, result := w.Builder.PreRequest(w.Req)
 	if result != nil {
 		w.results <- result
 		return
@@ -119,7 +119,7 @@ func (w *Work) runWorker(ctx context.Context, n int) {
 			}
 
 			// Initiate a request
-			ret := w.Builder.Request(ctx, obj, w.Req.Task)
+			ret := w.Builder.Request(ctx, obj, w.Req)
 
 			// The result of the request will be sent to collector goroutine for summary
 			w.results <- ret

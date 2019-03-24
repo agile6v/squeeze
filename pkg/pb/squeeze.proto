@@ -49,14 +49,7 @@ message HeartBeatResponse {
 }
 
 message TaskRequest {
-    uint32 concurrency = 1;
-    uint32 requests = 2;
-    uint32 rateLimit = 3;
-    oneof type {
-        HttpTask http = 4;
-        WebsocketTask websocket = 5;
-        UDPTask udp = 6;
-    }
+
 }
 
 // ExecuteTaskRequest describes the task information to be executed.
@@ -70,7 +63,10 @@ message ExecuteTaskRequest {
     string callback = 3;
     uint32 duration = 4;
     uint32 id = 5;
-    TaskRequest task = 6;
+    uint32 concurrency = 6;
+    uint32 requests = 7;
+    uint32 rateLimit = 8;
+    string data = 9;
 }
 
 // ExecuteTaskResponse for ExecuteTaskRequest, is used to report the results of this execution task.
@@ -101,36 +97,4 @@ enum Protocol {
     GRPC = 7;
     THRIFT = 8;
     WEBSOCKET = 9;
-}
-
-message WebsocketTask {
-    string scheme = 1;
-    string host = 2;
-    string path = 3;
-    uint32 timeout = 4;
-    string body = 5;
-    int32 maxResults = 6;
-}
-
-message UDPTask {
-    string addr = 1;
-    uint32 timeout = 4;
-    uint32 msgLength = 5;
-    int32 maxResults = 6;
-}
-
-message HttpTask {
-    string url = 1;
-    string method = 2;
-    string body = 3;
-    uint32 timeout = 7;
-    bool http2 = 8;
-    bool disableRedirects = 9;
-    bool disableKeepalives = 10;
-    bool disableCompression = 11;
-    string proxyAddr = 12;
-    uint32 maxIdleConn = 13;
-    repeated string headers = 14;
-    string contentType = 15;
-    int32 maxResults = 16;
 }

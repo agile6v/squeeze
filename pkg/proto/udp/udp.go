@@ -20,6 +20,7 @@ import (
 	"net"
 	"context"
 	"encoding/json"
+	log "github.com/golang/glog"
 	"github.com/gorilla/websocket"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/agile6v/squeeze/pkg/config"
@@ -63,8 +64,9 @@ func newUDPReport(n int) *udpReport {
 }
 
 type UDPBuilder struct {
-	Conn   *websocket.Conn
-	report *udpReport
+	Conn    *websocket.Conn
+	report  *udpReport
+	options *config.UDPOptions
 }
 
 func NewBuilder() *UDPBuilder {
@@ -77,23 +79,22 @@ func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 		return "", fmt.Errorf("Expected udpOptions type, but got %T", configArgs.Options)
 	}
 
+	data, err := json.Marshal(udpOptions)
+	if err != nil {
+		log.Errorf("could not marshal message : %v", err)
+		return "", err
+	}
+
 	req := &pb.ExecuteTaskRequest{
 		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_UDP,
 		Callback: configArgs.Callback,
 		Duration: uint32(udpOptions.Duration),
-		Task: &pb.TaskRequest{
-			Requests:    uint32(udpOptions.Requests),
-			Concurrency: uint32(udpOptions.Concurrency),
-			Type: &pb.TaskRequest_Udp{
-				Udp: &pb.UDPTask{
-					Timeout: uint32(udpOptions.Timeout),
-					MsgLength: uint32(udpOptions.MsgLength),
-					Addr: udpOptions.Addr,
-				},
-			},
-		},
+		Requests: uint32(udpOptions.Requests),
+		Concurrency: uint32(udpOptions.Concurrency),
+		//RateLimit:
+		Data: string(data),
 	}
 
 	m := jsonpb.Marshaler{}
@@ -110,52 +111,49 @@ func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 }
 
 func (builder *UDPBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
-	var taskRequests []*pb.ExecuteTaskRequest
+	var requests []*pb.ExecuteTaskRequest
 
-	if count > int(request.Task.Concurrency) {
-		count = int(request.Task.Concurrency)
-	} else if count > int(request.Task.Requests) {
-		count = int(request.Task.Requests)
+	if count > int(request.Concurrency) {
+		count = int(request.Concurrency)
+	} else if count > int(request.Requests) {
+		count = int(request.Requests)
 	}
 
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
 		*req = *request
-		task := new(pb.UDPTask)
-		*task = *req.Task.GetUdp()
 
-		var requests, concurrency uint32
 		if count != i {
-			requests = req.Task.Requests / uint32(count)
-			concurrency = req.Task.Concurrency / uint32(count)
+			req.Requests = request.Requests / uint32(count)
+			req.RateLimit = request.RateLimit / uint32(count)
+			req.Concurrency = request.Concurrency / uint32(count)
 		} else {
-			requests = req.Task.Requests/uint32(count) + req.Task.Requests%uint32(count)
-			concurrency = req.Task.Concurrency/uint32(count) + req.Task.Concurrency%uint32(count)
+			req.Requests = request.Requests/uint32(count) + request.Requests%uint32(count)
+			req.RateLimit = request.RateLimit/uint32(count) + request.RateLimit%uint32(count)
+			req.Concurrency = request.Concurrency/uint32(count) + request.Concurrency%uint32(count)
 		}
 
-		req.Task = &pb.TaskRequest{
-			Requests:    requests,
-			Concurrency: concurrency,
-			Type: &pb.TaskRequest_Udp{
-				Udp: task,
-			},
-		}
-
-		taskRequests = append(taskRequests, req)
+		requests = append(requests, req)
 	}
 
-	return taskRequests
+	return requests
 }
 
-func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
+func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
+	var options config.UDPOptions
+	err := json.Unmarshal([]byte(taskReq.Data), &options)
+	if err != nil {
+		return err
+	}
+
+	builder.options = &options
 	return nil
 }
 
-func (builder *UDPBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
-	task := taskReq.GetUdp()
-	builder.report = newUDPReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
+func (builder *UDPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
+	builder.report = newUDPReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
 
-	addr, err := net.ResolveUDPAddr("udp", task.Addr)
+	addr, err := net.ResolveUDPAddr("udp", builder.options.Addr)
 	if err != nil {
 		return nil, &udpResult{Err: err}
 	}
@@ -170,11 +168,11 @@ func (builder *UDPBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, int
 	return conn, nil
 }
 
-func (builder *UDPBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
+func (builder *UDPBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
 	s := util.Now()
 	conn, _ := obj.(*net.UDPConn)
 
-	content := make([]byte, taskReq.GetUdp().MsgLength)
+	content := make([]byte, builder.options.MsgLength)
 	_, err := conn.Write(content)
 	if err != nil {
 

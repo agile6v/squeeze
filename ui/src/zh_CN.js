@@ -3,6 +3,7 @@ const zh_CN = {
 
     'tasklist.title': '任务列表',
     'tasklist.new': '新建 +',
+
     'tasklist.table.protocol': '协议',
     'tasklist.table.Id': 'ID',
     'tasklist.table.host': '目标地址',
@@ -10,8 +11,13 @@ const zh_CN = {
     'tasklist.table.updatedTime': '更新时间',
     'tasklist.table.operation': '操作',
     'tasklist.table.start': '启动',
+    'tasklist.table.startTitle': '您确定启动此任务吗?',
     'tasklist.table.delete': '删除',
+    'tasklist.table.deleteTitle': '删除任务',
+    'tasklist.table.deleteContent': '确定要删除ID为 ',
+    'tasklist.table.deleteContentTask': ' 的任务吗?',
     'tasklist.table.stop': '停止',
+    'tasklist.table.stopTitle': '您确定停止此任务吗?',
     'tasklist.table.status': '状态',
     'tasklist.table.result': '结果',
     'tasklist.table.resume': '暂停',
@@ -21,6 +27,8 @@ const zh_CN = {
     'tasklist.table.unfinished': '未完成',
 
     'taskmodal.title': '新建任务',
+
+    'taskform.required': '不能为空',
 
     'taskform.nickname.message': '请输入昵称',
     'taskform.protocol.label': '协议',

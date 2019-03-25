@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Table, message, Icon, Modal } from 'antd';
-import { FormattedMessage } from 'react-intl';
+import { Table, message, Popconfirm, Modal } from 'antd';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import moment from 'moment';
 
 import ContentWrapper from '../../components/ContentWrapper';
@@ -9,7 +9,7 @@ import { request } from '../../lib/common';
 
 import styles from './TaskList.less';
 
-export default class TaskList extends Component {
+class TaskList extends Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -69,6 +69,7 @@ export default class TaskList extends Component {
     render() {
         const { state: { taskList, loading } } = this.props.taskListStore;
         const { taskModalVisible } = this.state;
+        const { intl } = this.props;
         const resultMap = {
             0: <FormattedMessage id="tasklist.table.unfinished" />,
             1: <FormattedMessage id="tasklist.table.fail" />,
@@ -78,6 +79,7 @@ export default class TaskList extends Component {
             1: <FormattedMessage id="tasklist.table.resume" />,
             2: <FormattedMessage id="tasklist.table.running" />,
         }
+        const deleteTitle = intl.formatMessage({ id: 'tasklist.table.deleteTitle' });
         const dataSource = taskList.map((task) => {
             let request;
             try {
@@ -103,30 +105,18 @@ export default class TaskList extends Component {
             key: 'operation',
             width: 120,
             render: (value, record) => {
-                return [<a key="1" onClick={() => {
-                    Modal.confirm({
-                        title: `启动任务`,
-                        content: `请确认启动Id为${record.Id}的任务`,
-                        onOk: () => {
-                            this.start(record.Id)
-                        }
-                    })
-                }}><FormattedMessage id="tasklist.table.start" /></a>,
+                return [<Popconfirm key="1" title={<FormattedMessage id="tasklist.table.startTitle" />} onConfirm={() => { this.start(record.Id) }}>
+                    <a ><FormattedMessage id="tasklist.table.start" /></a>
+                </Popconfirm>,
                 <span key="2"> </span>,
-                <a key="3" onClick={() => {
-                    Modal.confirm({
-                        title: `停止任务`,
-                        content: `请确认停止Id为${record.Id}的任务`,
-                        onOk: () => {
-                            this.stop(record.Id)
-                        }
-                    })
-                }}><FormattedMessage id="tasklist.table.stop" /></a>,
+                <Popconfirm key="3" title={<FormattedMessage id="tasklist.table.stopTitle" />} onConfirm={() => { this.stop(record.Id) }}>
+                    <a ><FormattedMessage id="tasklist.table.stop" /></a>
+                </Popconfirm>,
                 <span key="4"> </span>,
                 <a key="5" onClick={() => {
                     Modal.confirm({
-                        title: `删除任务`,
-                        content: `请确认删除Id为${record.Id}的任务`,
+                        title: deleteTitle,
+                        content: `${intl.formatMessage({ id: 'tasklist.table.deleteContent' })}${record.Id}${intl.formatMessage({ id: 'tasklist.table.deleteContentTask' })}`,
                         onOk: () => {
                             this.delete(record.Id)
                         }
@@ -219,12 +209,13 @@ export default class TaskList extends Component {
                     loading={loading}
                     bordered
                 />
-                <TaskModal
+                {taskModalVisible && <TaskModal
                     fetchList={this.props.taskListStore.fetchList}
                     visible={taskModalVisible}
                     onCancel={() => { this.toggleTaskModal(false) }}
-                />
+                />}
             </ContentWrapper>
         )
     }
 }
+export default injectIntl(TaskList)

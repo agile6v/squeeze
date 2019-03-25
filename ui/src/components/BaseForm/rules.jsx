@@ -2,7 +2,7 @@ const RULES_CONFIG = {
     // 必填
     required: {
         required: true,
-        message: '[label]不能为空',
+        message: '[label][requiredMessage]',
     },
     // 非特殊字符
     plainText: {

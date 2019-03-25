@@ -92,6 +92,7 @@ class TaskModal extends Component {
     render() {
         const { visible, onCancel, intl } = this.props;
         const { formKeys, loading } = this.state;
+        const requiredMessage = intl.formatMessage({ id: 'taskform.required' });
         const formItems = {
             Protocol: {
                 type: 'combo',
@@ -99,6 +100,7 @@ class TaskModal extends Component {
                 labelCol: { span: 8 },
                 wrapperCol: { span: 14 },
                 rules: ['required'],
+                requiredMessage,
                 options: [
                     { label: 'http', value: 'http' },
                     { label: 'https', value: 'https' },
@@ -119,6 +121,7 @@ class TaskModal extends Component {
                 labelCol: { span: 8 },
                 wrapperCol: { span: 14 },
                 rules: ['required'],
+                requiredMessage,
                 options: [
                     { label: 'get', value: 'get' },
                     { label: 'post', value: 'post' },
@@ -137,7 +140,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.URL.label' }),
-                rules: ['required', 'description', 'plainText'],
+                requiredMessage,
+                rules: ['required'],
                 placeholder: intl.formatMessage({ id: 'taskform.URL.placeholder' }),
             },
             Requests: {
@@ -145,7 +149,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Requests.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Requests.placeholder' }),
             },
             Concurrency: {
@@ -153,7 +158,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Concurrency.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Concurrency.placeholder' }),
             },
             Timeout: {
@@ -161,7 +167,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Timeout.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Timeout.placeholder' }),
             },
             ContentType: {
@@ -170,6 +177,7 @@ class TaskModal extends Component {
                 type: 'combo',
                 label: intl.formatMessage({ id: 'taskform.ContentType.label' }),
                 rules: ['required'],
+                requiredMessage,
                 options: [
                     { label: 'application/json', value: 'application/json' },
                     { label: 'application/x-www-form-urlencoded', value: 'application/x-www-form-urlencoded' },
@@ -191,6 +199,7 @@ class TaskModal extends Component {
                 type: 'radio',
                 label: intl.formatMessage({ id: 'taskform.DisableKeepAlive.label' }),
                 rules: ['required'],
+                requiredMessage,
                 options: [
                     { label: 'true', value: true },
                     { label: 'false', value: false },
@@ -202,7 +211,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Scheme.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Scheme.placeholder' }),
             },
             Host: {
@@ -210,7 +220,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Host.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Host.placeholder' }),
             },
             Path: {
@@ -218,7 +229,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Path.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Path.placeholder' }),
             },
             Body: {
@@ -226,7 +238,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Body.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Body.placeholder' }),
             },
             Duration: {
@@ -234,7 +247,8 @@ class TaskModal extends Component {
                 wrapperCol: { span: 14 },
                 type: 'text',
                 label: intl.formatMessage({ id: 'taskform.Duration.label' }),
-                rules: ['required', 'description', 'plainText'],
+                rules: ['required'],
+                requiredMessage,
                 placeholder: intl.formatMessage({ id: 'taskform.Duration.placeholder' }),
             },
         }

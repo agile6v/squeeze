@@ -2,6 +2,7 @@ const en_US = {
     'app.tasks': 'TASKS',
     'tasklist.title': 'TASKS',
     'tasklist.new': 'new +',
+
     'tasklist.table.protocol': 'Protocol',
     'tasklist.table.Id': 'ID',
     'tasklist.table.host': 'Host',
@@ -9,8 +10,13 @@ const en_US = {
     'tasklist.table.updatedTime': 'UpdatedTime',
     'tasklist.table.operation': 'Operation',
     'tasklist.table.start': 'start',
+    'tasklist.table.startTitle': 'Are you sure to start this task?',
     'tasklist.table.delete': 'delete',
+    'tasklist.table.deleteTitle': 'Delete Task',
+    'tasklist.table.deleteContent': 'Are you sure to delete the task ID:',
+    'tasklist.table.deleteContentTask': ' ',
     'tasklist.table.stop': 'stop',
+    'tasklist.table.stopTitle': 'Are you sure to stop this task?',
     'tasklist.table.status': 'Status',
     'tasklist.table.result': 'Result',
     'tasklist.table.resume': 'resume',
@@ -21,6 +27,8 @@ const en_US = {
 
 
     'taskmodal.title': 'New Task',
+
+    'taskform.required':' is required',
 
     'taskform.nickname.message':'please inpu your nickname',
     'taskform.protocol.label': 'protocol',
@@ -53,23 +61,3 @@ const en_US = {
     
 }
 export default en_US;
-
-// "URL":              "http://127.0.0.1:8080",
-//         "Requests":         0,
-//         "Method":           "GET",
-//         "Concurrency":      5,
-//         "Timeout":          30,
-//         "Duration":         10,
-//         "ContentType":      "text/plain",
-//         "MaxResults":       1000000,
-//         "DisableKeepAlive": true
-
-// Scheme      string      `json:"scheme,omitempty"`
-// 	Host        string      `json:"host,omitempty"`
-// 	Path        string      `json:"path,omitempty"`
-// 	Requests    int         `json:"requests,omitempty"`
-// 	Concurrency int         `json:"concurrency,omitempty"`
-// 	Timeout     int         `json:"timeout,omitempty"`
-// 	Duration    int         `json:"duration,omitempty"`
-// 	Body        string      `json:"body,omitempty"`
-// 	MaxResults  int         `json:"maxResults,omitempty"`

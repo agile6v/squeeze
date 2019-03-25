@@ -4,11 +4,11 @@ import { Provider, Subscribe } from 'unstated'
 import TaskList from './TaskList'
 
 import TaskListContainer from '../../containers/TaskListContainer'
-
-export default class ProjectListPage extends Component {
+const taskListContainer = new TaskListContainer()
+export default class TaskListPage extends Component {
   render () {
     return (
-      <Provider>
+      <Provider inject={[taskListContainer]}>
         <Subscribe to={[TaskListContainer]}>
           {(taskListStore) => (
               <TaskList taskListStore={taskListStore} />

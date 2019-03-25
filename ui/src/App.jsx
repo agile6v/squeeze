@@ -4,6 +4,7 @@ import { Layout, Menu, LocaleProvider, Button } from 'antd';
 import { IntlProvider, addLocaleData, FormattedMessage } from 'react-intl';
 import { BrowserRouter as Router, Route, Link as RouterLink, Switch } from 'react-router-dom'
 import browserLang from 'browser-lang';
+import moment from 'moment';
 import en from 'react-intl/locale-data/en';
 import zh from 'react-intl/locale-data/zh';
 import zhCN from 'antd/lib/locale-provider/zh_CN';
@@ -13,6 +14,7 @@ import en_US from './en_US'     // import defined messages in English
 
 import TaskListPage from './pages/TaskList';
 import styles from './index.less';
+
 const { Header, Footer } = Layout;
 
 addLocaleData([...en, ...zh]);
@@ -21,11 +23,12 @@ class App extends Component {
   constructor(props) {
     super(props)
     const lang = window.localStorage.getItem('lang') || browserLang({ languages: ['zh', 'en'], fallback: 'en' });
+    moment.locale(lang)
     this.state = {
       lang,
     }
   }
- 
+
   changeLang = () => {
     const lang = this.state.lang === 'en' ? 'zh' : 'en';
     window.localStorage.setItem('lang', lang)
@@ -62,14 +65,14 @@ class App extends Component {
                 </div>
               </Header>
               <Switch>
-                <Route exact path='/' component={Tasks} />
-                <Route path='/tasks' component={Tasks} />
+                <Route exact path='/' component={TaskListPage} />
+                <Route path='/tasks' component={TaskListPage} />
                 {/* <Route path='/tasks/:tasksId' component={Projects} />
               <Route path='/about' component={Info} /> */}
               </Switch>
               <Footer className={styles.footer}>
                 <a href="https://github.com/agile6v/squeeze">GitHub</a>
-          </Footer>
+              </Footer>
             </Layout>
           </Router >
         </IntlProvider>
@@ -78,12 +81,6 @@ class App extends Component {
   }
 };
 
-
-function Tasks({ match }) {
-  return (
-    <TaskListPage />
-  )
-}
 
 ReactDOM.render(<App />, document.getElementById("app"));
 

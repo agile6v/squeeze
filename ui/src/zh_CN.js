@@ -2,7 +2,7 @@ const zh_CN = {
     'app.tasks': '任务列表',
 
     'tasklist.title': '任务列表',
-    'tasklist.new': '新建',
+    'tasklist.new': '新建 +',
     'tasklist.table.protocol': '协议',
     'tasklist.table.Id': 'ID',
     'tasklist.table.host': '目标地址',
@@ -12,6 +12,13 @@ const zh_CN = {
     'tasklist.table.start': '启动',
     'tasklist.table.delete': '删除',
     'tasklist.table.stop': '停止',
+    'tasklist.table.status': '状态',
+    'tasklist.table.result': '结果',
+    'tasklist.table.resume': '暂停',
+    'tasklist.table.running': '执行中',
+    'tasklist.table.fail': '失败',
+    'tasklist.table.success': '成功',
+    'tasklist.table.unfinished': '未完成',
 
     'taskmodal.title': '新建任务',
 

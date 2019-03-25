@@ -8,4 +8,4 @@ export function getAppRoot() {
     return ''
 }
 
-export const request = ky.extend({ prefixUrl: getAppRoot() + '/api/' })
+export const request = ky.extend({ prefixUrl: getAppRoot() + '/api/', throwHttpErrors: false })

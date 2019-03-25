@@ -1,18 +1,17 @@
 import React, { Component } from 'react'
 import { Table, message, Icon, Modal } from 'antd';
 import { FormattedMessage } from 'react-intl';
+import moment from 'moment';
 
 import ContentWrapper from '../../components/ContentWrapper';
 import TaskModal from './Modal/TaskModal';
 import { request } from '../../lib/common';
 
 import styles from './TaskList.less';
-import moment from 'moment';
 
 export default class TaskList extends Component {
     constructor(props) {
         super(props)
-
         this.state = {
             taskModalVisible: false,
         }
@@ -30,6 +29,9 @@ export default class TaskList extends Component {
             const res = await request.post('delete', {
                 json: { ID }
             }).json()
+            if (res.error) {
+                message.error(res.error); return;
+            }
             this.props.taskListStore.fetchList()
         } catch (err) {
             message.error(err.message)
@@ -41,6 +43,9 @@ export default class TaskList extends Component {
             const res = await request.post('start', {
                 json: { ID }
             }).json()
+            if (res.error) {
+                message.error(res.error); return;
+            }
             this.props.taskListStore.fetchList()
         } catch (err) {
             message.error(err.message)
@@ -52,6 +57,9 @@ export default class TaskList extends Component {
             const res = await request.post('stop', {
                 json: { ID }
             }).json()
+            if (res.error) {
+                message.error(res.error); return;
+            }
             this.props.taskListStore.fetchList()
         } catch (err) {
             message.error(err.message)
@@ -60,7 +68,16 @@ export default class TaskList extends Component {
     }
     render() {
         const { state: { taskList, loading } } = this.props.taskListStore;
-        console.log(taskList)
+        const { taskModalVisible } = this.state;
+        const resultMap = {
+            0: <FormattedMessage id="tasklist.table.unfinished" />,
+            1: <FormattedMessage id="tasklist.table.fail" />,
+            2: <FormattedMessage id="tasklist.table.success" />,
+        }
+        const statustMap = {
+            1: <FormattedMessage id="tasklist.table.resume" />,
+            2: <FormattedMessage id="tasklist.table.running" />,
+        }
         const dataSource = taskList.map((task) => {
             let request;
             try {
@@ -72,7 +89,7 @@ export default class TaskList extends Component {
             const host = Data.Host || Data.URL
             return { ...task, protocol: Protocol, host }
         })
-        const { taskModalVisible } = this.state;
+
         const columns = [{
             title: <FormattedMessage id="tasklist.table.Id" />,
             dataIndex: 'Id',
@@ -130,8 +147,6 @@ export default class TaskList extends Component {
                 { text: 'websocket', value: 'websocket' },
             ],
             onFilter: (value, record) => { return record.protocol.indexOf(value) === 0 },
-            // sorter: (a, b) => a.name.length - b.name.length,
-            // sortOrder: sortedInfo.columnKey === 'name' && sortedInfo.order,
         }, {
             title: <FormattedMessage id="tasklist.table.host" />,
             dataIndex: 'host',
@@ -139,16 +154,39 @@ export default class TaskList extends Component {
             filteredValue: null,
             onFilter: (value, record) => record.host.indexOf(value) === 0,
         }, {
+            title: <FormattedMessage id="tasklist.table.status" />,
+            dataIndex: 'Status',
+            key: 'Status',
+            width: 80,
+            filters: [
+                { text: <FormattedMessage id="tasklist.table.resume" />, value: 1 },
+                { text: <FormattedMessage id="tasklist.table.running" />, value: 2 },
+            ],
+            onFilter: (value, record) => { return record.Status === value },
+            render: value => statustMap[value],
+        }, {
+            title: <FormattedMessage id="tasklist.table.result" />,
+            dataIndex: 'Result',
+            key: 'Result',
+            width: 80,
+            filters: [
+                { text: <FormattedMessage id="tasklist.table.unfinished" />, value: 0 },
+                { text: <FormattedMessage id="tasklist.table.fail" />, value: 1 },
+                { text: <FormattedMessage id="tasklist.table.success" />, value: 2 },
+            ],
+            onFilter: (value, record) => { return record.Result === value },
+            render: value => resultMap[value],
+        }, {
             title: <FormattedMessage id="tasklist.table.createdTime" />,
             dataIndex: 'CreateAt',
             key: 'CreateAt',
             filteredValue: null,
             width: 180,
-            onFilter: (value, record) => moment(record.CreateAt).format('YYYY-MM-DD hh:mm:ss').includes(value),
+            onFilter: (value, record) => moment(record.CreateAt).format('YYYY-MM-DD HH:mm:ss').includes(value),
             // sorter: (a, b) => a.address.length - b.address.length,
             // sortOrder: sortedInfo.columnKey === 'address' && sortedInfo.order,
             render: (value) => {
-                return moment(value).format('YYYY-MM-DD hh:mm:ss')
+                return moment(value).utc().format('YYYY-MM-DD HH:mm:ss')
             }
         }, {
             title: <FormattedMessage id="tasklist.table.updatedTime" />,
@@ -156,10 +194,10 @@ export default class TaskList extends Component {
             key: 'UpdateAt',
             filteredValue: null,
             width: 180,
-            onFilter: (value, record) => moment(record.updatedTime).format('YYYY-MM-DD hh:mm:ss').includes(value),
+            onFilter: (value, record) => moment(record.updatedTime).format('YYYY-MM-DD HH:mm:ss').includes(value),
             // sorter: (a, b) => a.address.length - b.address.length,
             render: (value) => {
-                return moment(value).format('YYYY-MM-DD hh:mm:ss')
+                return moment(value).utc().format('YYYY-MM-DD HH:mm:ss')
             }
             // sortOrder: sortedInfo.columnKey === 'address' && sortedInfo.order,
         }];
@@ -168,7 +206,7 @@ export default class TaskList extends Component {
                 <FormattedMessage id="tasklist.title" />
             </div>),
             (<div key="2" className={styles.addButton} onClick={() => { this.toggleTaskModal(true) }}>
-                <FormattedMessage id="tasklist.new" /><Icon type="plus" />
+                <FormattedMessage id="tasklist.new" />
             </div>)
         ]
         return (
@@ -181,8 +219,11 @@ export default class TaskList extends Component {
                     loading={loading}
                     bordered
                 />
-                <TaskModal fetchList={this.props.taskListStore.fetchList} visible={taskModalVisible} onCancel={() => { this.toggleTaskModal(false) }} />
-                {/* <Modal visible={true}></Modal> */}
+                <TaskModal
+                    fetchList={this.props.taskListStore.fetchList}
+                    visible={taskModalVisible}
+                    onCancel={() => { this.toggleTaskModal(false) }}
+                />
             </ContentWrapper>
         )
     }

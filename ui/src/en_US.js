@@ -1,7 +1,7 @@
 const en_US = {
     'app.tasks': 'TASKS',
     'tasklist.title': 'TASKS',
-    'tasklist.new': 'new',
+    'tasklist.new': 'new +',
     'tasklist.table.protocol': 'Protocol',
     'tasklist.table.Id': 'ID',
     'tasklist.table.host': 'Host',
@@ -11,6 +11,13 @@ const en_US = {
     'tasklist.table.start': 'start',
     'tasklist.table.delete': 'delete',
     'tasklist.table.stop': 'stop',
+    'tasklist.table.status': 'Status',
+    'tasklist.table.result': 'Result',
+    'tasklist.table.resume': 'resume',
+    'tasklist.table.running': 'running',
+    'tasklist.table.fail': 'fail',
+    'tasklist.table.success': 'success',
+    'tasklist.table.unfinished': 'unfinished',
 
 
     'taskmodal.title': 'New Task',
@@ -26,7 +33,7 @@ const en_US = {
     'taskform.Method.placeholder':'please select Method',
     'taskform.Concurrency.label':'Concurrency',
     'taskform.Concurrency.placeholder':'please input Concurrency count',
-    'taskform.Timeout.label':'Concurrency',
+    'taskform.Timeout.label':'Timeout',
     'taskform.Timeout.placeholder':'please input timeout(seconds)',
     'taskform.Duration.label':'Duration',
     'taskform.Duration.placeholder':'please input Duration(seconds)',

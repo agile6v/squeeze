@@ -21,7 +21,7 @@ import (
 
 type Task struct {
     Id          int       `sql:"AUTO_INCREMENT"`
-    Status      int       `sql:"type:tinyint"`
+    Status      int       `sql:"type:tinyint":"DEFAULT:1"`
     Result      int       `sql:"type:tinyint"`
     Request     string    `sql:"type:varchar(2048)"`
     Response    string    `sql:"type:varchar(2048)"`

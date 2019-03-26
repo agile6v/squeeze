@@ -19,6 +19,14 @@ import (
     "github.com/agile6v/squeeze/pkg/server/web/db"
 )
 
+const (
+    STATUS_START = 1
+    STATUS_STOP = 2
+
+    RESULT_FAIL = 1
+    RESULT_SUCC = 2
+)
+
 type Task struct {
     Id          int       `sql:"AUTO_INCREMENT"`
     Status      int       `sql:"type:tinyint":"DEFAULT:1"`
@@ -45,7 +53,28 @@ func CreateTask(reqData string) error {
     return nil
 }
 
-func UpdateTaskResponse(id int, data string) error {
+
+func UpdateTaskByResult(id, result int) error {
+    orm := db.GetOrm()
+    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Result: result}).Error
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func UpdateTaskByStatus(id, status int) error {
+    orm := db.GetOrm()
+    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Status: status}).Error
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func UpdateTaskByResponse(id int, data string) error {
     orm := db.GetOrm()
     err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Response: data}).Error
     if err != nil {

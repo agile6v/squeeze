@@ -80,6 +80,12 @@ func (g *GenericTask) Start(masterAddr, webAddr string) error {
         return err
     }
 
+    // update status to "START"
+    err = dao.UpdateTaskByStatus(task.Id, dao.STATUS_START)
+    if err != nil {
+        return err
+    }
+
     args := config.NewConfigArgs(options)
     args.Callback = "http://" + webAddr + "/api/callback"
     args.HttpAddr = masterAddr
@@ -132,6 +138,11 @@ func (g *GenericTask) Stop(masterAddr string) error {
         return err
     }
 
+    err = dao.UpdateTaskByStatus(task.Id, dao.STATUS_STOP)
+    if err != nil {
+        return err
+    }
+
     log.Infof("stop task returns %s", resp)
     return nil
 }
@@ -153,7 +164,13 @@ func HandleCallback(data string) error {
 
     id := response.Data.ID
 
-    err = dao.UpdateTaskResponse(int(id), data)
+    // update status to "STOP"
+    err = dao.UpdateTaskByStatus(int(id), dao.STATUS_STOP)
+    if err != nil {
+        return err
+    }
+
+    err = dao.UpdateTaskByResponse(int(id), data)
     if err != nil {
         return err
     }

@@ -64,34 +64,37 @@ func newWsReport(n int) *wsReport {
 }
 
 type WebSocketBuilder struct {
-	Conn   *websocket.Conn
-	report *wsReport
+	Conn    *websocket.Conn
+	report  *wsReport
+	options *config.WsOptions
 }
 
 func NewBuilder() *WebSocketBuilder {
 	return &WebSocketBuilder{}
 }
 
-func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+func (builder *WebSocketBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
+	wsOptions, ok := configArgs.Options.(*config.WsOptions)
+	if !ok {
+		return "", fmt.Errorf("Expected WsOptions type, but got %T", configArgs.Options)
+	}
+
+	data, err := json.Marshal(wsOptions)
+	if err != nil {
+		log.Errorf("could not marshal message : %v", err)
+		return "", err
+	}
+
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(ConfigArgs.ID),
+		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_WEBSOCKET,
-		Callback: ConfigArgs.Callback,
-		Duration: uint32(ConfigArgs.WsOpts.Duration),
-		Task: &pb.TaskRequest{
-			Requests:    uint32(ConfigArgs.WsOpts.Requests),
-			Concurrency: uint32(ConfigArgs.WsOpts.Concurrency),
-			Type: &pb.TaskRequest_Websocket{
-				Websocket: &pb.WebsocketTask{
-					Scheme:  ConfigArgs.WsOpts.Scheme,
-					Host:    ConfigArgs.WsOpts.Host,
-					Path:    ConfigArgs.WsOpts.Path,
-					Body:    ConfigArgs.WsOpts.Body,
-					Timeout: uint32(ConfigArgs.WsOpts.Timeout),
-				},
-			},
-		},
+		Callback: configArgs.Callback,
+		Duration: uint32(wsOptions.Duration),
+		Requests: uint32(wsOptions.Requests),
+		Concurrency: uint32(wsOptions.Concurrency),
+		//RateLimit:
+		Data: string(data),
 	}
 
 	m := jsonpb.Marshaler{}
@@ -100,7 +103,7 @@ func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) 
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
@@ -108,55 +111,52 @@ func (builder *WebSocketBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) 
 }
 
 func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
-	var taskRequests []*pb.ExecuteTaskRequest
+	var requests []*pb.ExecuteTaskRequest
 
-	if count > int(request.Task.Concurrency) {
-		count = int(request.Task.Concurrency)
-	} else if (count > int(request.Task.Requests)) {
-		count = int(request.Task.Requests)
+	if count > int(request.Concurrency) {
+		count = int(request.Concurrency)
+	} else if count > int(request.Requests) {
+		count = int(request.Requests)
 	}
 
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
 		*req = *request
-		task := new(pb.WebsocketTask)
-		*task = *req.Task.GetWebsocket()
 
-		var requests, concurrency uint32
 		if count != i {
-			requests = req.Task.Requests / uint32(count)
-			concurrency = req.Task.Concurrency / uint32(count)
+			req.Requests = request.Requests / uint32(count)
+			req.RateLimit = request.RateLimit / uint32(count)
+			req.Concurrency = request.Concurrency / uint32(count)
 		} else {
-			requests = req.Task.Requests/uint32(count) + req.Task.Requests%uint32(count)
-			concurrency = req.Task.Concurrency/uint32(count) + req.Task.Concurrency%uint32(count)
+			req.Requests = request.Requests/uint32(count) + request.Requests%uint32(count)
+			req.RateLimit = request.RateLimit/uint32(count) + request.RateLimit%uint32(count)
+			req.Concurrency = request.Concurrency/uint32(count) + request.Concurrency%uint32(count)
 		}
 
-		req.Task = &pb.TaskRequest{
-			Requests:    requests,
-			Concurrency: concurrency,
-			Type: &pb.TaskRequest_Websocket{
-				Websocket: task,
-			},
-		}
-
-		taskRequests = append(taskRequests, req)
+		requests = append(requests, req)
 	}
 
-	return taskRequests
+	return requests
 }
 
-func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
+func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
+	var options config.WsOptions
+	err := json.Unmarshal([]byte(taskReq.Data), &options)
+	if err != nil {
+		return err
+	}
+
+	builder.options = &options
 	return nil
 }
 
-func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
-	task := taskReq.GetWebsocket()
-	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
+func (builder *WebSocketBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
+	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
 	dialer := websocket.Dialer{
-		HandshakeTimeout: time.Duration(task.Timeout) * time.Second,
+		HandshakeTimeout: time.Duration(builder.options.Timeout) * time.Second,
 	}
 
-	u := url.URL{Scheme: task.Scheme, Host: task.Host, Path: task.Path}
+	u := url.URL{Scheme: builder.options.Scheme, Host: builder.options.Host, Path: builder.options.Path}
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
 		return nil,  &wsResult{Err: err}
@@ -165,12 +165,12 @@ func (builder *WebSocketBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{
 	return conn, nil
 }
 
-func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
+func (builder *WebSocketBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
 	s := util.Now()
 	conn, _ := obj.(*websocket.Conn)
 
 	var resp []byte
-	err := conn.WriteMessage(websocket.TextMessage, []byte(taskReq.GetWebsocket().Body))
+	err := conn.WriteMessage(websocket.TextMessage, []byte(builder.options.Body))
 	if err == nil {
 		// Since our goal is to press server-side capabilities, so we only
 		// consider synchronization scenario. If needed, we will support

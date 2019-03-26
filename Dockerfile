@@ -8,14 +8,15 @@ RUN git clone -b master https://github.com/agile6v/squeeze.git /tmp/squeeze
 
 WORKDIR /tmp/squeeze
 
-RUN make build
+RUN go version && \
+        env GOOS=linux GOARCH=amd64 \
+        make build
 
 FROM alpine:3.8
 
-RUN apk --no-cache add ca-certificates
+RUN apk add --no-cache \
+        libc6-compat
 
-COPY --from=builder /tmp/squeeze/squeeze /home/agile6v/squeeze
+COPY --from=builder /tmp/squeeze/squeeze /bin/squeeze
 
-WORKDIR /home/agile6v/
-
-CMD [./squeeze]
+CMD ["squeeze"]

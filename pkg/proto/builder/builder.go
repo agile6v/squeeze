@@ -19,6 +19,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/proto/http"
 	"github.com/agile6v/squeeze/pkg/proto/websocket"
+	"github.com/agile6v/squeeze/pkg/proto/udp"
 )
 
 func NewBuilder(protocol pb.Protocol) *proto.ProtoBuilderBase {
@@ -27,6 +28,8 @@ func NewBuilder(protocol pb.Protocol) *proto.ProtoBuilderBase {
 		return &proto.ProtoBuilderBase{http.NewBuilder(), &http.ResultTmpl, &http.HttpStats{}}
 	case pb.Protocol_WEBSOCKET:
 		return &proto.ProtoBuilderBase{websocket.NewBuilder(), &websocket.ResultTmpl, &websocket.WebsocketStats{}}
+	case pb.Protocol_UDP:
+		return &proto.ProtoBuilderBase{udp.NewBuilder(), &udp.ResultTmpl, &udp.UDPStats{}}
 	}
 	return nil
 }

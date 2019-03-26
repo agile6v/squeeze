@@ -26,8 +26,8 @@ import (
 )
 
 type CreateTask struct {
-    Protocol string
-    Data     json.RawMessage
+    Protocol string             `json:"protocol"`
+    Data     json.RawMessage    `json:"data"`
 }
 
 func (c *CreateTask) Handle(data string) error {
@@ -39,7 +39,7 @@ func (c *CreateTask) Handle(data string) error {
 }
 
 type GenericTask struct {
-    ID      int
+    ID      int                 `json:"id"`
 }
 
 func (task *GenericTask) Delete() error {
@@ -62,18 +62,16 @@ func (g *GenericTask) Start(masterAddr, webAddr string) error {
         return err
     }
 
-    args := config.ProtoConfigArgs{}
-    args.Callback = "http://" + webAddr + "/api/callback"
-    args.HttpAddr = masterAddr
-    args.ID = task.Id
-
     protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
     builder := builder.NewBuilder(protocol)
 
+    var options interface{}
     if protocol == pb.Protocol_HTTP {
-        err = json.Unmarshal(createTask.Data, &args.HttpOpts)
+        options = config.NewHttpOptions()
+        err = json.Unmarshal(createTask.Data, options)
     } else if protocol == pb.Protocol_WEBSOCKET {
-        err = json.Unmarshal(createTask.Data, &args.WsOpts)
+        options = config.NewWsOptions()
+        err = json.Unmarshal(createTask.Data, options)
     } else {
         // TODO: error
     }
@@ -82,7 +80,12 @@ func (g *GenericTask) Start(masterAddr, webAddr string) error {
         return err
     }
 
-    resp, err := builder.CreateTask(&args)
+    args := config.NewConfigArgs(options)
+    args.Callback = "http://" + webAddr + "/api/callback"
+    args.HttpAddr = masterAddr
+    args.ID = task.Id
+
+    resp, err := builder.CreateTask(args)
     if err != nil {
         return err
     }
@@ -103,16 +106,16 @@ func (g *GenericTask) Stop(masterAddr string) error {
         return err
     }
 
-    args := config.ProtoConfigArgs{}
-    args.HttpAddr = masterAddr
-
     protocol := pb.Protocol(pb.Protocol_value[strings.ToUpper(createTask.Protocol)])
     builder := builder.NewBuilder(protocol)
 
+    var options interface{}
     if protocol == pb.Protocol_HTTP {
-        err = json.Unmarshal(createTask.Data, &args.HttpOpts)
+        options = config.NewHttpOptions()
+        err = json.Unmarshal(createTask.Data, options)
     } else if protocol == pb.Protocol_WEBSOCKET {
-        err = json.Unmarshal(createTask.Data, &args.WsOpts)
+        options = config.NewWsOptions()
+        err = json.Unmarshal(createTask.Data, options)
     } else {
         // TODO: error
     }
@@ -121,7 +124,10 @@ func (g *GenericTask) Stop(masterAddr string) error {
         return err
     }
 
-    resp, err := builder.CancelTask(&args)
+    args := config.NewConfigArgs(options)
+    args.HttpAddr = masterAddr
+
+    resp, err := builder.CancelTask(args)
     if err != nil {
         return err
     }

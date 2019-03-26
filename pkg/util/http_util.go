@@ -76,6 +76,7 @@ func DoRequest(method, host, body string, timeout time.Duration) (string, error)
 	if err != nil {
 		return "", err
 	}
+
 	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

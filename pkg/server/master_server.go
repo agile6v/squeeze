@@ -38,6 +38,8 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto"
 )
 
+var currentReq *pb.ExecuteTaskRequest
+
 type MasterServer struct {
 	ServerBase
 	results chan protobuf.Message
@@ -69,6 +71,8 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 		m.runCollector(mergedResults, taskReq)
 	}(mergedResults)
 
+	currentReq = taskReq
+
 	if taskReq.Callback != "" {
 		err := m.dispatchTask(taskReq, conns, &wg)
 		if err != nil {
@@ -76,6 +80,10 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 		}
 
 		go func() {
+			defer func() {
+				currentReq = nil
+			}()
+
 			wg.Wait()
 			close(m.results)
 
@@ -100,8 +108,12 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			log.Infof("Send results to callback address successfully: %s", resp)
 		}()
 
-		return "success", nil
+		return "Start Successfully\n", nil
 	} else {
+		defer func() {
+			currentReq = nil
+		}()
+
 		err := m.dispatchTask(taskReq, conns, &wg)
 		if err != nil {
 			return nil, err
@@ -161,15 +173,20 @@ func (m *MasterServer) stopTask(conns []*SlaveConn) error {
 func (m *MasterServer) dispatchTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveConn, wg *sync.WaitGroup) error {
 	reqs := builder.NewBuilder(taskReq.Protocol).Split(taskReq, len(conns))
 	wg.Add(util.Min(len(conns), len(reqs)))
+	log.V(2).Infof("connections: %d, requests: %d", len(conns), len(reqs))
 
 	for i, conn := range conns {
 		go func(conn *SlaveConn, index int) {
 			defer wg.Done()
+			log.V(2).Infof("slave address: %s", conn.PeerAddr)
 			slaveAddr, err := util.BuildHostname(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
 			if err != nil {
 				log.Errorf("failed to build slave hostname: %s", err.Error())
 				return
 			}
+
+			log.V(2).Infof("dispatch to slave: %s", slaveAddr)
+
 			ret, err := m.DoExecuteTask(slaveAddr, reqs[index])
 			if err != nil {
 				log.Errorf("failed to dispatch task to %s: %s", slaveAddr, err.Error())
@@ -223,9 +240,6 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Check if it can run start request.
-	//log.Infof("task: %s, %s, %d", taskReq.URL, taskReq.Callback, taskReq.Cmd)
-
 	slaveConns := GetConnections()
 	if len(slaveConns) == 0 {
 		util.RespondWithError(w, http.StatusInternalServerError, "No slave available.")
@@ -237,8 +251,14 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		} else {
-			util.RespondWithJSON(w, http.StatusOK, "success")
+			util.RespondWithJSON(w, http.StatusOK, "Stop Successfully\n")
 		}
+		return
+	}
+
+	// Check if it can run execute request.
+	if currentReq != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "There are task in progress, please try again later.")
 		return
 	}
 

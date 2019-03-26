@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"net/http/httptrace"
 	"golang.org/x/net/http2"
+	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
@@ -42,8 +43,8 @@ type ElapsedInfo struct {
 }
 
 type LatencyDistribution struct {
-	Percentage  uint32
-    Latency     float64
+	Percentage  uint32      `json:"percentage,omitempty"`
+    Latency     float64     `json:"latency,omitempty"`
 }
 
 type HttpStats struct {
@@ -64,8 +65,8 @@ type HttpStats struct {
 	Resp                ElapsedInfo `json:"resp,omitempty"`
 	Conn                ElapsedInfo `json:"conn,omitempty"`
 	Req                 ElapsedInfo `json:"req,omitempty"`
-	StatusCodes         map[uint32]uint32
-	ErrMap              map[string]uint32
+	StatusCodes         map[uint32]uint32 `json:"statusCodes,omitempty"`
+	ErrMap              map[string]uint32 `json:"errMap,omitempty"`
 	ConnDuration        float64      `json:"connDuration,omitempty"`
 	DnsDuration         float64      `json:"dnsDuration,omitempty"`
 	ReqDuration         float64      `json:"reqDuration,omitempty"`
@@ -74,7 +75,7 @@ type HttpStats struct {
 	// Total number of requests
 	Requests            int64        `json:"requests,omitempty"`
 	TotalDuration       float64      `json:"totalDuration,omitempty"`
-	LatencyDistribution []LatencyDistribution `json:latencyDistribution,omitempty`
+	LatencyDistribution []LatencyDistribution `json:"latencyDistribution,omitempty"`
 	// time spent per request
 	Lats                []float64    `json:"latencies,omitempty"`
 }
@@ -146,42 +147,39 @@ type HttpBuilder struct {
 	report     *httpReport
 	HttpReq    *http.Request
 	HttpClient *http.Client
+	options    *config.HttpOptions
 }
 
 func NewBuilder() *HttpBuilder {
 	return &HttpBuilder{}
 }
 
-func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
-	if ConfigArgs.HttpOpts.Duration > 0 {
-		ConfigArgs.HttpOpts.Requests = math.MaxInt32
+func (builder *HttpBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
+	httpOptions, ok := configArgs.Options.(*config.HttpOptions)
+	if !ok {
+		return "", fmt.Errorf("Expected HttpOptions type, but got %T", configArgs.Options)
+	}
+
+	if httpOptions.Duration > 0 {
+		httpOptions.Requests = math.MaxInt32
+	}
+
+	data, err := json.Marshal(httpOptions)
+	if err != nil {
+		log.Errorf("could not marshal message : %v", err)
+		return "", err
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(ConfigArgs.ID),
+		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
 		Protocol: pb.Protocol_HTTP,
-		Callback: ConfigArgs.Callback,
-		Duration: uint32(ConfigArgs.HttpOpts.Duration),
-		Task: &pb.TaskRequest{
-			Requests:    uint32(ConfigArgs.HttpOpts.Requests),
-			Concurrency: uint32(ConfigArgs.HttpOpts.Concurrency),
-			RateLimit:   uint32(ConfigArgs.HttpOpts.RateLimit),
-			Type: &pb.TaskRequest_Http{
-				Http: &pb.HttpTask{
-					Url:               ConfigArgs.HttpOpts.URL,
-					Http2:             ConfigArgs.HttpOpts.HTTP2,
-					Method:            ConfigArgs.HttpOpts.Method,
-					Body:              ConfigArgs.HttpOpts.Body,
-					Timeout:           uint32(ConfigArgs.HttpOpts.Timeout),
-					DisableKeepalives: ConfigArgs.HttpOpts.DisableKeepAlive,
-					Headers:           ConfigArgs.HttpOpts.Headers,
-					ProxyAddr:         ConfigArgs.HttpOpts.ProxyAddr,
-					ContentType:       ConfigArgs.HttpOpts.ContentType,
-					MaxResults:        int32(ConfigArgs.HttpOpts.MaxResults),
-				},
-			},
-		},
+		Callback: configArgs.Callback,
+		Duration: uint32(httpOptions.Duration),
+		Requests: uint32(httpOptions.Requests),
+		Concurrency: uint32(httpOptions.Concurrency),
+		RateLimit: uint32(httpOptions.RateLimit),
+		Data: string(data),
 	}
 
 	m := jsonpb.Marshaler{}
@@ -190,42 +188,35 @@ func (builder *HttpBuilder) CreateTask(ConfigArgs *config.ProtoConfigArgs) (stri
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/start", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/start", string(jsonStr), 0)
 	if err != nil {
 		return resp, err
 	}
+
 	return resp, nil
 }
 
 func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
 	var requests []*pb.ExecuteTaskRequest
 
-	if count > int(request.Task.Concurrency) {
-		count = int(request.Task.Concurrency)
-	} else if count > int(request.Task.Requests) {
-		count = int(request.Task.Requests)
+	if count > int(request.Concurrency) {
+		count = int(request.Concurrency)
+	} else if count > int(request.Requests) {
+		count = int(request.Requests)
 	}
 
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
 		*req = *request
-		task := new(pb.HttpTask)
-		*task = *request.Task.GetHttp()
-
-		req.Task = &pb.TaskRequest{
-			Type: &pb.TaskRequest_Http{
-				Http: task,
-			},
-		}
 
 		if count != i {
-			req.Task.Requests = request.Task.Requests / uint32(count)
-			req.Task.RateLimit = request.Task.RateLimit / uint32(count)
-			req.Task.Concurrency = request.Task.Concurrency / uint32(count)
+			req.Requests = request.Requests / uint32(count)
+			req.RateLimit = request.RateLimit / uint32(count)
+			req.Concurrency = request.Concurrency / uint32(count)
 		} else {
-			req.Task.Requests = request.Task.Requests/uint32(count) + request.Task.Requests%uint32(count)
-			req.Task.RateLimit = request.Task.RateLimit/uint32(count) + request.Task.RateLimit%uint32(count)
-			req.Task.Concurrency = request.Task.Concurrency/uint32(count) + request.Task.Concurrency%uint32(count)
+			req.Requests = request.Requests/uint32(count) + request.Requests%uint32(count)
+			req.RateLimit = request.RateLimit/uint32(count) + request.RateLimit%uint32(count)
+			req.Concurrency = request.Concurrency/uint32(count) + request.Concurrency%uint32(count)
 		}
 
 		requests = append(requests, req)
@@ -234,19 +225,25 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 	return requests
 }
 
-func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) error {
-	task := taskReq.GetHttp()
+func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
+	var options config.HttpOptions
+	err := json.Unmarshal([]byte(taskReq.Data), &options)
+	if err != nil {
+		return err
+	}
 
-	builder.report = newHttpReport(util.Min(int(taskReq.Requests), int(task.MaxResults)))
-	httpReq, err := http.NewRequest(task.Method, task.Url, nil)
+	builder.options = &options
+
+	builder.report = newHttpReport(util.Min(int(taskReq.Requests), int(options.MaxResults)))
+	httpReq, err := http.NewRequest(options.Method, options.URL, nil)
 	if err != nil {
 		return err
 	}
 
 	// copy headers
 	header := make(http.Header)
-	if len(task.Headers) > 0 {
-		for _, h := range task.Headers {
+	if len(options.Headers) > 0 {
+		for _, h := range options.Headers {
 			matched, err := util.ParseHTTPHeader(h)
 			if err != nil {
 				return fmt.Errorf("HTTP Header format is invalid, %v", err)
@@ -266,10 +263,10 @@ func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) e
 	header.Set("User-Agent", ua)
 
 	// content-type
-	header.Set("Content-Type", task.ContentType)
+	header.Set("Content-Type", options.ContentType)
 
-	if len(taskReq.GetHttp().Body) > 0 {
-		httpReq.ContentLength = int64(len(taskReq.GetHttp().Body))
+	if len(options.Body) > 0 {
+		httpReq.ContentLength = int64(len(options.Body))
 	}
 
 	tr := &http.Transport{
@@ -278,26 +275,26 @@ func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) e
 			ServerName:         httpReq.Host,
 		},
 		MaxIdleConnsPerHost: int(taskReq.Concurrency),
-		DisableCompression:  task.DisableCompression,
-		DisableKeepAlives:   task.DisableKeepalives,
+		DisableCompression:  options.DisableCompression,
+		DisableKeepAlives:   options.DisableKeepAlive,
 	}
 
-	if task.ProxyAddr != "" {
-		proxyURL, err := url.Parse(task.ProxyAddr)
+	if options.ProxyAddr != "" {
+		proxyURL, err := url.Parse(options.ProxyAddr)
 		if err != nil {
-			return fmt.Errorf("invalid argument %s: %s", task.ProxyAddr, err.Error())
+			return fmt.Errorf("invalid argument %s: %s", options.ProxyAddr, err.Error())
 		}
 		tr.Proxy = http.ProxyURL(proxyURL)
 	}
 
-	if task.Http2 {
+	if options.HTTP2 {
 		http2.ConfigureTransport(tr)
 	} else {
 		tr.TLSNextProto = make(map[string]func(string, *tls.Conn) http.RoundTripper)
 	}
-	client := &http.Client{Transport: tr, Timeout: time.Duration(task.Timeout) * time.Second}
+	client := &http.Client{Transport: tr, Timeout: time.Duration(options.Timeout) * time.Second}
 
-	if task.DisableRedirects {
+	if options.DisableRedirects {
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		}
@@ -308,17 +305,17 @@ func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.TaskRequest) e
 	return nil
 }
 
-func (builder *HttpBuilder) PreRequest(taskReq *pb.TaskRequest) (interface{}, interface{}) {
+func (builder *HttpBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
 	return nil, nil
 }
 
-func (builder *HttpBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.TaskRequest) interface{} {
+func (builder *HttpBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
 	s := util.Now()
 	var size int64
 	var code int
 	var dnsStart, connStart, resStart, reqStart, delayStart time.Duration
 	var dnsDuration, connDuration, resDuration, reqDuration, delayDuration time.Duration
-	req := util.CloneRequest(builder.HttpReq, []byte(taskReq.GetHttp().Body))
+	req := util.CloneRequest(builder.HttpReq, []byte(builder.options.Body))
 	trace := &httptrace.ClientTrace{
 		DNSStart: func(info httptrace.DNSStartInfo) {
 			dnsStart = util.Now()
@@ -539,7 +536,7 @@ Summary:
   Total data:	{{ .TotalSize }} bytes
   Size/request:	{{ .AvgSize }} bytes{{ end }}
 
-Latency distribution:{{ range .LatencyDistribution }}
+Latency Distribution:{{ range .LatencyDistribution }}
   {{ .Percentage }}% in {{ formatNumber .Latency }} secs{{ end }}
 
 Details (average, fastest, slowest):

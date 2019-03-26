@@ -45,9 +45,9 @@ type SqueezeResult struct {
 type ProtoBuilder interface {
 	// slave side
 	// These functions are executed in the following order
-	Init(context.Context, *pb.TaskRequest) error
-	PreRequest(*pb.TaskRequest) (interface{}, interface{})
-	Request(context.Context, interface{}, *pb.TaskRequest) interface{}
+	Init(context.Context, *pb.ExecuteTaskRequest) error
+	PreRequest(*pb.ExecuteTaskRequest) (interface{}, interface{})
+	Request(context.Context, interface{}, *pb.ExecuteTaskRequest) interface{}
 	PostRequest(interface{}) error
 	Done(time.Duration) (interface{}, error)
 
@@ -65,10 +65,9 @@ type ProtoBuilderBase struct {
 	Stats    interface{}
 }
 
-func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (string, error) {
+func (proto *ProtoBuilderBase) CancelTask(configArgs *config.ProtoConfigArgs) (string, error) {
 	req := &pb.ExecuteTaskRequest{
 		Cmd:      pb.ExecuteTaskRequest_STOP,
-		Callback: ConfigArgs.Callback,
 	}
 
 	m := jsonpb.Marshaler{}
@@ -77,14 +76,32 @@ func (proto *ProtoBuilderBase) CancelTask(ConfigArgs *config.ProtoConfigArgs) (s
 		return "", err
 	}
 
-	resp, err := util.DoRequest("POST", ConfigArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
+	resp, err := util.DoRequest("POST", configArgs.HttpAddr+"/task/stop", string(jsonStr), 0)
 	if err != nil {
 		return "", err
 	}
 	return resp, nil
 }
 
-func (proto *ProtoBuilderBase) Render(data string) (string, error) {
+func (proto *ProtoBuilderBase) Render(data string, callback string) (string, error) {
+	if callback != "" {
+		response := struct {
+			Data string
+			Error string
+		}{}
+
+		err := json.Unmarshal([]byte(data), &response)
+		if err != nil {
+			return "", err
+		}
+
+		if response.Error != "" {
+			return response.Error, nil
+		} else {
+			return response.Data, nil
+		}
+	}
+
 	response := &SqueezeResponse{
 		Data: &SqueezeResult{
 			Result: proto.Stats,

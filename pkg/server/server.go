@@ -65,7 +65,7 @@ type ServerArgs struct {
 	HTTPAddr       string   // The listening address for http
 	GRPCAddr       string   // The listening address for grpc
 
-	MasterAddr     string   // Master's HTTP Address
+	HttpMasterAddr string   // Master's HTTP Address
 	GrpcMasterAddr string   // Master's GRPC Address
 	ReportInterval time.Duration // Heartbeat reporting interval
 	ResultCapacity int

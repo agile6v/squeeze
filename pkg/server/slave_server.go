@@ -27,6 +27,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/pb"
 	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
+	"github.com/agile6v/squeeze/pkg/util"
 )
 
 type SlaveServer struct {
@@ -40,13 +41,28 @@ func (s *SlaveServer) Initialize(args *ServerArgs) error {
 	s.ServerBase.Initialize(args)
 	s.Mode = Slave
 
+	// check if the HttpMasterAddr is valid
+	_, _, err := util.GetHostPort(s.args.HttpMasterAddr)
+	if err != nil {
+		return err
+	}
+
+	// check if the GrpcMasterAddr is valid
+	_, _, err = util.GetHostPort(s.args.GrpcMasterAddr)
+	if err != nil {
+		return err
+	}
+
 	// Create the gRPC server
 	// TODO: create the grpc options
 	s.grpcServer = grpc.NewServer(grpc.MaxConcurrentStreams(256), grpc.MaxMsgSize(1024*1024))
 	pb.RegisterSqueezeServiceServer(s.grpcServer, s)
 
-	// TODO: check if the MasterAddr is valid
-	proxy := NewProxy(s.args.MasterAddr)
+	proxy, err := NewProxy(s.args.HttpMasterAddr)
+	if err != nil {
+		return err
+	}
+
 	http.HandleFunc("/", proxy.handle)
 	return nil
 }

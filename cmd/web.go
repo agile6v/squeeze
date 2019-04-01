@@ -62,8 +62,8 @@ func WebCmd() *cobra.Command {
 
 	webCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9991",
 		"The address and port of the web server.")
-	webCmd.PersistentFlags().StringVar(&serverArgs.MasterAddr, "masterAddr", "",
-		"The address of the master server")
+	webCmd.PersistentFlags().StringVar(&serverArgs.HttpMasterAddr, "masterAddr", "",
+		"Master server's http address.")
 	webCmd.PersistentFlags().StringVar(&webOptions.DSN, "dsn", "",
 		`Data Source Name. If you specify --type=mysql, need to set this option.
 Format: username:password@protocol(address)/dbname?param=value`)

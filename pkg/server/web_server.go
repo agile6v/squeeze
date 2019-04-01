@@ -43,7 +43,7 @@ func (s *WebServer) Initialize(args *ServerArgs) error {
 	}
 
 	api := &api.AppAPI{
-		MasterAddr: s.args.MasterAddr,
+		MasterAddr: s.args.HttpMasterAddr,
 		HTTPAddr: s.args.HTTPAddr,
 		LocalAddr: ip + ":" + port,
 	}

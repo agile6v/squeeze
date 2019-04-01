@@ -55,19 +55,19 @@ func SlaveCmd() *cobra.Command {
 		},
 	}
 
-	slaveCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9998",
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9996",
 		"Squeeze service HTTP address")
-	slaveCmd.PersistentFlags().StringVar(&serverArgs.GRPCAddr, "grpcAddr", ":9997",
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.GRPCAddr, "grpcAddr", ":9995",
 		"Squeeze service grpc address")
-	slaveCmd.PersistentFlags().StringVar(&serverArgs.MasterAddr, "masterAddr", "",
-		"The address of the master server")
+	slaveCmd.PersistentFlags().StringVar(&serverArgs.HttpMasterAddr, "httpMasterAddr", "",
+		"Master Server's http address.")
 	slaveCmd.PersistentFlags().StringVar(&serverArgs.GrpcMasterAddr, "grpcMasterAddr", "",
-		"The address of the grpc master server")
+		"Master Server's grpc address.")
 	slaveCmd.PersistentFlags().DurationVar(&serverArgs.ReportInterval, "reportInterval", 5,
 		"Task reporting interval to the master")
 	slaveCmd.PersistentFlags().IntVar(&serverArgs.ResultCapacity, "resultCapacity", 2000,
 		"The capacity of the results channel for aggregating.")
-	slaveCmd.MarkPersistentFlagRequired("masterAddr")
+	slaveCmd.MarkPersistentFlagRequired("httpMasterAddr")
 	slaveCmd.MarkPersistentFlagRequired("grpcMasterAddr")
 
 	return slaveCmd

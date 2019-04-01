@@ -29,7 +29,7 @@ func ClientCmd() *cobra.Command {
 	// clientCmd represents the client command
 	clientCmd := &cobra.Command{
 		Use:   "client",
-		Short: "A handy tool that can call the Squeeze's API.",
+		Short: "A handy tools that can call the Squeeze's API.",
 		Long: `This command allows you to interact with Squeeze and stress targets with multiple protocols.
 Currently supported protocol is only http, other protocols are under development. Look forward
 to your contribution.

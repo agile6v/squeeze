@@ -15,10 +15,11 @@
 package server
 
 import (
-	"github.com/agile6v/squeeze/pkg/version"
+	"fmt"
+	"net/url"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
+	"github.com/agile6v/squeeze/pkg/version"
 )
 
 type Proxy struct {
@@ -26,10 +27,13 @@ type Proxy struct {
 	proxy  *httputil.ReverseProxy
 }
 
-func NewProxy(target string) *Proxy {
-	url, _ := url.Parse(target)
+func NewProxy(target string) (*Proxy, error) {
+	url, err := url.Parse(fmt.Sprintf("http://%v/", target))
+	if err != nil {
+		return nil, err
+	}
 
-	return &Proxy{target: url, proxy: httputil.NewSingleHostReverseProxy(url)}
+	return &Proxy{target: url, proxy: httputil.NewSingleHostReverseProxy(url)}, nil
 }
 
 func (p *Proxy) handle(w http.ResponseWriter, r *http.Request) {

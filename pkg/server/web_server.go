@@ -42,8 +42,14 @@ func (s *WebServer) Initialize(args *ServerArgs) error {
 		return err
 	}
 
+	// check if the HttpMasterAddr is valid
+	_, _, err = util.GetHostPort(args.HttpMasterAddr)
+	if err != nil {
+		return err
+	}
+
 	api := &api.AppAPI{
-		MasterAddr: s.args.HttpMasterAddr,
+		MasterAddr: fmt.Sprintf("http://%v", s.args.HttpMasterAddr),
 		HTTPAddr: s.args.HTTPAddr,
 		LocalAddr: ip + ":" + port,
 	}

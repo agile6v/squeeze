@@ -1,0 +1,8 @@
+apiVersion: v1
+appVersion: "1.0"
+description: Helm chart for all squeeze components
+name: squeeze
+version: 0.1.0
+maintainers:
+- email: agile6v@agile6v.com
+  name: agile6v

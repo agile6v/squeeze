@@ -23,7 +23,8 @@ ingress:
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: squeeze-master.default
-      paths: ["/"]
+      paths:
+        - path
 
   tls: []
   #  - secretName: chart-example-tls

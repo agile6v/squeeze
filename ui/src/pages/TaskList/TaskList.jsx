@@ -66,6 +66,9 @@ class TaskList extends Component {
             console.log('error: ', err)
         }
     }
+    toDetails = async (record) => {
+        console.log(JSON.parse(record.Response))
+    }
     render() {
         const { state: { taskList, loading } } = this.props.taskListStore;
         const { taskModalVisible } = this.state;
@@ -76,6 +79,7 @@ class TaskList extends Component {
             2: <FormattedMessage id="tasklist.table.success" />,
         }
         const statustMap = {
+            0: <FormattedMessage id="tasklist.table.notstarted" />,
             1: <FormattedMessage id="tasklist.table.resume" />,
             2: <FormattedMessage id="tasklist.table.running" />,
         }
@@ -87,9 +91,9 @@ class TaskList extends Component {
             } catch (err) {
                 message.error(err.message)
             }
-            const { Protocol, Data } = request;
-            const host = Data.Host || Data.URL
-            return { ...task, protocol: Protocol, host }
+            const { data } = request;
+            const host = data.host || data.url
+            return { ...task, protocol: data.protocol, host }
         })
 
         const columns = [{
@@ -103,17 +107,15 @@ class TaskList extends Component {
             title: <FormattedMessage id="tasklist.table.operation" />,
             dataIndex: 'operation',
             key: 'operation',
-            width: 120,
+            width: 150,
             render: (value, record) => {
-                return [<Popconfirm key="1" title={<FormattedMessage id="tasklist.table.startTitle" />} onConfirm={() => { this.start(record.Id) }}>
+                return [record.Status === 1 || record.Status === 0 ? <Popconfirm key="1" title={<FormattedMessage id="tasklist.table.startTitle" />} onConfirm={() => { this.start(record.Id) }}>
                     <a ><FormattedMessage id="tasklist.table.start" /></a>
-                </Popconfirm>,
-                <span key="2"> </span>,
-                <Popconfirm key="3" title={<FormattedMessage id="tasklist.table.stopTitle" />} onConfirm={() => { this.stop(record.Id) }}>
-                    <a ><FormattedMessage id="tasklist.table.stop" /></a>
-                </Popconfirm>,
-                <span key="4"> </span>,
-                <a key="5" onClick={() => {
+                </Popconfirm> : <Popconfirm key="1" title={<FormattedMessage id="tasklist.table.stopTitle" />} onConfirm={() => { this.stop(record.Id) }}>
+                        <a ><FormattedMessage id="tasklist.table.stop" /></a>
+                    </Popconfirm>,
+                <span key="2"> | </span>,
+                <a key="3" onClick={() => {
                     Modal.confirm({
                         title: deleteTitle,
                         content: `${intl.formatMessage({ id: 'tasklist.table.deleteContent' })}${record.Id}${intl.formatMessage({ id: 'tasklist.table.deleteContentTask' })}`,
@@ -121,7 +123,9 @@ class TaskList extends Component {
                             this.delete(record.Id)
                         }
                     })
-                }}><FormattedMessage id="tasklist.table.delete" /></a>]
+                }}><FormattedMessage id="tasklist.table.delete" /></a>,
+                <span key="4"> | </span>,
+                <a onClick={() => { this.toDetails(record) }} key="5"><FormattedMessage id="tasklist.table.details" /></a>]
             }
         }, {
             title: <FormattedMessage id="tasklist.table.protocol" />,
@@ -129,12 +133,12 @@ class TaskList extends Component {
             key: 'protocol',
             width: 110,
             filters: [
-                { text: 'http', value: 'http' },
-                { text: 'https', value: 'https' },
+                { text: 'HTTP', value: 'HTTP' },
+                { text: 'HTTPS', value: 'HTTPS' },
                 { text: 'UDP', value: 'UDP' },
                 { text: 'TCP', value: 'TCP' },
-                { text: 'http2', value: 'http2' },
-                { text: 'websocket', value: 'websocket' },
+                { text: 'HTTP2', value: 'HTTP2' },
+                { text: 'WEBSOCKET', value: 'WEBSOCKET' },
             ],
             onFilter: (value, record) => { return record.protocol.indexOf(value) === 0 },
         }, {
@@ -149,6 +153,7 @@ class TaskList extends Component {
             key: 'Status',
             width: 80,
             filters: [
+                { text: <FormattedMessage id="tasklist.table.notstarted" />, value: 0 },
                 { text: <FormattedMessage id="tasklist.table.resume" />, value: 1 },
                 { text: <FormattedMessage id="tasklist.table.running" />, value: 2 },
             ],
@@ -207,7 +212,6 @@ class TaskList extends Component {
                     dataSource={dataSource}
                     rowKey="Id"
                     loading={loading}
-                    bordered
                 />
                 {taskModalVisible && <TaskModal
                     fetchList={this.props.taskListStore.fetchList}

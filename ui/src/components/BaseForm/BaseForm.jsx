@@ -196,6 +196,7 @@ class BaseForm extends React.Component {
                 case 'number':
                     children = this.decorateFormField(key, {}, item)(
                         <InputNumber
+                            style={{ width: '100%' }}
                             min={item.min}
                             max={item.max}
                             step={item.step}

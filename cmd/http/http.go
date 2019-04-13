@@ -27,7 +27,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-func HttpCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
+func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 	httpOptions := config.NewHttpOptions()
 	httpCmd := &cobra.Command{
 		Use:   "http",

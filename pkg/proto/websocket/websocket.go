@@ -216,6 +216,10 @@ func (builder *WebSocketBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
+func (builder *WebSocketBuilder) Destroy(obj interface{}) error {
+	return nil
+}
+
 func (builder *WebSocketBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()

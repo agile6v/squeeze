@@ -22,6 +22,7 @@ import (
 	"github.com/agile6v/squeeze/cmd/websocket"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/proto"
+	"github.com/agile6v/squeeze/cmd/udp"
 )
 
 func ClientCmd() *cobra.Command {
@@ -41,8 +42,9 @@ to your contribution.
 	clientCmd.PersistentFlags().StringVar(&configArgs.HttpAddr, "httpAddr", "http://127.0.0.1:9998",
 		"The address and port of the Squeeze master or slave.")
 
-	clientCmd.AddCommand(http.HttpCmd(configArgs))
-	clientCmd.AddCommand(websocket.WsCmd(configArgs))
+	clientCmd.AddCommand(http.Command(configArgs))
+	clientCmd.AddCommand(websocket.Command(configArgs))
+	clientCmd.AddCommand(udp.Command(configArgs))
 	clientCmd.AddCommand(StopCmd(configArgs))
 
 	return clientCmd

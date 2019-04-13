@@ -49,6 +49,7 @@ type ProtoBuilder interface {
 	PreRequest(*pb.ExecuteTaskRequest) (interface{}, interface{})
 	Request(context.Context, interface{}, *pb.ExecuteTaskRequest) interface{}
 	PostRequest(interface{}) error
+	Destroy(interface{}) error
 	Done(time.Duration) (interface{}, error)
 
 	// master side

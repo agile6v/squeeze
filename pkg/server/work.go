@@ -125,6 +125,11 @@ func (w *Work) runWorker(ctx context.Context, n int) {
 			w.results <- ret
 		}
 	}
+
+	err := w.Builder.Destroy(obj)
+	if err != nil {
+		// TODO: exception handing
+	}
 }
 
 // runWorkers starts all workers(groutines) to press target

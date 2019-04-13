@@ -27,7 +27,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-func WsCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
+func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 	wsOptions := config.NewWsOptions()
 	wsCmd := &cobra.Command{
 		Use:   "websocket",

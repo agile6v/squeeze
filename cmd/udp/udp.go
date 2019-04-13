@@ -27,7 +27,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
-func UDPCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
+func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 	udpOptions := config.NewUDPOptions()
 	udpCmd := &cobra.Command{
 		Use:   "udp",

@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	log "github.com/golang/glog"
-	"github.com/gorilla/websocket"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
@@ -64,7 +63,7 @@ func newUDPReport(n int) *udpReport {
 }
 
 type UDPBuilder struct {
-	Conn    *websocket.Conn
+	Conn    *net.UDPConn
 	report  *udpReport
 	options *config.UDPOptions
 }
@@ -170,12 +169,15 @@ func (builder *UDPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface
 
 func (builder *UDPBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
 	s := util.Now()
-	conn, _ := obj.(*net.UDPConn)
+	conn, ok := obj.(*net.UDPConn)
+	if !ok {
+		return fmt.Errorf("Expected UDPConn type, but got %T", obj)
+	}
 
 	content := make([]byte, builder.options.MsgLength)
 	_, err := conn.Write(content)
 	if err != nil {
-
+		return err
 	}
 
 	t := util.Now()
@@ -212,22 +214,19 @@ func (builder *UDPBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
+func (builder *UDPBuilder) Destroy(obj interface{}) error {
+	conn, ok := obj.(*net.UDPConn)
+	if !ok {
+		return fmt.Errorf("Expected UDPConn type, but got %T", obj)
+	}
+
+	conn.Close()
+	return nil
+}
+
 func (builder *UDPBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
-
-	if len(report.lats) == 0 {
-		return report.result, nil
-	}
-
-	// Sending a close message to close the connection.
-	err := builder.Conn.WriteMessage(websocket.CloseMessage,
-		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-	if err != nil {
-		return report.result, err
-	}
-
-	builder.Conn.Close()
 
 	return report.result, nil
 }

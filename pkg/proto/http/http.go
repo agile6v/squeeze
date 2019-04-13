@@ -406,6 +406,10 @@ func (builder *HttpBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
+func (builder *HttpBuilder) Destroy(obj interface{}) error {
+	return nil
+}
+
 func (builder *HttpBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()

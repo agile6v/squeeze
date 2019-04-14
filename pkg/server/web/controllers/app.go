@@ -31,7 +31,14 @@ type CreateTask struct {
 }
 
 func (c *CreateTask) Handle(data string) error {
-    err := dao.CreateTask(data)
+    // check the validity of the data
+    createTask := &CreateTask{}
+    err := json.Unmarshal([]byte(data), createTask)
+    if err != nil {
+        return err
+    }
+
+    err = dao.CreateTask(data)
     if err != nil {
         return err
     }
@@ -147,8 +154,8 @@ func (g *GenericTask) Stop(masterAddr string) error {
     return nil
 }
 
-func (task *GenericTask) Search() error {
-    return nil
+func (g *GenericTask) Search() (*dao.Task, error) {
+    return dao.SearchTask(g.ID)
 }
 
 func ListTask() ([]dao.Task, error) {

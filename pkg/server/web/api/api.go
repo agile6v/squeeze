@@ -51,6 +51,11 @@ func (api *AppAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if task.Protocol == "" {
+		util.RespondWithError(w, http.StatusBadRequest, "Protocol field cannot be empty.")
+		return
+	}
+
 	err = task.Handle(body)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -79,7 +84,21 @@ func (api *AppAPI) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *AppAPI) search(w http.ResponseWriter, r *http.Request) {
+	// Read body
+	task := &controllers.GenericTask{}
+	_, err := util.ReadBody(r, task)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	ret, err := task.Search()
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	util.RespondWithJSON(w, http.StatusOK, ret)
 }
 
 func (api *AppAPI) list(w http.ResponseWriter, r *http.Request) {

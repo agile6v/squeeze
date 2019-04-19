@@ -25,7 +25,7 @@ import (
 var RootCmd = &cobra.Command{
 	Use:          "squeeze",
 	Short:        "A Load Testing Tool.",
-	Long:         "Squeeze provides scalable and easy-to-use load testing tool for performance testing.",
+	Long:         ascIILogo + "Squeeze provides scalable and easy-to-use load testing tool for performance testing.",
 	SilenceUsage: true,
 }
 
@@ -41,3 +41,12 @@ func init() {
 	RootCmd.AddCommand(InfoCmd())
 	RootCmd.AddCommand(VersionCmd)
 }
+
+const ascIILogo = `
+			   _________ ___  _____  ___  ____  ___
+			  / ___/ __ \/ / / / _ \/ _ \/_  / / _ \
+			 (__  ) /_/ / /_/ /  __/  __/ / /_/  __/
+			/____/\__, /\__,_/\___/\___/ /___/\___/
+			        /_/
+
+`

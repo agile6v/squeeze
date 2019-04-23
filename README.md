@@ -16,7 +16,7 @@
 - [License](#license)
 
 # Features
-* **Multiple Protocols**: HTTP1.0, HTTP1.1, HTTP2.0, HTTPS, Websocket
+* **Multiple Protocols**: HTTP1.0, HTTP1.1, HTTP2.0, HTTPS, Websocket, UDP
 * **Cross-Platform**: Linux, MacOSX, Windows
 * **Scalability**: With the Master-Slave model, Slave can be expanded indefinitely. In other words, you can simulate as many users as you want.
 

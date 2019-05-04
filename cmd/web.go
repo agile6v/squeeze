@@ -33,7 +33,7 @@ func WebCmd() *cobra.Command {
 		Short: "Backend server that supports the Squeeze UI.",
 		Long:  `Backend server that supports the Squeeze UI.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return validate(args, webOptions)
+			return webOptions.Validate(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("run squeeze with web mode.")
@@ -75,16 +75,4 @@ Format: username:password@protocol(address)/dbname?param=value`)
 	webCmd.MarkPersistentFlagRequired("masterAddr")
 
 	return webCmd
-}
-
-func validate(args []string, webOptions *config.WebOptions) error {
-	if webOptions.Type != "mysql" && webOptions.Type != "sqlite" {
-		return fmt.Errorf("option --type must be one of the mysql and sqlite.")
-	}
-
-	if webOptions.Type == "mysql" && webOptions.DSN == "" {
-		return fmt.Errorf("option --dsn cannot be empty.")
-	}
-
-	return nil
 }

@@ -65,7 +65,7 @@ func newUDPReport(n int) *udpReport {
 type UDPBuilder struct {
 	Conn    *net.UDPConn
 	report  *udpReport
-	options *config.UDPOptions
+	options *UDPOptions
 }
 
 func NewBuilder() *UDPBuilder {
@@ -73,7 +73,7 @@ func NewBuilder() *UDPBuilder {
 }
 
 func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
-	udpOptions, ok := configArgs.Options.(*config.UDPOptions)
+	udpOptions, ok := configArgs.Options.(*UDPOptions)
 	if !ok {
 		return "", fmt.Errorf("Expected udpOptions type, but got %T", configArgs.Options)
 	}
@@ -139,7 +139,7 @@ func (builder *UDPBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*p
 }
 
 func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
-	var options config.UDPOptions
+	var options UDPOptions
 	err := json.Unmarshal([]byte(taskReq.Data), &options)
 	if err != nil {
 		return err

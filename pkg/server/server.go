@@ -55,6 +55,11 @@ func (t NodeType) String() string {
 	}
 }
 
+type ClusterInfo struct {
+	Data   []AgentStatusResp    `json:"data"`
+	Error  string               `json:"error"`
+}
+
 type AgentStatusResp struct {
 	ConnID string `json:"id"`
 	Addr   string `json:"addr"`

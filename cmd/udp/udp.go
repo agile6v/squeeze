@@ -25,10 +25,11 @@ import (
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
+	"github.com/agile6v/squeeze/pkg/proto/udp"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
-	udpOptions := config.NewUDPOptions()
+	udpOptions := udp.NewUDPOptions()
 	udpCmd := &cobra.Command{
 		Use:   "udp",
 		Short: "udp protocol benchmark",
@@ -68,11 +69,10 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 
 			ret, err := builder.Render(resp, configArgs.Callback)
 			if err != nil {
-				log.Errorf("failed to render response, %s", err)
+				log.Errorf("failed to render response %s, ret: %s", err, ret)
 				return err
 			}
 
-			fmt.Printf("%s", ret)
 			return nil
 		},
 	}

@@ -147,7 +147,7 @@ type HttpBuilder struct {
 	report     *httpReport
 	HttpReq    *http.Request
 	HttpClient *http.Client
-	options    *config.HttpOptions
+	options    *HttpOptions
 }
 
 func NewBuilder() *HttpBuilder {
@@ -155,7 +155,7 @@ func NewBuilder() *HttpBuilder {
 }
 
 func (builder *HttpBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
-	httpOptions, ok := configArgs.Options.(*config.HttpOptions)
+	httpOptions, ok := configArgs.Options.(*HttpOptions)
 	if !ok {
 		return "", fmt.Errorf("Expected HttpOptions type, but got %T", configArgs.Options)
 	}
@@ -226,7 +226,7 @@ func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*
 }
 
 func (builder *HttpBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
-	var options config.HttpOptions
+	var options HttpOptions
 	err := json.Unmarshal([]byte(taskReq.Data), &options)
 	if err != nil {
 		return err

@@ -39,8 +39,8 @@ func InfoCmd() *cobra.Command {
 				return err
 			}
 
-			status := &ClusterInfo{}
-			ret, err := render(resp, &InfoTemplate, status)
+			info := &server.ClusterInfo{}
+			ret, err := render(resp, &InfoTemplate, info)
 			if err != nil {
 				log.Errorf("failed to render response, %s", err)
 				return err
@@ -57,19 +57,14 @@ func InfoCmd() *cobra.Command {
 	return infoCmd
 }
 
-type ClusterInfo struct {
-	Data   []server.AgentStatusResp `json:"data"`
-	Error  string                   `json:"error"`
-}
-
-func render(data string, tmpl *string, stats *ClusterInfo) (string, error) {
-	err := json.Unmarshal([]byte(data), stats)
+func render(data string, tmpl *string, info *server.ClusterInfo) (string, error) {
+	err := json.Unmarshal([]byte(data), info)
 	if err != nil {
 		return "", err
 	}
 
 	buf := &bytes.Buffer{}
-	if err := util.NewTemplate(*tmpl).Execute(buf, stats.Data); err != nil {
+	if err := util.NewTemplate(*tmpl).Execute(buf, info.Data); err != nil {
 		return "", err
 	}
 

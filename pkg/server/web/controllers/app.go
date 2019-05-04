@@ -23,6 +23,8 @@ import (
     "github.com/agile6v/squeeze/pkg/pb"
     "github.com/agile6v/squeeze/pkg/proto"
     "github.com/agile6v/squeeze/pkg/proto/builder"
+    "github.com/agile6v/squeeze/pkg/proto/http"
+    "github.com/agile6v/squeeze/pkg/proto/websocket"
 )
 
 type CreateTask struct {
@@ -74,10 +76,10 @@ func (g *GenericTask) Start(masterAddr, webAddr string) error {
 
     var options interface{}
     if protocol == pb.Protocol_HTTP {
-        options = config.NewHttpOptions()
+        options = http.NewHttpOptions()
         err = json.Unmarshal(createTask.Data, options)
     } else if protocol == pb.Protocol_WEBSOCKET {
-        options = config.NewWsOptions()
+        options = websocket.NewWsOptions()
         err = json.Unmarshal(createTask.Data, options)
     } else {
         // TODO: error
@@ -124,10 +126,10 @@ func (g *GenericTask) Stop(masterAddr string) error {
 
     var options interface{}
     if protocol == pb.Protocol_HTTP {
-        options = config.NewHttpOptions()
+        options = http.NewHttpOptions()
         err = json.Unmarshal(createTask.Data, options)
     } else if protocol == pb.Protocol_WEBSOCKET {
-        options = config.NewWsOptions()
+        options = websocket.NewWsOptions()
         err = json.Unmarshal(createTask.Data, options)
     } else {
         // TODO: error

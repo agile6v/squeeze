@@ -66,7 +66,7 @@ func newWsReport(n int) *wsReport {
 type WebSocketBuilder struct {
 	Conn    *websocket.Conn
 	report  *wsReport
-	options *config.WsOptions
+	options *WsOptions
 }
 
 func NewBuilder() *WebSocketBuilder {
@@ -74,7 +74,7 @@ func NewBuilder() *WebSocketBuilder {
 }
 
 func (builder *WebSocketBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
-	wsOptions, ok := configArgs.Options.(*config.WsOptions)
+	wsOptions, ok := configArgs.Options.(*WsOptions)
 	if !ok {
 		return "", fmt.Errorf("Expected WsOptions type, but got %T", configArgs.Options)
 	}
@@ -140,7 +140,7 @@ func (builder *WebSocketBuilder) Split(request *pb.ExecuteTaskRequest, count int
 }
 
 func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
-	var options config.WsOptions
+	var options WsOptions
 	err := json.Unmarshal([]byte(taskReq.Data), &options)
 	if err != nil {
 		return err

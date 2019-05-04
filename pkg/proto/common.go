@@ -15,6 +15,7 @@
 package proto
 
 import (
+	"fmt"
 	"time"
 	"bytes"
 	"context"
@@ -125,6 +126,8 @@ func (proto *ProtoBuilderBase) Render(data string, callback string) (string, err
 			return "", err
 		}
 	}
+
+	fmt.Printf("%s", buf.String())
 
 	return buf.String(), nil
 }

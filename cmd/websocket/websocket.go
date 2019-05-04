@@ -25,10 +25,11 @@ import (
 	log "github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
+    "github.com/agile6v/squeeze/pkg/proto/websocket"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
-	wsOptions := config.NewWsOptions()
+	wsOptions := websocket.NewWsOptions()
 	wsCmd := &cobra.Command{
 		Use:   "websocket",
 		Short: "websocket protocol benchmark",
@@ -68,11 +69,9 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 
 			ret, err := builder.Render(resp, configArgs.Callback)
 			if err != nil {
-				log.Errorf("failed to render response, %s", err)
+				log.Errorf("failed to render response %s, ret: %s", err, ret)
 				return err
 			}
-
-			fmt.Printf("%s", ret)
 			return nil
 		},
 	}

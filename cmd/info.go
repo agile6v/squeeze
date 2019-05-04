@@ -64,7 +64,7 @@ func render(data string, tmpl *string, info *server.ClusterInfo) (string, error)
 	}
 
 	buf := &bytes.Buffer{}
-	if err := util.NewTemplate(*tmpl).Execute(buf, info.Data); err != nil {
+	if err := util.NewTemplate(*tmpl).Execute(buf, info); err != nil {
 		return "", err
 	}
 
@@ -74,8 +74,11 @@ func render(data string, tmpl *string, info *server.ClusterInfo) (string, error)
 var (
 	InfoTemplate = `
 Cluster Information:
-{{ range . }}
-  Agent: {{ .Addr }}, {{ .Status }}
+{{ if ne .Error "" }}
+    {{.Error}}
+{{ else }}
+{{ range .Data }}   Agent: {{ .Addr }}, {{ .Status }}
+{{ end }}
 {{ end }}
 `
 )

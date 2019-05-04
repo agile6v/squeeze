@@ -314,14 +314,24 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.Ex
 }
 
 func (m *MasterServer) handleInfo(w http.ResponseWriter, r *http.Request) {
-	resp := []AgentStatusResp{}
-	slaveConnsMutex.Lock()
-	for connID, c := range slaveConns {
-		resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr, Status: c.Status})
+    err := ""
+    resp := []AgentStatusResp{}
+
+    slaveConnsMutex.Lock()
+    if len(slaveConns) == 0 {
+        err = "No slave available."
+	} else {
+		for connID, c := range slaveConns {
+			resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr, Status: c.Status})
+		}
 	}
 	slaveConnsMutex.Unlock()
 
-	util.RespondWithJSON(w, http.StatusOK, resp)
+    if err != "" {
+        util.RespondWithError(w, http.StatusOK, err)
+    } else {
+        util.RespondWithJSON(w, http.StatusOK, resp)
+    }
 }
 
 func (m *MasterServer) ExecuteTask(ctx context.Context, in *pb.ExecuteTaskRequest) (*pb.ExecuteTaskResponse, error) {

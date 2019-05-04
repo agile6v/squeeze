@@ -26,12 +26,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-type SqueezeStats struct {
-	Addr    string  `json:"addr"`
-	Status  int32   `json:"status"`
-	Error   string  `json:"error"`
-}
-
 type SqueezeResponse struct {
 	Data   *SqueezeResult `json:"data"`
 	Error   string        `json:"error"`
@@ -41,6 +35,12 @@ type SqueezeResult struct {
 	ID         uint32         `json:"id"`
 	AgentStats []SqueezeStats `json:"agent_stats"`
 	Result     interface{}    `json:"result"`
+}
+
+type SqueezeStats struct {
+	Addr    string  `json:"addr"`
+	Status  int32   `json:"status"`
+	Error   string  `json:"error"`
 }
 
 type ProtoBuilder interface {

@@ -23,6 +23,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/cmd/udp"
+    "github.com/agile6v/squeeze/cmd/tcp"
 )
 
 func ClientCmd() *cobra.Command {
@@ -45,6 +46,7 @@ to your contribution.
 	clientCmd.AddCommand(http.Command(configArgs))
 	clientCmd.AddCommand(websocket.Command(configArgs))
 	clientCmd.AddCommand(udp.Command(configArgs))
+	clientCmd.AddCommand(tcp.Command(configArgs))
 	clientCmd.AddCommand(StopCmd(configArgs))
 
 	return clientCmd

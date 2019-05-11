@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package udp
+package tcp
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/util"
 )
 
-type UDPStats struct {
+type TCPStats struct {
 	TotalSize       int64       `json:"totalSize,omitempty"`
 	Rps             float64     `json:"rps,omitempty"`
 	Duration        float64     `json:"duration,omitempty"`
@@ -39,7 +39,7 @@ type UDPStats struct {
 	ErrMap          map[string]uint32 `json:"errMap,omitempty"`
 }
 
-type udpResult struct {
+type tcpResult struct {
 	Err           error
 	StatusCode    int
 	Offset        time.Duration
@@ -47,37 +47,37 @@ type udpResult struct {
 	ContentLength int64
 }
 
-type udpReport struct {
-	result *UDPStats
+type tcpReport struct {
+	result *TCPStats
 	lats   []float64 // time spent per request
 }
 
-func newUDPReport(n int) *udpReport {
+func newTCPReport(n int) *tcpReport {
 	cap := n
-	return &udpReport{
-		result: &UDPStats{
+	return &tcpReport{
+		result: &TCPStats{
 			ErrMap: make(map[string]uint32),
 		},
 		lats: make([]float64, 0, cap),
 	}
 }
 
-type UDPBuilder struct {
-	report  *udpReport
-	options *UDPOptions
+type TCPBuilder struct {
+	report  *tcpReport
+	options *TCPOptions
 }
 
-func NewBuilder() *UDPBuilder {
-	return &UDPBuilder{}
+func NewBuilder() *TCPBuilder {
+	return &TCPBuilder{}
 }
 
-func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
-	udpOptions, ok := configArgs.Options.(*UDPOptions)
+func (builder *TCPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (string, error) {
+	tcpOptions, ok := configArgs.Options.(*TCPOptions)
 	if !ok {
-		return "", fmt.Errorf("Expected udpOptions type, but got %T", configArgs.Options)
+		return "", fmt.Errorf("Expected tcpOptions type, but got %T", configArgs.Options)
 	}
 
-	data, err := json.Marshal(udpOptions)
+	data, err := json.Marshal(tcpOptions)
 	if err != nil {
 		log.Errorf("could not marshal message : %v", err)
 		return "", err
@@ -86,11 +86,11 @@ func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 	req := &pb.ExecuteTaskRequest{
 		Id:       uint32(configArgs.ID),
 		Cmd:      pb.ExecuteTaskRequest_START,
-		Protocol: pb.Protocol_UDP,
+		Protocol: pb.Protocol_TCP,
 		Callback: configArgs.Callback,
-		Duration: uint32(udpOptions.Duration),
-		Requests: uint32(udpOptions.Requests),
-		Concurrency: uint32(udpOptions.Concurrency),
+		Duration: uint32(tcpOptions.Duration),
+		Requests: uint32(tcpOptions.Requests),
+		Concurrency: uint32(tcpOptions.Concurrency),
 		//RateLimit:
 		Data: string(data),
 	}
@@ -108,7 +108,7 @@ func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 	return resp, nil
 }
 
-func (builder *UDPBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
+func (builder *TCPBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
 	var requests []*pb.ExecuteTaskRequest
 
 	if count > int(request.Concurrency) {
@@ -137,8 +137,8 @@ func (builder *UDPBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*p
 	return requests
 }
 
-func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
-	var options UDPOptions
+func (builder *TCPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequest) error {
+	var options TCPOptions
 	err := json.Unmarshal([]byte(taskReq.Data), &options)
 	if err != nil {
 		return err
@@ -148,50 +148,46 @@ func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequ
 	return nil
 }
 
-func (builder *UDPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
-	builder.report = newUDPReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
+func (builder *TCPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
+	builder.report = newTCPReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
 
-	addr, err := net.ResolveUDPAddr("udp", builder.options.Addr)
+	conn, err := net.Dial("tcp", builder.options.Addr)
 	if err != nil {
-		return nil, &udpResult{Err: err}
-	}
-
-	conn, err := net.DialUDP("udp4", nil, addr)
-	if err != nil {
-		return nil, &udpResult{
-			Err: fmt.Errorf("connect to server %v failed : %v", addr.String(), err.Error()),
+		return nil, &tcpResult{
+			Err: fmt.Errorf("connect to server %v failed : %v", builder.options.Addr, err.Error()),
 		}
 	}
 
 	return conn, nil
 }
 
-func (builder *UDPBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
+func (builder *TCPBuilder) Request(ctx context.Context, obj interface{}, taskReq *pb.ExecuteTaskRequest) interface{} {
 	s := util.Now()
-	conn, ok := obj.(*net.UDPConn)
+	conn, ok := obj.(*net.TCPConn)
 	if !ok {
-		return fmt.Errorf("Expected UDPConn type, but got %T", obj)
+		return fmt.Errorf("Expected TCPConn type, but got %T", obj)
 	}
 
 	content := make([]byte, builder.options.MsgLength)
 	_, err := conn.Write(content)
 	if err != nil {
+		log.Infof(">>>>> %s", err)
 		return err
 	}
 
 	t := util.Now()
 	finish := t - s
 
-	return &udpResult{
+	return &tcpResult{
 		Duration:      finish,
 		Err:           err,
 	}
 }
 
-func (builder *UDPBuilder) PostRequest(result interface{}) error {
-	res, ok := result.(*udpResult)
+func (builder *TCPBuilder) PostRequest(result interface{}) error {
+	res, ok := result.(*tcpResult)
 	if !ok {
-		return fmt.Errorf("Expected udpResult type, but got %T", result)
+		return fmt.Errorf("Expected tcpResult type, but got %T", result)
 	}
 
 	report := builder.report
@@ -213,32 +209,32 @@ func (builder *UDPBuilder) PostRequest(result interface{}) error {
 	return nil
 }
 
-func (builder *UDPBuilder) Destroy(obj interface{}) error {
-	conn, ok := obj.(*net.UDPConn)
+func (builder *TCPBuilder) Destroy(obj interface{}) error {
+	conn, ok := obj.(*net.TCPConn)
 	if !ok {
-		return fmt.Errorf("Expected UDPConn type, but got %T", obj)
+		return fmt.Errorf("Expected TCPConn type, but got %T", obj)
 	}
 
 	conn.Close()
 	return nil
 }
 
-func (builder *UDPBuilder) Done(total time.Duration) (interface{}, error) {
+func (builder *TCPBuilder) Done(total time.Duration) (interface{}, error) {
 	report := builder.report
 	report.result.Duration = total.Seconds()
 
 	return report.result, nil
 }
 
-func (builder *UDPBuilder) Merge(messages []string) (interface{}, error) {
-	stats := &UDPStats{}
+func (builder *TCPBuilder) Merge(messages []string) (interface{}, error) {
+	stats := &TCPStats{}
 	stats.ErrMap = make(map[string]uint32)
 
 	for _, message := range messages {
-		r := &UDPStats{}
+		r := &TCPStats{}
 		err := json.Unmarshal([]byte(message), r)
 		if err != nil {
-			return nil, fmt.Errorf("cannot cast to UDPStats: %#v", message)
+			return nil, fmt.Errorf("cannot cast to TCPStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {

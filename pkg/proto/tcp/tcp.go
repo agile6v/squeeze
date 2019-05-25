@@ -171,7 +171,6 @@ func (builder *TCPBuilder) Request(ctx context.Context, obj interface{}, taskReq
 	content := make([]byte, builder.options.MsgLength)
 	_, err := conn.Write(content)
 	if err != nil {
-		log.Infof(">>>>> %s", err)
 		return err
 	}
 

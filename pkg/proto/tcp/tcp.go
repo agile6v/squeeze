@@ -145,12 +145,11 @@ func (builder *TCPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequ
 	}
 
 	builder.options = &options
+	builder.report = newTCPReport(util.Min(int(taskReq.Requests), int(options.MaxResults)))
 	return nil
 }
 
 func (builder *TCPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
-	builder.report = newTCPReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
-
 	conn, err := net.Dial("tcp", builder.options.Addr)
 	if err != nil {
 		return nil, &tcpResult{

@@ -147,11 +147,11 @@ func (builder *WebSocketBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTa
 	}
 
 	builder.options = &options
+	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(options.MaxResults)))
 	return nil
 }
 
 func (builder *WebSocketBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
-	builder.report = newWsReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
 	dialer := websocket.Dialer{
 		HandshakeTimeout: time.Duration(builder.options.Timeout) * time.Second,
 	}

@@ -145,12 +145,11 @@ func (builder *UDPBuilder) Init(ctx context.Context, taskReq *pb.ExecuteTaskRequ
 	}
 
 	builder.options = &options
+	builder.report = newUDPReport(util.Min(int(taskReq.Requests), int(options.MaxResults)))
 	return nil
 }
 
 func (builder *UDPBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (interface{}, interface{}) {
-	builder.report = newUDPReport(util.Min(int(taskReq.Requests), int(builder.options.MaxResults)))
-
 	addr, err := net.ResolveUDPAddr("udp", builder.options.Addr)
 	if err != nil {
 		return nil, &udpResult{Err: err}

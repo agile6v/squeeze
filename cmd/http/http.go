@@ -15,17 +15,12 @@
 package http
 
 import (
-	"os"
-	"fmt"
 	"math"
-	"errors"
-	"os/signal"
+    "github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	log "github.com/golang/glog"
-	"github.com/spf13/cobra"
-	"github.com/agile6v/squeeze/pkg/proto/builder"
     "github.com/agile6v/squeeze/pkg/proto/http"
+    "github.com/agile6v/squeeze/pkg/proto/builder"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
@@ -39,37 +34,10 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 			return httpOptions.Validate(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configArgs.Options = httpOptions
-			httpOptions.URL = args[0]
-			builder := builder.NewBuilder(pb.Protocol_HTTP)
-
-			c := make(chan os.Signal, 1)
-			signal.Notify(c, os.Interrupt)
-			go func() {
-				<-c
-				fmt.Printf("\nCanceling...\n")
-				_, err := builder.CancelTask(configArgs)
-				if err != nil {
-					log.Errorf("failed to cancel task %s", err)
-				}
-			}()
-
-			resp, err := builder.CreateTask(configArgs)
-			if err != nil {
-				log.Errorf("failed to create task %s", err)
-				if resp != "" {
-					return errors.New(resp)
-				}
-				return err
-			}
-
-			ret, err := builder.Render(resp, configArgs.Callback)
-			if err != nil {
-				log.Errorf("failed to render response %s, ret: %s", err, ret)
-				return err
-			}
-
-			return nil
+            httpOptions.URL = args[0]
+            configArgs.Options = httpOptions
+            builder := builder.NewBuilder(pb.Protocol_HTTP)
+            return builder.RunTask(configArgs)
 		},
 	}
 

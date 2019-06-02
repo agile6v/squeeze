@@ -33,7 +33,7 @@ func ClientCmd() *cobra.Command {
 		Use:   "client",
 		Short: "A handy tools that can call the Squeeze's API.",
 		Long: `This command allows you to interact with Squeeze and stress targets with multiple protocols.
-Currently supported protocol is only http, other protocols are under development. Look forward
+Currently supported protocols are http, websocket, tcp and udp, other protocols are under development. Look forward
 to your contribution.
 	`,
 	}
@@ -63,6 +63,7 @@ func StopCmd(configArgs *config.ProtoConfigArgs) *cobra.Command {
 			_, err := builder.CancelTask(configArgs)
 			if err != nil {
 				log.Errorf("failed to cancel task %s", err)
+				return err
 			}
 			fmt.Printf("\nCancelled\n")
 			return nil

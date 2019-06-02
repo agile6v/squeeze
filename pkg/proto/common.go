@@ -15,11 +15,15 @@
 package proto
 
 import (
+    "os"
 	"fmt"
 	"time"
 	"bytes"
+    "errors"
 	"context"
+    "os/signal"
 	"encoding/json"
+    log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
@@ -130,6 +134,41 @@ func (proto *ProtoBuilderBase) Render(data string, callback string) (string, err
 	fmt.Printf("%s", buf.String())
 
 	return buf.String(), nil
+}
+
+func (proto *ProtoBuilderBase) RunTask(configArgs *config.ProtoConfigArgs) error {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    go func() {
+        <-c
+        fmt.Printf("\nCanceling...\n")
+        _, err := proto.CancelTask(configArgs)
+        if err != nil {
+            log.Errorf("failed to cancel task %s", err)
+        }
+    }()
+
+    resp, err := proto.CreateTask(configArgs)
+    if err != nil {
+        log.Errorf("failed to create task %s", err)
+        if resp != "" {
+            return errors.New(resp)
+        }
+        return err
+    }
+
+    if configArgs.Callback != "" {
+        fmt.Printf("%s", resp)
+        return nil
+    }
+
+    ret, err := proto.Render(resp, configArgs.Callback)
+    if err != nil {
+        log.Errorf("failed to render response %s, ret: %s", err, ret)
+        return err
+    }
+
+    return nil
 }
 
 var (

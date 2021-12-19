@@ -15,28 +15,28 @@
 package tcp
 
 import (
-	"fmt"
-	"time"
-	"net"
 	"context"
 	"encoding/json"
-	log "github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
+	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"net"
+	"time"
 )
 
 type TCPStats struct {
-	TotalSize       int64       `json:"totalSize,omitempty"`
-	Rps             float64     `json:"rps,omitempty"`
-	Duration        float64     `json:"duration,omitempty"`
-	TotalDuration   float64     `json:"totalDuration,omitempty"`
-	Requests        int64       `json:"requests,omitempty"`
-	TotalRequests   int64       `json:"totalRequests,omitempty"`
-	TotalResponses  int64       `json:"totalResponses,omitempty"`
-	AvgSize         int64       `json:"avgSize,omitempty"`
-	ErrMap          map[string]uint32 `json:"errMap,omitempty"`
+	TotalSize      int64             `json:"totalSize,omitempty"`
+	Rps            float64           `json:"rps,omitempty"`
+	Duration       float64           `json:"duration,omitempty"`
+	TotalDuration  float64           `json:"totalDuration,omitempty"`
+	Requests       int64             `json:"requests,omitempty"`
+	TotalRequests  int64             `json:"totalRequests,omitempty"`
+	TotalResponses int64             `json:"totalResponses,omitempty"`
+	AvgSize        int64             `json:"avgSize,omitempty"`
+	ErrMap         map[string]uint32 `json:"errMap,omitempty"`
 }
 
 type tcpResult struct {
@@ -84,12 +84,12 @@ func (builder *TCPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(configArgs.ID),
-		Cmd:      pb.ExecuteTaskRequest_START,
-		Protocol: pb.Protocol_TCP,
-		Callback: configArgs.Callback,
-		Duration: uint32(tcpOptions.Duration),
-		Requests: uint32(tcpOptions.Requests),
+		Id:          uint32(configArgs.ID),
+		Cmd:         pb.ExecuteTaskRequest_START,
+		Protocol:    pb.Protocol_TCP,
+		Callback:    configArgs.Callback,
+		Duration:    uint32(tcpOptions.Duration),
+		Requests:    uint32(tcpOptions.Requests),
 		Concurrency: uint32(tcpOptions.Concurrency),
 		//RateLimit:
 		Data: string(data),
@@ -177,8 +177,8 @@ func (builder *TCPBuilder) Request(ctx context.Context, obj interface{}, taskReq
 	finish := t - s
 
 	return &tcpResult{
-		Duration:      finish,
-		Err:           err,
+		Duration: finish,
+		Err:      err,
 	}
 }
 

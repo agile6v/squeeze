@@ -15,14 +15,14 @@
 package cmd
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
-	"github.com/agile6v/squeeze/pkg/util"
-	"github.com/spf13/cobra"
-	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/server"
+	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
+	"github.com/spf13/cobra"
 )
 
 func InfoCmd() *cobra.Command {
@@ -31,8 +31,8 @@ func InfoCmd() *cobra.Command {
 	// infoCmd represents the info command
 	infoCmd := &cobra.Command{
 		Use:   "info",
-		Short: "Show information about the squeeze cluster.",
-		Long:  `Show information about the squeeze cluster.`,
+		Short: "Show information about the squeeze cluster",
+		Long:  `Show information about the squeeze cluster`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resp, err := util.DoRequest("GET", configArgs.HttpAddr+"/info", "", 5)
 			if err != nil {
@@ -82,5 +82,3 @@ Cluster Information:
 {{ end }}
 `
 )
-
-

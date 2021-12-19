@@ -15,12 +15,12 @@
 package tcp
 
 import (
-	"math"
-	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 	"github.com/agile6v/squeeze/pkg/proto/tcp"
+	"github.com/spf13/cobra"
+	"math"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
@@ -36,7 +36,7 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			configArgs.Options = tcpOptions
 			builder := builder.NewBuilder(pb.Protocol_TCP)
-            return builder.RunTask(configArgs)
+			return builder.RunTask(configArgs)
 		},
 	}
 
@@ -55,4 +55,3 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 
 	return tcpCmd
 }
-

@@ -16,19 +16,19 @@ package util
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/agile6v/squeeze/pkg/version"
 	"io/ioutil"
 	"net"
-	"time"
 	"net/http"
 	"regexp"
-	"encoding/json"
-	"github.com/agile6v/squeeze/pkg/version"
+	"time"
 )
 
 var headerRegexp = `^([\w-]+):\s*(.+)`
 
-func BuildHostname(ip, port string) (string, error) {
+func BuildAddress(ip, port string) (string, error) {
 	host, _, err := GetHostPort(ip)
 	if err != nil {
 		return "", err
@@ -67,7 +67,7 @@ func DoRequest(method, host, body string, timeout time.Duration) (string, error)
 	header := make(http.Header)
 	header.Set("User-Agent", version.GetVersion())
 	req.Header = header
-	
+
 	// Send request
 	client := http.Client{
 		Timeout: time.Duration(timeout * time.Second),

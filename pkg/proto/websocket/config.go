@@ -15,22 +15,22 @@
 package websocket
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"net/url"
 )
 
 // WsOptions contains websocket protocol runtime parameters
 type WsOptions struct {
-	Scheme      string      `json:"scheme,omitempty"`
-	Host        string      `json:"host,omitempty"`
-	Path        string      `json:"path,omitempty"`
-	Requests    int         `json:"requests,omitempty"`
-	Concurrency int         `json:"concurrency,omitempty"`
-	Timeout     int         `json:"timeout,omitempty"`
-	Duration    int         `json:"duration,omitempty"`
-	Body        string      `json:"body,omitempty"`
-	MaxResults  int         `json:"maxResults,omitempty"`
+	Scheme      string `json:"scheme,omitempty"`
+	Host        string `json:"host,omitempty"`
+	Path        string `json:"path,omitempty"`
+	Requests    int    `json:"requests,omitempty"`
+	Concurrency int    `json:"concurrency,omitempty"`
+	Timeout     int    `json:"timeout,omitempty"`
+	Duration    int    `json:"duration,omitempty"`
+	Body        string `json:"body,omitempty"`
+	MaxResults  int    `json:"maxResults,omitempty"`
 }
 
 func NewWsOptions() *WsOptions {

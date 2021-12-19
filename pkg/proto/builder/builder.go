@@ -18,9 +18,9 @@ import (
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/proto/http"
-	"github.com/agile6v/squeeze/pkg/proto/websocket"
-	"github.com/agile6v/squeeze/pkg/proto/udp"
 	"github.com/agile6v/squeeze/pkg/proto/tcp"
+	"github.com/agile6v/squeeze/pkg/proto/udp"
+	"github.com/agile6v/squeeze/pkg/proto/websocket"
 )
 
 func NewBuilder(protocol pb.Protocol) *proto.ProtoBuilderBase {

@@ -17,11 +17,11 @@ package config
 import "fmt"
 
 type ProtoConfigArgs struct {
-	ID          int             // The ID of the task
-	HttpAddr    string          // Usually used to save the address of the master
-	Callback    string          // If it is asynchronous mode, the response
-								// will be sent to the address specified by Callback
-	Options     interface{}
+	ID       int    // The ID of the task
+	HttpAddr string // Usually used to save the address of the master
+	Callback string // If it is asynchronous mode, the response
+	// will be sent to the address specified by Callback
+	Options interface{}
 }
 
 func NewConfigArgs(opts interface{}) *ProtoConfigArgs {
@@ -30,23 +30,23 @@ func NewConfigArgs(opts interface{}) *ProtoConfigArgs {
 
 // WebOptions contains options of the web command
 type WebOptions struct {
-    DSN     string      `json:"dsn,omitempty"`
-    File    string      `json:"file,omitempty"`
-    Type    string      `json:"type,omitempty"`
+	DSN  string `json:"dsn,omitempty"`
+	File string `json:"file,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 func NewWebOptions() *WebOptions {
-    return &WebOptions{}
+	return &WebOptions{}
 }
 
 func (webOptions *WebOptions) Validate(args []string) error {
-    if webOptions.Type != "mysql" && webOptions.Type != "sqlite" {
-        return fmt.Errorf("option --type must be one of the mysql and sqlite.")
-    }
+	if webOptions.Type != "mysql" && webOptions.Type != "sqlite" {
+		return fmt.Errorf("option --dbtype must be one of the mysql and sqlite.")
+	}
 
-    if webOptions.Type == "mysql" && webOptions.DSN == "" {
-        return fmt.Errorf("option --dsn cannot be empty.")
-    }
+	if webOptions.Type == "mysql" && webOptions.DSN == "" {
+		return fmt.Errorf("option --dsn cannot be empty.")
+	}
 
-    return nil
+	return nil
 }

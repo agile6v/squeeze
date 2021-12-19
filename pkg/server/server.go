@@ -56,8 +56,8 @@ func (t NodeType) String() string {
 }
 
 type ClusterInfo struct {
-	Data   []AgentStatusResp    `json:"data"`
-	Error  string               `json:"error"`
+	Data  []AgentStatusResp `json:"data"`
+	Error string            `json:"error"`
 }
 
 type AgentStatusResp struct {
@@ -67,11 +67,11 @@ type AgentStatusResp struct {
 }
 
 type ServerArgs struct {
-	HTTPAddr       string   // The listening address for http
-	GRPCAddr       string   // The listening address for grpc
+	HTTPAddr string // The listening address for http
+	GRPCAddr string // The listening address for grpc
 
-	HttpMasterAddr string   // Master's HTTP Address
-	GrpcMasterAddr string   // Master's GRPC Address
+	HttpMasterAddr string        // Master's HTTP Address
+	GrpcMasterAddr string        // Master's GRPC Address
 	ReportInterval time.Duration // Heartbeat reporting interval
 	ResultCapacity int
 	Args           interface{}

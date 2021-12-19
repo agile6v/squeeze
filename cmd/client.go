@@ -16,14 +16,14 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/golang/glog"
-	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/cmd/http"
+	"github.com/agile6v/squeeze/cmd/tcp"
+	"github.com/agile6v/squeeze/cmd/udp"
 	"github.com/agile6v/squeeze/cmd/websocket"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/proto"
-	"github.com/agile6v/squeeze/cmd/udp"
-    "github.com/agile6v/squeeze/cmd/tcp"
+	log "github.com/golang/glog"
+	"github.com/spf13/cobra"
 )
 
 func ClientCmd() *cobra.Command {
@@ -31,7 +31,7 @@ func ClientCmd() *cobra.Command {
 	// clientCmd represents the client command
 	clientCmd := &cobra.Command{
 		Use:   "client",
-		Short: "A handy tools that can call the Squeeze's API.",
+		Short: "A handy tools that can call the Squeeze's API",
 		Long: `This command allows you to interact with Squeeze and stress targets with multiple protocols.
 Currently supported protocols are http, websocket, tcp and udp, other protocols are under development. Look forward
 to your contribution.

@@ -15,12 +15,12 @@
 package udp
 
 import (
-	"math"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-	"github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 	"github.com/agile6v/squeeze/pkg/proto/udp"
+	"github.com/spf13/cobra"
+	"math"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
@@ -55,4 +55,3 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 
 	return udpCmd
 }
-

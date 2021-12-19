@@ -15,69 +15,69 @@
 package http
 
 import (
-	"fmt"
-	"io"
-	"math"
-	"sort"
-	"time"
 	"context"
 	"crypto/tls"
-	"net/url"
-	"io/ioutil"
-	"net/http"
 	"encoding/json"
-	"net/http/httptrace"
-	"golang.org/x/net/http2"
-	log "github.com/golang/glog"
+	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/version"
+	log "github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
+	"golang.org/x/net/http2"
+	"io"
+	"io/ioutil"
+	"math"
+	"net/http"
+	"net/http/httptrace"
+	"net/url"
+	"sort"
+	"time"
 )
 
 type ElapsedInfo struct {
-	Max float64     `json:"max,omitempty"`
-	Min float64     `json:"min,omitempty"`
-	Avg float64     `json:"avg,omitempty"`
+	Max float64 `json:"max,omitempty"`
+	Min float64 `json:"min,omitempty"`
+	Avg float64 `json:"avg,omitempty"`
 }
 
 type LatencyDistribution struct {
-	Percentage  uint32      `json:"percentage,omitempty"`
-    Latency     float64     `json:"latency,omitempty"`
+	Percentage uint32  `json:"percentage,omitempty"`
+	Latency    float64 `json:"latency,omitempty"`
 }
 
 type HttpStats struct {
-	TotalRequests       int64       `json:"totalRequests,omitempty"`
+	TotalRequests int64 `json:"totalRequests,omitempty"`
 	// Total time for running
-	Duration            float64     `json:"duration,omitempty"`
-	FastestReqTime      float64     `json:"fastestReqTime,omitempty"`
-	SlowestReqTime      float64     `json:"slowestReqTime,omitempty"`
-	AvgReqTime          float64     `json:"avgReqTime,omitempty"`
+	Duration       float64 `json:"duration,omitempty"`
+	FastestReqTime float64 `json:"fastestReqTime,omitempty"`
+	SlowestReqTime float64 `json:"slowestReqTime,omitempty"`
+	AvgReqTime     float64 `json:"avgReqTime,omitempty"`
 	// Average response size per request
-	AvgSize             int64       `json:"avgSize,omitempty"`
+	AvgSize int64 `json:"avgSize,omitempty"`
 	// The sum of all response sizes
-	TotalSize           int64       `json:"totalSize,omitempty"`
+	TotalSize int64 `json:"totalSize,omitempty"`
 	// Requests per second
-	Rps                 float64     `json:"rps,omitempty"`
-	Dns                 ElapsedInfo `json:"dns,omitempty"`
-	Delay               ElapsedInfo `json:"delay,omitempty"`
-	Resp                ElapsedInfo `json:"resp,omitempty"`
-	Conn                ElapsedInfo `json:"conn,omitempty"`
-	Req                 ElapsedInfo `json:"req,omitempty"`
-	StatusCodes         map[uint32]uint32 `json:"statusCodes,omitempty"`
-	ErrMap              map[string]uint32 `json:"errMap,omitempty"`
-	ConnDuration        float64      `json:"connDuration,omitempty"`
-	DnsDuration         float64      `json:"dnsDuration,omitempty"`
-	ReqDuration         float64      `json:"reqDuration,omitempty"`
-	RespDuration        float64      `json:"respDuration,omitempty"`
-	DelayDuration       float64      `json:"delayDuration,omitempty"`
+	Rps           float64           `json:"rps,omitempty"`
+	Dns           ElapsedInfo       `json:"dns,omitempty"`
+	Delay         ElapsedInfo       `json:"delay,omitempty"`
+	Resp          ElapsedInfo       `json:"resp,omitempty"`
+	Conn          ElapsedInfo       `json:"conn,omitempty"`
+	Req           ElapsedInfo       `json:"req,omitempty"`
+	StatusCodes   map[uint32]uint32 `json:"statusCodes,omitempty"`
+	ErrMap        map[string]uint32 `json:"errMap,omitempty"`
+	ConnDuration  float64           `json:"connDuration,omitempty"`
+	DnsDuration   float64           `json:"dnsDuration,omitempty"`
+	ReqDuration   float64           `json:"reqDuration,omitempty"`
+	RespDuration  float64           `json:"respDuration,omitempty"`
+	DelayDuration float64           `json:"delayDuration,omitempty"`
 	// Total number of requests
-	Requests            int64        `json:"requests,omitempty"`
-	TotalDuration       float64      `json:"totalDuration,omitempty"`
+	Requests            int64                 `json:"requests,omitempty"`
+	TotalDuration       float64               `json:"totalDuration,omitempty"`
 	LatencyDistribution []LatencyDistribution `json:"latencyDistribution,omitempty"`
 	// time spent per request
-	Lats                []float64    `json:"latencies,omitempty"`
+	Lats []float64 `json:"latencies,omitempty"`
 }
 
 type httpResult struct {
@@ -108,8 +108,8 @@ func newHttpReport(n int) *httpReport {
 	cap := n
 	return &httpReport{
 		result: &HttpStats{
-			ErrMap:   make(map[string]uint32),
-			Lats:        make([]float64, 0, cap),
+			ErrMap: make(map[string]uint32),
+			Lats:   make([]float64, 0, cap),
 		},
 		connLats:    make([]float64, 0, cap),
 		dnsLats:     make([]float64, 0, cap),
@@ -171,15 +171,15 @@ func (builder *HttpBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (stri
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(configArgs.ID),
-		Cmd:      pb.ExecuteTaskRequest_START,
-		Protocol: pb.Protocol_HTTP,
-		Callback: configArgs.Callback,
-		Duration: uint32(httpOptions.Duration),
-		Requests: uint32(httpOptions.Requests),
+		Id:          uint32(configArgs.ID),
+		Cmd:         pb.ExecuteTaskRequest_START,
+		Protocol:    pb.Protocol_HTTP,
+		Callback:    configArgs.Callback,
+		Duration:    uint32(httpOptions.Duration),
+		Requests:    uint32(httpOptions.Requests),
 		Concurrency: uint32(httpOptions.Concurrency),
-		RateLimit: uint32(httpOptions.RateLimit),
-		Data: string(data),
+		RateLimit:   uint32(httpOptions.RateLimit),
+		Data:        string(data),
 	}
 
 	m := jsonpb.Marshaler{}
@@ -196,27 +196,27 @@ func (builder *HttpBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (stri
 	return resp, nil
 }
 
-func (builder *HttpBuilder) Split(request *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
+func (builder *HttpBuilder) Split(taskReq *pb.ExecuteTaskRequest, count int) []*pb.ExecuteTaskRequest {
 	var requests []*pb.ExecuteTaskRequest
 
-	if count > int(request.Concurrency) {
-		count = int(request.Concurrency)
-	} else if count > int(request.Requests) {
-		count = int(request.Requests)
+	if count > int(taskReq.Concurrency) {
+		count = int(taskReq.Concurrency)
+	} else if count > int(taskReq.Requests) {
+		count = int(taskReq.Requests)
 	}
 
 	for i := 1; i <= count; i++ {
 		req := new(pb.ExecuteTaskRequest)
-		*req = *request
+		*req = *taskReq
 
 		if count != i {
-			req.Requests = request.Requests / uint32(count)
-			req.RateLimit = request.RateLimit / uint32(count)
-			req.Concurrency = request.Concurrency / uint32(count)
+			req.Requests = taskReq.Requests / uint32(count)
+			req.RateLimit = taskReq.RateLimit / uint32(count)
+			req.Concurrency = taskReq.Concurrency / uint32(count)
 		} else {
-			req.Requests = request.Requests/uint32(count) + request.Requests%uint32(count)
-			req.RateLimit = request.RateLimit/uint32(count) + request.RateLimit%uint32(count)
-			req.Concurrency = request.Concurrency/uint32(count) + request.Concurrency%uint32(count)
+			req.Requests = taskReq.Requests/uint32(count) + taskReq.Requests%uint32(count)
+			req.RateLimit = taskReq.RateLimit/uint32(count) + taskReq.RateLimit%uint32(count)
+			req.Concurrency = taskReq.Concurrency/uint32(count) + taskReq.Concurrency%uint32(count)
 		}
 
 		requests = append(requests, req)
@@ -457,7 +457,7 @@ func (builder *HttpBuilder) Merge(messages []string) (interface{}, error) {
 		r := &HttpStats{}
 		err := json.Unmarshal([]byte(message), r)
 		if err != nil {
-			return nil, fmt.Errorf("cannot cast to websocketStats: %#v", message)
+			return nil, fmt.Errorf("cannot cast to HttpStats: %#v", message)
 		}
 
 		if stats.Duration < r.Duration {

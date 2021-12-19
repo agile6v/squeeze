@@ -15,110 +15,102 @@
 package dao
 
 import (
-    "time"
-    "github.com/agile6v/squeeze/pkg/server/web/db"
+	"github.com/agile6v/squeeze/pkg/server/web/db"
+	"time"
 )
 
 const (
-    STATUS_START = 1
-    STATUS_STOP = 2
+	STATUS_START = 1
+	STATUS_STOP  = 2
 
-    RESULT_FAIL = 1
-    RESULT_SUCC = 2
+	RESULT_FAIL = 1
+	RESULT_SUCC = 2
 )
 
 type Task struct {
-    Id          int       `sql:"AUTO_INCREMENT"`
-    Status      int       `sql:"type:tinyint":"DEFAULT:1"`
-    Result      int       `sql:"type:tinyint"`
-    Request     string    `sql:"type:varchar(2048)"`
-    Response    string    `sql:"type:varchar(2048)"`
-    CreatedAt   time.Time `sql:"timestamp"`
-    UpdatedAt   time.Time `sql:"timestamp"`
+	Id        int       `sql:"AUTO_INCREMENT"`
+	Status    int       `sql:"type:tinyint":"DEFAULT:1"`
+	Result    int       `sql:"type:tinyint"`
+	Request   string    `sql:"type:varchar(2048)"`
+	Response  string    `sql:"type:varchar(2048)"`
+	CreatedAt time.Time `sql:"timestamp"`
+	UpdatedAt time.Time `sql:"timestamp"`
 }
 
 func Init() error {
-    orm := db.GetOrm()
-    orm.AutoMigrate(&Task{})
-    return nil
+	orm := db.GetOrm()
+	orm.AutoMigrate(&Task{})
+	return nil
 }
 
-func CreateTask(reqData string) error {
-    orm := db.GetOrm()
-    err := orm.Create(&Task{Request: reqData}).Error
-    if err != nil {
-        return err
-    }
-
-    return nil
+func CreateTask(reqData string) (*Task, error) {
+	orm := db.GetOrm()
+	task := &Task{Request: reqData}
+	err := orm.Create(task).Error
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
 }
-
 
 func UpdateTaskByResult(id, result int) error {
-    orm := db.GetOrm()
-    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Result: result}).Error
-    if err != nil {
-        return err
-    }
+	orm := db.GetOrm()
+	err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Result: result}).Error
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func UpdateTaskByStatus(id, status int) error {
-    orm := db.GetOrm()
-    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Status: status}).Error
-    if err != nil {
-        return err
-    }
+	orm := db.GetOrm()
+	err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Status: status}).Error
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func UpdateTaskByResponse(id int, data string) error {
-    orm := db.GetOrm()
-    err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Response: data}).Error
-    if err != nil {
-        return err
-    }
+	orm := db.GetOrm()
+	err := orm.Model(Task{}).Where("id = ?", id).Updates(Task{Response: data}).Error
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func DeleteTask(id int) error {
-    orm := db.GetOrm()
-    err := orm.Delete(&Task{Id: id}).Error
-    if err != nil {
-        return err
-    }
+	orm := db.GetOrm()
+	err := orm.Delete(&Task{Id: id}).Error
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func ListTask() ([]Task, error) {
-    var tasks []Task
-    orm := db.GetOrm()
-    err := orm.Find(&tasks).Error
-    if err != nil {
-        return nil, err
-    }
+	var tasks []Task
+	orm := db.GetOrm()
+	err := orm.Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
 
-    return tasks, nil
+	return tasks, nil
 }
 
 func SearchTask(id int) (*Task, error) {
-    var task Task
-    orm := db.GetOrm()
-    err := orm.Where("id = ?", id).Find(&task).Error
-    if err != nil {
-        return nil, err
-    }
+	var task Task
+	orm := db.GetOrm()
+	err := orm.Where("id = ?", id).Find(&task).Error
+	if err != nil {
+		return nil, err
+	}
 
-    return &task, nil
+	return &task, nil
 }
-
-
-
-
-
-
-

@@ -15,12 +15,12 @@
 package http
 
 import (
-	"math"
-    "github.com/spf13/cobra"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
-    "github.com/agile6v/squeeze/pkg/proto/http"
-    "github.com/agile6v/squeeze/pkg/proto/builder"
+	"github.com/agile6v/squeeze/pkg/proto/builder"
+	"github.com/agile6v/squeeze/pkg/proto/http"
+	"github.com/spf13/cobra"
+	"math"
 )
 
 func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
@@ -34,10 +34,10 @@ func Command(configArgs *config.ProtoConfigArgs) *cobra.Command {
 			return httpOptions.Validate(args)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-            httpOptions.URL = args[0]
-            configArgs.Options = httpOptions
-            builder := builder.NewBuilder(pb.Protocol_HTTP)
-            return builder.RunTask(configArgs)
+			httpOptions.URL = args[0]
+			configArgs.Options = httpOptions
+			builder := builder.NewBuilder(pb.Protocol_HTTP)
+			return builder.RunTask(configArgs)
 		},
 	}
 

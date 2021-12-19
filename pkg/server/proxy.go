@@ -16,10 +16,10 @@ package server
 
 import (
 	"fmt"
-	"net/url"
+	"github.com/agile6v/squeeze/pkg/version"
 	"net/http"
 	"net/http/httputil"
-	"github.com/agile6v/squeeze/pkg/version"
+	"net/url"
 )
 
 type Proxy struct {

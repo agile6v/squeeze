@@ -17,8 +17,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
-	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/server"
+	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -30,8 +30,8 @@ func WebCmd() *cobra.Command {
 	// webCmd represents the web command
 	webCmd := &cobra.Command{
 		Use:   "web",
-		Short: "Backend server that supports the Squeeze UI.",
-		Long:  `Backend server that supports the Squeeze UI.`,
+		Short: "Backend server that supports the Squeeze UI",
+		Long:  `Backend server that supports the Squeeze UI`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return webOptions.Validate(args)
 		},
@@ -62,16 +62,16 @@ func WebCmd() *cobra.Command {
 
 	webCmd.PersistentFlags().StringVar(&serverArgs.HTTPAddr, "httpAddr", ":9991",
 		"The address and port of the web server.")
-	webCmd.PersistentFlags().StringVar(&serverArgs.HttpMasterAddr, "masterAddr", "",
+	webCmd.PersistentFlags().StringVar(&serverArgs.HttpMasterAddr, "masterAddr", "http://127.0.0.1:9998",
 		"Master server's http address.")
 	webCmd.PersistentFlags().StringVar(&webOptions.DSN, "dsn", "",
 		`Data Source Name. If you specify --type=mysql, need to set this option.
 Format: username:password@protocol(address)/dbname?param=value`)
 	webCmd.PersistentFlags().StringVar(&webOptions.File, "file", "/tmp/sqlite.db",
 		"SQLite database files. If you specify --type=sqlite, need to set this option.")
-	webCmd.PersistentFlags().StringVar(&webOptions.Type, "type", "sqlite",
+	webCmd.PersistentFlags().StringVar(&webOptions.Type, "dbtype", "sqlite",
 		"The type of the database, one of the mysql and sqlite.")
-	webCmd.MarkPersistentFlagRequired("type")
+	webCmd.MarkPersistentFlagRequired("dbtype")
 	webCmd.MarkPersistentFlagRequired("masterAddr")
 
 	return webCmd

@@ -19,6 +19,7 @@ import (
 	"github.com/agile6v/squeeze/pkg/server"
 	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 func SlaveCmd() *cobra.Command {
@@ -27,7 +28,7 @@ func SlaveCmd() *cobra.Command {
 	// slaveCmd represents the slave command
 	slaveCmd := &cobra.Command{
 		Use:   "slave",
-		Short: "Squeeze slave node.",
+		Short: "Squeeze slave node",
 		Long:  `Slave initiates stress testing to the target.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("run squeeze with slave mode.")
@@ -63,7 +64,7 @@ func SlaveCmd() *cobra.Command {
 		"Master Server's http address.")
 	slaveCmd.PersistentFlags().StringVar(&serverArgs.GrpcMasterAddr, "grpcMasterAddr", "",
 		"Master Server's grpc address.")
-	slaveCmd.PersistentFlags().DurationVar(&serverArgs.ReportInterval, "reportInterval", 5,
+	slaveCmd.PersistentFlags().DurationVar(&serverArgs.ReportInterval, "reportInterval", 5*time.Second,
 		"Task reporting interval to the master")
 	slaveCmd.PersistentFlags().IntVar(&serverArgs.ResultCapacity, "resultCapacity", 2000,
 		"The capacity of the results channel for aggregating.")

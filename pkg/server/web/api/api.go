@@ -15,10 +15,10 @@
 package api
 
 import (
-	"net/http"
-	log "github.com/golang/glog"
-	"github.com/agile6v/squeeze/pkg/util"
 	"github.com/agile6v/squeeze/pkg/server/web/controllers"
+	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
+	"net/http"
 )
 
 type AppAPI struct {
@@ -56,13 +56,13 @@ func (api *AppAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = task.Handle(body)
+	ret, err := task.Handle(body)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, nil)
+	util.RespondWithJSON(w, http.StatusOK, ret)
 }
 
 func (api *AppAPI) delete(w http.ResponseWriter, r *http.Request) {

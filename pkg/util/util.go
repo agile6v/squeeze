@@ -15,9 +15,9 @@
 package util
 
 import (
-	"os"
-	"net"
 	"errors"
+	"net"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -44,7 +44,6 @@ func WaitSignal(stopChan chan struct{}) {
 
 // now returns time.Duration using stdlib time
 func Now() time.Duration { return time.Since(startTime) }
-
 
 func ExternalIP() (string, error) {
 	ifaces, err := net.Interfaces()

@@ -15,41 +15,41 @@
 package db
 
 import (
-    "fmt"
-    "github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/sqlite"
+	"fmt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 type sqlite struct {
-    file string
+	file string
 }
 
 // NewSQLite returns an instance of sqlite
 func NewSQLite(file string) Database {
-    return &sqlite{
-        file: file,
-    }
+	return &sqlite{
+		file: file,
+	}
 }
 
 func (s *sqlite) Init() (db *gorm.DB, err error) {
-    db, err = gorm.Open("sqlite3", s.file);
-    if err != nil {
-        return nil, err
-    }
+	db, err = gorm.Open("sqlite3", s.file)
+	if err != nil {
+		return nil, err
+	}
 
-    if err := db.DB().Ping(); err != nil {
-        return nil, err
-    }
+	if err := db.DB().Ping(); err != nil {
+		return nil, err
+	}
 
-    db.LogMode(true)
+	db.LogMode(true)
 
-    return db, nil
+	return db, nil
 }
 
 func (s *sqlite) Name() string {
-    return "SQLite"
+	return "SQLite"
 }
 
 func (s *sqlite) String() string {
-    return fmt.Sprintf("%s file:%s", s.Name(), s.file)
+	return fmt.Sprintf("%s file:%s", s.Name(), s.file)
 }

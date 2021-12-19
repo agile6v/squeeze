@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/agile6v/squeeze/pkg/pb"
+	"github.com/agile6v/squeeze/pkg/proto"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
@@ -35,14 +36,13 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
-	"github.com/agile6v/squeeze/pkg/proto"
 )
-
-var currentReq *pb.ExecuteTaskRequest
 
 type MasterServer struct {
 	ServerBase
-	results chan protobuf.Message
+	results     chan protobuf.Message
+	currentTask *pb.ExecuteTaskRequest
+	mutex       sync.RWMutex
 }
 
 func (m *MasterServer) Initialize(args *ServerArgs) error {
@@ -67,11 +67,15 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 	m.results = make(chan protobuf.Message, count)
 	mergedResults := make(chan interface{}, 1)
 
+	f := func() {
+		m.mutex.Lock()
+		m.currentTask = nil
+		m.mutex.Unlock()
+	}
+
 	go func(mergedResults chan interface{}) {
 		m.runCollector(mergedResults, taskReq)
 	}(mergedResults)
-
-	currentReq = taskReq
 
 	if taskReq.Callback != "" {
 		err := m.dispatchTask(taskReq, conns, &wg)
@@ -80,9 +84,7 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 		}
 
 		go func() {
-			defer func() {
-				currentReq = nil
-			}()
+			defer f()
 
 			wg.Wait()
 			close(m.results)
@@ -91,9 +93,9 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			// and then read the merged results.
 			response := <-mergedResults
 
-			data, err := json.Marshal(map[string]interface{} {
+			data, err := json.Marshal(map[string]interface{}{
 				"error": "",
-				"data": response,
+				"data":  response,
 			})
 			if err != nil {
 				log.Errorf("unable to marshal data : %v", err)
@@ -108,11 +110,10 @@ func (m *MasterServer) startTask(taskReq *pb.ExecuteTaskRequest, conns []*SlaveC
 			log.Infof("Send results to callback address successfully: %s", resp)
 		}()
 
-		return "Start Successfully\n", nil
+		return fmt.Sprintf("Start Successfully and the results will be sent to callback address %s\n",
+			taskReq.Callback), nil
 	} else {
-		defer func() {
-			currentReq = nil
-		}()
+		defer f()
 
 		err := m.dispatchTask(taskReq, conns, &wg)
 		if err != nil {
@@ -138,7 +139,7 @@ func (m *MasterServer) stopTask(conns []*SlaveConn) error {
 		var err error
 		go func(conn *SlaveConn, errP *error) {
 			defer wg.Done()
-			slaveAddr, err := util.BuildHostname(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
+			slaveAddr, err := util.BuildAddress(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
 			if err != nil {
 				log.Error("failed to build slave hostname: %s", err.Error())
 				*errP = err
@@ -178,14 +179,13 @@ func (m *MasterServer) dispatchTask(taskReq *pb.ExecuteTaskRequest, conns []*Sla
 	for i, conn := range conns {
 		go func(conn *SlaveConn, index int) {
 			defer wg.Done()
-			log.V(2).Infof("slave address: %s", conn.PeerAddr)
-			slaveAddr, err := util.BuildHostname(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
+			slaveAddr, err := util.BuildAddress(conn.PeerAddr, strconv.Itoa(conn.GrpcPort))
 			if err != nil {
-				log.Errorf("failed to build slave hostname: %s", err.Error())
+				log.Errorf("failed to build slave address: %s", err.Error())
 				return
 			}
 
-			log.V(2).Infof("dispatch to slave: %s", slaveAddr)
+			log.V(2).Infof("dispatch task to slave: %s", slaveAddr)
 
 			ret, err := m.DoExecuteTask(slaveAddr, reqs[index])
 			if err != nil {
@@ -209,15 +209,15 @@ func (m *MasterServer) DoExecuteTask(address string, request *pb.ExecuteTaskRequ
 	// Set up a connection to the slave server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Errorf("can not connect with slave server %v", err)
+		log.Errorf("Cannot connect with slave server %v", err)
 		return nil, err
 	}
 
-	// create stream
+	// create stream to slave server
 	client := pb.NewSqueezeServiceClient(conn)
 	resp, err := client.ExecuteTask(context.Background(), request)
 	if err != nil {
-		log.Errorf("open stream error %v", err)
+		log.Errorf("Failed to execute ExecuteTask, %v", err)
 		return nil, err
 	}
 
@@ -235,12 +235,12 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 	taskReq := &pb.ExecuteTaskRequest{}
 	err = jsonpb.Unmarshal(bytes.NewReader(body), taskReq)
 	if err != nil {
-		log.Errorf("unable to decode json : %s", err)
+		log.Errorf("Unable to decode json : %s", err)
 		util.RespondWithError(w, http.StatusBadRequest, "Unable to decode request")
 		return
 	}
 
-	slaveConns := GetConnections()
+	slaveConns := GetSlaveConns()
 	if len(slaveConns) == 0 {
 		util.RespondWithError(w, http.StatusInternalServerError, "No slave available.")
 		return
@@ -256,19 +256,25 @@ func (m *MasterServer) handleTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	m.mutex.Lock()
+
 	// Check if it can run execute request.
-	if currentReq != nil {
+	if m.currentTask != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, "There are task in progress, please try again later.")
+		m.mutex.Unlock()
 		return
 	}
 
-	data, err := m.startTask(taskReq, slaveConns)
+	m.currentTask = taskReq
+	m.mutex.Unlock()
+
+	ret, err := m.startTask(taskReq, slaveConns)
 	if err != nil {
 		util.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	util.RespondWithJSON(w, http.StatusOK, data)
+	util.RespondWithJSON(w, http.StatusOK, ret)
 	return
 }
 
@@ -277,21 +283,23 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.Ex
 	builder := builder.NewBuilder(taskReq.Protocol)
 	results := make([]string, 0)
 	SqueezeResult := &proto.SqueezeResult{
-		ID: taskReq.Id,
+		ID:     taskReq.Id,
 		Result: nil,
 	}
 
 	for r := range m.results {
 		res, ok := r.(*pb.ExecuteTaskResponse)
 		if !ok {
-			log.Errorf("Incorrect message type, expected: ExecuteTaskResponse, but got: %T", r)
+			log.Errorf("Invalid message type, expect ExecuteTaskResponse, but got: %T", r)
 			continue
 		}
 
-		SqueezeResult.AgentStats = append(SqueezeResult.AgentStats, proto.SqueezeStats{
-			Addr: res.Addr,
-			Status: int32(res.Status),
-			Error: res.Error},
+		SqueezeResult.AgentStats = append(SqueezeResult.AgentStats,
+			proto.SqueezeStats{
+				Addr:   res.Addr,
+				Status: int32(res.Status),
+				Error:  res.Error,
+			},
 		)
 
 		if res.Status == pb.ExecuteTaskResponse_FAIL {
@@ -304,7 +312,7 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.Ex
 	if len(results) != 0 {
 		ret, err := builder.Merge(results)
 		if err != nil {
-			log.Error("failed to merge result, ", err.Error())
+			log.Error("failed to merge result, %s", err.Error())
 			return
 		}
 		SqueezeResult.Result = ret
@@ -314,12 +322,12 @@ func (m *MasterServer) runCollector(aggregation chan interface{}, taskReq *pb.Ex
 }
 
 func (m *MasterServer) handleInfo(w http.ResponseWriter, r *http.Request) {
-    err := ""
-    resp := []AgentStatusResp{}
+	err := ""
+	resp := []AgentStatusResp{}
 
-    slaveConnsMutex.Lock()
-    if len(slaveConns) == 0 {
-        err = "No slave available."
+	slaveConnsMutex.Lock()
+	if len(slaveConns) == 0 {
+		err = "No slave available."
 	} else {
 		for connID, c := range slaveConns {
 			resp = append(resp, AgentStatusResp{ConnID: connID, Addr: c.PeerAddr, Status: c.Status})
@@ -327,11 +335,11 @@ func (m *MasterServer) handleInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	slaveConnsMutex.Unlock()
 
-    if err != "" {
-        util.RespondWithError(w, http.StatusOK, err)
-    } else {
-        util.RespondWithJSON(w, http.StatusOK, resp)
-    }
+	if err != "" {
+		util.RespondWithError(w, http.StatusOK, err)
+	} else {
+		util.RespondWithJSON(w, http.StatusOK, resp)
+	}
 }
 
 func (m *MasterServer) ExecuteTask(ctx context.Context, in *pb.ExecuteTaskRequest) (*pb.ExecuteTaskResponse, error) {

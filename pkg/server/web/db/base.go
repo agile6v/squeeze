@@ -15,51 +15,50 @@
 package db
 
 import (
-    "github.com/jinzhu/gorm"
-    log "github.com/golang/glog"
-    "fmt"
+	"fmt"
+	log "github.com/golang/glog"
+	"github.com/jinzhu/gorm"
 )
 
 const (
-    DB_MYSQL   = "mysql"
-    DB_SQLITE  = "sqlite"
+	DB_MYSQL  = "mysql"
+	DB_SQLITE = "sqlite"
 )
 
 type Database interface {
-    Name() string
-    String() string
-    Init() (*gorm.DB, error)
+	Name() string
+	String() string
+	Init() (*gorm.DB, error)
 }
 
 var database Database
 var orm *gorm.DB
 
 func Init(dbType, dsn, file string) (err error) {
-    log.Infof("Database type: %s", dbType)
+	log.Infof("Database type: %s", dbType)
 
-    switch dbType {
-    case DB_MYSQL:
-        database = NewMySQL(dsn)
-    case DB_SQLITE:
-        database = NewSQLite(file)
-    default:
-        log.Error("Invalid database type: ", dbType)
-        return fmt.Errorf("Invalid database type: ", dbType)
-    }
+	switch dbType {
+	case DB_MYSQL:
+		database = NewMySQL(dsn)
+	case DB_SQLITE:
+		database = NewSQLite(file)
+	default:
+		log.Error("Invalid database type: ", dbType)
+		return fmt.Errorf("Invalid database type: ", dbType)
+	}
 
-    log.Info(database.String())
+	log.Info(database.String())
 
-    log.Info("Initializing database...")
-    orm, err = database.Init()
-    if  err != nil {
-        return err
-    }
-    log.Info("Initialize database completed")
+	log.Info("Initializing database...")
+	orm, err = database.Init()
+	if err != nil {
+		return err
+	}
+	log.Info("Initialize database completed")
 
-    return nil
+	return nil
 }
 
 func GetOrm() *gorm.DB {
-    return orm
+	return orm
 }
-

@@ -67,7 +67,7 @@ func SlaveCount() int {
 	return n
 }
 
-func GetConnections() []*SlaveConn {
+func GetSlaveConns() []*SlaveConn {
 	conns := []*SlaveConn{}
 	slaveConnsMutex.RLock()
 	for _, conn := range slaveConns {

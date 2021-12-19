@@ -16,29 +16,29 @@ package http
 
 import (
 	"fmt"
-	"net/url"
 	"github.com/agile6v/squeeze/pkg/util"
+	"net/url"
 )
 
 // HttpOptions contains http protocol runtime parameters
 type HttpOptions struct {
-	URL              string         `json:"url,omitempty"`
-	HTTP2            bool           `json:"http2,omitempty"`
-	Requests         int            `json:"requests,omitempty"`
-	Method           string         `json:"method,omitempty"`
-	ProxyAddr        string         `json:"proxyAddr,omitempty"`
-	Headers          []string       `json:"headers,omitempty"`
-	Concurrency      int            `json:"concurrency,omitempty"`
-	RateLimit        int            `json:"rateLimit,omitempty"`
-	Timeout          int            `json:"timeout,omitempty"`
-	Duration         int            `json:"duration,omitempty"`
-	Body             string         `json:"body,omitempty"`
-	BodyFile         string         `json:"bodyFile,omitempty"`
-	ContentType      string         `json:"contentType,omitempty"`
-	MaxResults       int            `json:"maxResults,omitempty"`
-	DisableRedirects bool           `json:"disableRedirects,omitempty"`
-	DisableKeepAlive bool           `json:"disableKeepAlive,omitempty"`
-	DisableCompression bool         `json:"disableCompression,omitempty"`
+	URL                string   `json:"url,omitempty"`
+	HTTP2              bool     `json:"http2,omitempty"`
+	Requests           int      `json:"requests,omitempty"`
+	Method             string   `json:"method,omitempty"`
+	ProxyAddr          string   `json:"proxyAddr,omitempty"`
+	Headers            []string `json:"headers,omitempty"`
+	Concurrency        int      `json:"concurrency,omitempty"`
+	RateLimit          int      `json:"rateLimit,omitempty"`
+	Timeout            int      `json:"timeout,omitempty"`
+	Duration           int      `json:"duration,omitempty"`
+	Body               string   `json:"body,omitempty"`
+	BodyFile           string   `json:"bodyFile,omitempty"`
+	ContentType        string   `json:"contentType,omitempty"`
+	MaxResults         int      `json:"maxResults,omitempty"`
+	DisableRedirects   bool     `json:"disableRedirects,omitempty"`
+	DisableKeepAlive   bool     `json:"disableKeepAlive,omitempty"`
+	DisableCompression bool     `json:"disableCompression,omitempty"`
 }
 
 func NewHttpOptions() *HttpOptions {

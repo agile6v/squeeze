@@ -64,7 +64,7 @@ func (w *Work) Run(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 
-	w.results = make(chan interface{}, w.Workers * w.ResultCapacity)
+	w.results = make(chan interface{}, w.Workers*w.ResultCapacity)
 	w.done = make(chan bool, 1)
 	start := util.Now()
 

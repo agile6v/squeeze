@@ -15,42 +15,42 @@
 package db
 
 import (
-    "fmt"
-    "github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/mysql"
+	"fmt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type mysql struct {
-    dsn      string
+	dsn string
 }
 
 // NewMySQL returns an instance of mysql
 func NewMySQL(dsn string) Database {
-    return &mysql{
-        dsn: dsn,
-    }
+	return &mysql{
+		dsn: dsn,
+	}
 }
 
 func (m *mysql) Init() (db *gorm.DB, err error) {
-    if db, err = gorm.Open("mysql", m.dsn); err != nil {
-        return nil, err
-    }
+	if db, err = gorm.Open("mysql", m.dsn); err != nil {
+		return nil, err
+	}
 
-    if err := db.DB().Ping(); err != nil {
-        return nil, err
-    }
+	if err := db.DB().Ping(); err != nil {
+		return nil, err
+	}
 
-    db.LogMode(true)
-    db.SingularTable(true)
+	db.LogMode(true)
+	db.SingularTable(true)
 
-    return db, nil
+	return db, nil
 }
 
 func (m *mysql) Name() string {
-    return "MySQL"
+	return "MySQL"
 }
 
 func (m *mysql) String() string {
-    return fmt.Sprintf("%s %s",
-        m.Name(), m.dsn)
+	return fmt.Sprintf("%s %s",
+		m.Name(), m.dsn)
 }

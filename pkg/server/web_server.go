@@ -16,12 +16,12 @@ package server
 
 import (
 	"fmt"
-	log "github.com/golang/glog"
-	"github.com/agile6v/squeeze/pkg/server/web/api"
-	"github.com/agile6v/squeeze/pkg/util"
-	"github.com/agile6v/squeeze/pkg/server/web/db"
-	"github.com/agile6v/squeeze/pkg/server/web/dao"
 	"github.com/agile6v/squeeze/pkg/config"
+	"github.com/agile6v/squeeze/pkg/server/web/api"
+	"github.com/agile6v/squeeze/pkg/server/web/dao"
+	"github.com/agile6v/squeeze/pkg/server/web/db"
+	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
 )
 
 type WebServer struct {
@@ -50,8 +50,8 @@ func (s *WebServer) Initialize(args *ServerArgs) error {
 
 	api := &api.AppAPI{
 		MasterAddr: fmt.Sprintf("http://%v", s.args.HttpMasterAddr),
-		HTTPAddr: s.args.HTTPAddr,
-		LocalAddr: ip + ":" + port,
+		HTTPAddr:   s.args.HTTPAddr,
+		LocalAddr:  ip + ":" + port,
 	}
 
 	api.Init()
@@ -85,7 +85,7 @@ func (s *WebServer) Start(stopChan <-chan struct{}) error {
 		<-stopChan
 		err := s.httpServer.Close()
 		if err != nil {
-			log.Error(err)
+			log.Error("Close http server error: %s", err.Error())
 		}
 	}()
 	return nil

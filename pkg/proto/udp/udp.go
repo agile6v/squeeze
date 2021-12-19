@@ -15,28 +15,28 @@
 package udp
 
 import (
-	"fmt"
-	"time"
-	"net"
 	"context"
 	"encoding/json"
-	log "github.com/golang/glog"
-	"github.com/golang/protobuf/jsonpb"
+	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"net"
+	"time"
 )
 
 type UDPStats struct {
-	TotalSize       int64       `json:"totalSize,omitempty"`
-	Rps             float64     `json:"rps,omitempty"`
-	Duration        float64     `json:"duration,omitempty"`
-	TotalDuration   float64     `json:"totalDuration,omitempty"`
-	Requests        int64       `json:"requests,omitempty"`
-	TotalRequests   int64       `json:"totalRequests,omitempty"`
-	TotalResponses  int64       `json:"totalResponses,omitempty"`
-	AvgSize         int64       `json:"avgSize,omitempty"`
-	ErrMap          map[string]uint32 `json:"errMap,omitempty"`
+	TotalSize      int64             `json:"totalSize,omitempty"`
+	Rps            float64           `json:"rps,omitempty"`
+	Duration       float64           `json:"duration,omitempty"`
+	TotalDuration  float64           `json:"totalDuration,omitempty"`
+	Requests       int64             `json:"requests,omitempty"`
+	TotalRequests  int64             `json:"totalRequests,omitempty"`
+	TotalResponses int64             `json:"totalResponses,omitempty"`
+	AvgSize        int64             `json:"avgSize,omitempty"`
+	ErrMap         map[string]uint32 `json:"errMap,omitempty"`
 }
 
 type udpResult struct {
@@ -84,12 +84,12 @@ func (builder *UDPBuilder) CreateTask(configArgs *config.ProtoConfigArgs) (strin
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(configArgs.ID),
-		Cmd:      pb.ExecuteTaskRequest_START,
-		Protocol: pb.Protocol_UDP,
-		Callback: configArgs.Callback,
-		Duration: uint32(udpOptions.Duration),
-		Requests: uint32(udpOptions.Requests),
+		Id:          uint32(configArgs.ID),
+		Cmd:         pb.ExecuteTaskRequest_START,
+		Protocol:    pb.Protocol_UDP,
+		Callback:    configArgs.Callback,
+		Duration:    uint32(udpOptions.Duration),
+		Requests:    uint32(udpOptions.Requests),
 		Concurrency: uint32(udpOptions.Concurrency),
 		//RateLimit:
 		Data: string(data),
@@ -182,8 +182,8 @@ func (builder *UDPBuilder) Request(ctx context.Context, obj interface{}, taskReq
 	finish := t - s
 
 	return &udpResult{
-		Duration:      finish,
-		Err:           err,
+		Duration: finish,
+		Err:      err,
 	}
 }
 

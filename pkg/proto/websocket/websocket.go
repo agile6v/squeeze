@@ -15,29 +15,29 @@
 package websocket
 
 import (
-	"fmt"
-	"time"
-	"net/url"
 	"context"
 	"encoding/json"
-	"github.com/gorilla/websocket"
-	"github.com/golang/protobuf/jsonpb"
+	"fmt"
 	"github.com/agile6v/squeeze/pkg/config"
 	"github.com/agile6v/squeeze/pkg/pb"
 	"github.com/agile6v/squeeze/pkg/util"
 	log "github.com/golang/glog"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/gorilla/websocket"
+	"net/url"
+	"time"
 )
 
 type WebsocketStats struct {
-	TotalSize       int64       `json:"totalSize,omitempty"`
-	Rps             float64     `json:"rps,omitempty"`
-	Duration        float64     `json:"duration,omitempty"`
-	TotalDuration   float64     `json:"totalDuration,omitempty"`
-	Requests        int64       `json:"requests,omitempty"`
-	TotalRequests   int64       `json:"totalRequests,omitempty"`
-	TotalResponses  int64       `json:"totalResponses,omitempty"`
-	AvgSize         int64       `json:"avgSize,omitempty"`
-	ErrMap          map[string]uint32 `json:"errMap,omitempty"`
+	TotalSize      int64             `json:"totalSize,omitempty"`
+	Rps            float64           `json:"rps,omitempty"`
+	Duration       float64           `json:"duration,omitempty"`
+	TotalDuration  float64           `json:"totalDuration,omitempty"`
+	Requests       int64             `json:"requests,omitempty"`
+	TotalRequests  int64             `json:"totalRequests,omitempty"`
+	TotalResponses int64             `json:"totalResponses,omitempty"`
+	AvgSize        int64             `json:"avgSize,omitempty"`
+	ErrMap         map[string]uint32 `json:"errMap,omitempty"`
 }
 
 type wsResult struct {
@@ -86,12 +86,12 @@ func (builder *WebSocketBuilder) CreateTask(configArgs *config.ProtoConfigArgs) 
 	}
 
 	req := &pb.ExecuteTaskRequest{
-		Id:       uint32(configArgs.ID),
-		Cmd:      pb.ExecuteTaskRequest_START,
-		Protocol: pb.Protocol_WEBSOCKET,
-		Callback: configArgs.Callback,
-		Duration: uint32(wsOptions.Duration),
-		Requests: uint32(wsOptions.Requests),
+		Id:          uint32(configArgs.ID),
+		Cmd:         pb.ExecuteTaskRequest_START,
+		Protocol:    pb.Protocol_WEBSOCKET,
+		Callback:    configArgs.Callback,
+		Duration:    uint32(wsOptions.Duration),
+		Requests:    uint32(wsOptions.Requests),
 		Concurrency: uint32(wsOptions.Concurrency),
 		//RateLimit:
 		Data: string(data),
@@ -159,7 +159,7 @@ func (builder *WebSocketBuilder) PreRequest(taskReq *pb.ExecuteTaskRequest) (int
 	u := url.URL{Scheme: builder.options.Scheme, Host: builder.options.Host, Path: builder.options.Path}
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
-		return nil,  &wsResult{Err: err}
+		return nil, &wsResult{Err: err}
 	}
 
 	return conn, nil

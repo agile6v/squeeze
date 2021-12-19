@@ -15,8 +15,8 @@
 package util
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"text/template"
 )
 

@@ -16,18 +16,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"sync"
 	"time"
-	"encoding/json"
 
-	"google.golang.org/grpc"
 	"github.com/agile6v/squeeze/pkg/pb"
-	log "github.com/golang/glog"
 	"github.com/agile6v/squeeze/pkg/proto/builder"
 	"github.com/agile6v/squeeze/pkg/util"
+	log "github.com/golang/glog"
+	"google.golang.org/grpc"
 )
 
 type SlaveServer struct {
@@ -88,10 +88,10 @@ func (s *SlaveServer) Start(stopChan <-chan struct{}) error {
 
 	go func() {
 		for {
-			err := s.doHeartBeat(stopChan, s.args.ReportInterval*time.Second)
+			err := s.doHeartBeat(stopChan, s.args.ReportInterval)
 			if err != nil {
-				log.Errorf("report task : %v", err)
-				time.Sleep(s.args.ReportInterval * time.Second)
+				log.Errorf("failed to execute doHeartBeat error : %v", err)
+				time.Sleep(s.args.ReportInterval)
 			}
 		}
 	}()
@@ -121,12 +121,12 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 	}
 
 	s.work = &Work{
-		Req:       req,
-		Builder:   builder.NewBuilder(req.Protocol),
-		Requests:  int(req.Requests),
-		Workers:   int(req.Concurrency),
+		Req:            req,
+		Builder:        builder.NewBuilder(req.Protocol),
+		Requests:       int(req.Requests),
+		Workers:        int(req.Concurrency),
 		ResultCapacity: s.args.ResultCapacity,
-		RateLimit: float64(req.RateLimit),
+		RateLimit:      float64(req.RateLimit),
 	}
 
 	if req.Duration > 0 {
@@ -162,7 +162,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 
 	resp := &pb.ExecuteTaskResponse{
 		Status: pb.ExecuteTaskResponse_SUCC,
-		Data: string(data),
+		Data:   string(data),
 	}
 
 	return resp, nil
@@ -171,7 +171,7 @@ func (s *SlaveServer) ExecuteTask(ctx context.Context, req *pb.ExecuteTaskReques
 func (s *SlaveServer) doHeartBeat(stopChan <-chan struct{}, frequency time.Duration) error {
 	conn, err := grpc.Dial(s.args.GrpcMasterAddr, grpc.WithInsecure())
 	if err != nil {
-		return fmt.Errorf("dial with master server, %s", err.Error())
+		return fmt.Errorf("cannot dial with master server, %s", err.Error())
 	}
 	defer conn.Close()
 
@@ -179,7 +179,7 @@ func (s *SlaveServer) doHeartBeat(stopChan <-chan struct{}, frequency time.Durat
 	client := pb.NewSqueezeServiceClient(conn)
 	stream, err := client.HeartBeat(context.Background())
 	if err != nil {
-		return fmt.Errorf("connect with master server, %s", err.Error())
+		return fmt.Errorf("cannot connect with master server, %s", err.Error())
 	}
 
 	errorChan := make(chan error, 1)
@@ -205,10 +205,10 @@ func (s *SlaveServer) doHeartBeat(stopChan <-chan struct{}, frequency time.Durat
 	for {
 		select {
 		case err := <-errorChan:
-			return fmt.Errorf("recv meet error :%s", err.Error())
+			return fmt.Errorf("Got error from stream recv: %s", err.Error())
 		case <-stopChan:
 			if err := stream.CloseSend(); err != nil {
-				return fmt.Errorf("failed to close stream, error: %s", err.Error())
+				return fmt.Errorf("Failed to close stream, error: %s", err.Error())
 			}
 			log.Info("Finish sending heartbeat to master node.")
 			return nil
@@ -226,14 +226,14 @@ func (s *SlaveServer) doHeartBeat(stopChan <-chan struct{}, frequency time.Durat
 				Info: &pb.HeartBeatRequest_SlaveInfo{GrpcPort: uint32(s.grpcPort)},
 			})
 			if err != nil {
-				return fmt.Errorf("failed to send stream to master, error: %s", err.Error())
+				return fmt.Errorf("Failed to send stream to master, err: %s", err.Error())
 			}
 		}
 	}
 }
 
 func (s *SlaveServer) addTask(req *pb.ExecuteTaskRequest) error {
-	log.V(3).Infof("Save the last task.")
+	log.V(3).Infof("Save the latest task.")
 	var err error
 	s.mutex.Lock()
 	if s.lastTaskReq == nil {

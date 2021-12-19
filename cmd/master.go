@@ -27,7 +27,7 @@ func MasterCmd() *cobra.Command {
 	// masterCmd represents the master command
 	masterCmd := &cobra.Command{
 		Use:   "master",
-		Short: "Squeeze master node.",
+		Short: "Squeeze master node",
 		Long:  `Master node is responsible for managing all slave nodes.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("run squeeze with master mode.")

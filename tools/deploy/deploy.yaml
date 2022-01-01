@@ -1,0 +1,151 @@
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: squeeze
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: squeeze-master
+  namespace: squeeze
+  labels:
+    app: squeeze-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: squeeze-master
+  template:
+    metadata:
+      labels:
+        app: squeeze-master
+    spec:
+      containers:
+        - name: squeeze-master
+          image: agile6v/squeeze:v0.1.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - squeeze
+            - master
+            - --alsologtostderr
+            - -v=2
+          ports:
+            - containerPort: 9997
+              name: http-address
+            - containerPort: 9998
+              name: grpc-address
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-master
+  namespace: squeeze
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-address
+      port: 9997
+    - name: grpc-address
+      port: 9998
+  selector:
+    app: squeeze-master
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: squeeze-slave
+  namespace: squeeze
+  labels:
+    app: squeeze-slave
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: squeeze-slave
+  template:
+    metadata:
+      labels:
+        app: squeeze-slave
+    spec:
+      containers:
+        - name: squeeze-slave
+          image: agile6v/squeeze:v0.1.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - squeeze
+            - slave
+            - --grpcMasterAddr=squeeze-master:9997
+            - --httpMasterAddr=squeeze-master:9998
+            - --alsologtostderr
+            - -v=2
+          ports:
+            - containerPort: 9996
+              name: http-address
+            - containerPort: 9995
+              name: grpc-address
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-slave
+  namespace: squeeze
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-address
+      port: 9996
+    - name: grpc-address
+      port: 9995
+  selector:
+    app: squeeze-slave
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: squeeze-web
+  namespace: squeeze
+  labels:
+    app: squeeze-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: squeeze-web
+  template:
+    metadata:
+      labels:
+        app: squeeze-web
+    spec:
+      containers:
+        - name: squeeze-web
+          image: agile6v/squeeze:v0.1.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - squeeze
+            - web
+            - --type=sqlite
+            - --masterAddr=squeeze-master:9998
+            - --alsologtostderr
+          ports:
+            - containerPort: 9991
+              name: http-address
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-web
+  namespace: squeeze
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-address
+      port: 9991
+  selector:
+    app: squeeze-web

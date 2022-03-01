@@ -14,7 +14,7 @@
 
 BINARY = squeeze
 GO_BIN := go
-VERSION := "0.1.0"
+VERSION := "0.1.1"
 GIT_TAG ?= $(shell git rev-parse --short HEAD)
 VERSION_FLAGS = "-X github.com/agile6v/squeeze/pkg/version.version=${VERSION} \
  		   -X github.com/agile6v/squeeze/pkg/version.gitRevision=$(GIT_TAG)"
@@ -31,7 +31,7 @@ protoc:
 
 .PHONY: build
 build:
-	@echo "### Building binary"
+	@echo "### Building binary with version $(VERSION)"
 	$(GO_BIN) build -ldflags ${VERSION_FLAGS} -o $(BINARY)
 
 .PHONY: build-vendor

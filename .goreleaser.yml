@@ -1,26 +1,24 @@
 builds:
--
-  goos:
-    - windows
-    - linux
-    - darwin
-  flags:
-    - -tags=dev
-    - -v
-archive:
-  replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
 checksum:
-  name_template: '{{ .ProjectName }}_checksums.sha256'
+  name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}"
+  name_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - '^docs:'
+      - '^test:'

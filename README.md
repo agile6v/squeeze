@@ -81,8 +81,10 @@ $ docker-compose down
 
 **Deploying on Kubernetes:**
 
+If you have installed helm, you can deploy the squeeze with the following command:
 ```shell
-
+helm upgrade --install squeeze squeeze \
+  --namespace squeeze --create-namespace
 ```
 
 

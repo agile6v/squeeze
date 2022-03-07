@@ -59,21 +59,25 @@ If you are a mainland China user, you may compile binary using golang vendor mec
 We provide release binary for three platforms: Linux, OSX and Windows. You can download an appropriate release binary for your operating system. The list of binary releases is available for download from the [Release Pages](https://github.com/agile6v/squeeze/releases). If the binary doesn't work for you, you'll have to build from source.
 
 ### 3. With Docker or Kubernetes
-Squeeze provides a corresponding docker image for each version and hosted on [Docker Hub](https://hub.docker.com/r/agile6v/squeeze). Therefore we can use docker-compose to quickly build a squeeze cluster to experience all the features.  Deployment on kubernetes will also support in the near future.
+Squeeze provides a corresponding docker image for each version and hosted on [Docker Hub](https://hub.docker.com/r/agile6v/squeeze). Therefore we can use docker-compose to quickly build a squeeze cluster to experience all the features.
 
-**Starting squeeze cluster with docker-compose:**
+
+**Deploying with docker-compose:**
+
+
+Starting squeeze cluster:
 
 ```shell
 $ docker-compose up -d
 ```
 
-**Scaling the slave with docker-compose:**
+Scaling the slave:
 
 ```shell
 $ docker-compose up -d --scale slave=3
 ```
 
-**Stoping squeeze cluster with docker-compose:**
+Stoping squeeze cluster:
 
 ```shell
 $ docker-compose down
@@ -87,6 +91,11 @@ helm upgrade --install squeeze squeeze \
   --namespace squeeze --create-namespace
 ```
 
+or you can also use a YAML manifest:
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/agile6v/squeeze/v0.1.1/tools/deploy/deploy.yaml
+````
 
 
 # Usage

@@ -1,0 +1,39 @@
+{{- if .Values.master.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.master.deployment.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- with .Values.master.deployment.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.master.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- with .Values.master.pod.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- with .Values.master.pod.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.master.deployment.name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - squeeze
+            - master
+            - --alsologtostderr
+            - -v=2
+          ports:
+            - containerPort: {{ .Values.master.deployment.containerPorts.http }}
+              name: http
+            - containerPort: {{ .Values.master.deployment.containerPorts.grpc }}
+              name: grpc
+{{- end }}

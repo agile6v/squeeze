@@ -1,0 +1,41 @@
+{{- if .Values.slave.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: squeeze-slave
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- with .Values.slave.deployment.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.slave.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- with .Values.slave.pod.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- with .Values.slave.pod.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: squeeze-slave
+          image: "{{ .Values.image.registry }}/{{ .Values.image.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - squeeze
+            - slave
+            - --grpcMasterAddr={{ .Values.master.service.name }}:{{ .Values.master.service.ports.grpc }}
+            - --httpMasterAddr={{ .Values.master.service.name }}:{{ .Values.master.service.ports.http }}
+            - --alsologtostderr
+            - -v=2
+          ports:
+            - containerPort: {{ .Values.slave.deployment.containerPorts.http }}
+              name: http
+            - containerPort: {{ .Values.slave.deployment.containerPorts.http }}
+              name: grpc
+{{- end }}

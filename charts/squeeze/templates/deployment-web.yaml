@@ -1,0 +1,38 @@
+{{- if .Values.web.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.web.deployment.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- with .Values.web.deployment.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.web.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- with .Values.web.pod.labels }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- with .Values.web.pod.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .Values.web.deployment.name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.image }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - squeeze
+            - web
+            - --dbtype=sqlite
+            - --masterAddr={{ .Values.master.service.name }}:{{ .Values.master.service.ports.http }}
+            - --alsologtostderr
+          ports:
+            - containerPort:  {{ .Values.web.deployment.containerPorts.http }}
+              name: http
+{{- end }}

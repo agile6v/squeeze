@@ -1,0 +1,22 @@
+{{- if .Values.slave.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.slave.service.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "squeeze.name" . }}
+    helm.sh/chart: {{ include "squeeze.chart" . }}
+spec:
+  ports:
+  - port: {{ .Values.slave.service.ports.http }}
+    targetPort: {{ .Values.slave.service.ports.http }}
+    name: "http"
+  - port: {{ .Values.slave.service.ports.grpc }}
+    targetPort: {{ .Values.slave.service.ports.grpc }}
+    name: "grpc"
+  selector:
+    {{- with .Values.slave.deployment.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

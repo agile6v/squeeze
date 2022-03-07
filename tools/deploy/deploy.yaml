@@ -5,6 +5,64 @@ metadata:
   name: squeeze
 
 ---
+# Source: squeeze/templates/service-master.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-master
+  namespace: squeeze
+  labels:
+    app.kubernetes.io/name: squeeze
+    helm.sh/chart: squeeze-0.1
+spec:
+  ports:
+    - port: 9998
+      targetPort: 9998
+      name: "http"
+    - port: 9997
+      targetPort: 9997
+      name: "grpc"
+  selector:
+    app: squeeze-master
+---
+# Source: squeeze/templates/service-slave.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-slave
+  namespace: squeeze
+  labels:
+    app.kubernetes.io/name: squeeze
+    helm.sh/chart: squeeze-0.1
+spec:
+  ports:
+    - port: 9996
+      targetPort: 9996
+      name: "http"
+    - port: 9995
+      targetPort: 9995
+      name: "grpc"
+  selector:
+    app: squeeze-slave
+---
+# Source: squeeze/templates/service-web.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: squeeze-web
+  namespace: squeeze
+  labels:
+    app.kubernetes.io/name: squeeze
+    helm.sh/chart: squeeze-0.1
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9991
+  selector:
+    app: squeeze-web
+---
+# Source: squeeze/templates/deployment-master.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,7 +82,7 @@ spec:
     spec:
       containers:
         - name: squeeze-master
-          image: agile6v/squeeze:v0.1.0
+          image: "registry.hub.docker.com/agile6v/squeeze:v0.1.1"
           imagePullPolicy: IfNotPresent
           command:
             - squeeze
@@ -33,27 +91,11 @@ spec:
             - -v=2
           ports:
             - containerPort: 9997
-              name: http-address
+              name: http
             - containerPort: 9998
-              name: grpc-address
-
+              name: grpc
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: squeeze-master
-  namespace: squeeze
-spec:
-  type: ClusterIP
-  ports:
-    - name: http-address
-      port: 9997
-    - name: grpc-address
-      port: 9998
-  selector:
-    app: squeeze-master
-
----
+# Source: squeeze/templates/deployment-slave.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -73,7 +115,7 @@ spec:
     spec:
       containers:
         - name: squeeze-slave
-          image: agile6v/squeeze:v0.1.0
+          image: "registry.hub.docker.com/agile6v/squeeze:v0.1.1"
           imagePullPolicy: IfNotPresent
           command:
             - squeeze
@@ -84,27 +126,11 @@ spec:
             - -v=2
           ports:
             - containerPort: 9996
-              name: http-address
-            - containerPort: 9995
-              name: grpc-address
-
+              name: http
+            - containerPort: 9996
+              name: grpc
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: squeeze-slave
-  namespace: squeeze
-spec:
-  type: ClusterIP
-  ports:
-    - name: http-address
-      port: 9996
-    - name: grpc-address
-      port: 9995
-  selector:
-    app: squeeze-slave
-
----
+# Source: squeeze/templates/deployment-web.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -124,28 +150,14 @@ spec:
     spec:
       containers:
         - name: squeeze-web
-          image: agile6v/squeeze:v0.1.0
+          image: "registry.hub.docker.com/agile6v/squeeze:v0.1.1"
           imagePullPolicy: IfNotPresent
           command:
             - squeeze
             - web
-            - --type=sqlite
+            - --dbtype=sqlite
             - --masterAddr=squeeze-master:9998
             - --alsologtostderr
           ports:
-            - containerPort: 9991
-              name: http-address
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: squeeze-web
-  namespace: squeeze
-spec:
-  type: ClusterIP
-  ports:
-    - name: http-address
-      port: 9991
-  selector:
-    app: squeeze-web
+            - containerPort:  9991
+              name: http
